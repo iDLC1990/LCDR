@@ -54,7 +54,7 @@
     <div id="pb_searchStatus" class="pb-status"></div>
     <div id="pb_edit" style="display: none;">
       <div class="manual-input-title" data-i18n="editTitle">Змінити знайдені рядки</div>
-      <p class="pb-hint" data-i18n="editHint">Залиште поле порожнім, якщо не хочете його змінювати.</p>
+      <p class="pb-hint" data-i18n="editHint"></p>
       <div class="pb-row">
         <div class="form-group"><label data-i18n="labelNewData">Нова Дата</label><input type="date" id="pb_editData" class="form-input"></div>
         <div class="form-group"><label data-i18n="labelNewLocation">Нова Локація</label><input type="text" id="pb_editLocation" class="form-input code-text"></div>
