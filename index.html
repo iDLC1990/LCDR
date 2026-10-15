@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LCDR HUB</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- Верхняя панель -->
+    <header class="topbar">
+      <div class="brand">LCDR HUB</div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Открыть/закрыть меню">☰</button>
+      <div class="page-title" id="pageTitle">Друк етикеток</div>
+    </header>
+
+    <!-- Боковое меню -->
+    <aside class="sidebar" id="sidebar">
+      <nav>
+        <a href="#" class="nav-item" data-page="print">
+          <span class="icon">🖨</span>
+          <span class="label">Друк етикеток</span>
+        </a>
+
+        <div class="nav-group">
+          <button class="nav-item nav-parent" id="lcdrToggle">
+            <span class="icon">📊</span>
+            <span class="label">LCDR</span>
+            <span class="arrow">▼</span>
+          </button>
+          <div class="submenu" id="lcdrSubmenu">
+            <a href="#" class="nav-item sub" data-page="live">
+              <span class="icon">▭</span>
+              <span class="label">Live Data (дашборд)</span>
+            </a>
+            <a href="#" class="nav-item sub" data-page="stats">
+              <span class="icon">📈</span>
+              <span class="label">Статистика по датам</span>
+            </a>
+          </div>
+        </div>
+
+        <a href="#" class="nav-item" data-page="parts">
+          <span class="icon">▯</span>
+          <span class="label">База деталей</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Основная область -->
+    <main class="main">
+      <div class="tabs" id="tabs"></div>
+      <section class="content" id="content"></section>
+    </main>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
