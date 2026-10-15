@@ -8,10 +8,13 @@
 
 // Список всех страниц
 const PAGES = {
-  print:  { title: "Print" },
-  live:   { title: "Live Data " },
-  stats:  { title: "Statistic" },
-  parts:  { title: "PN Base" }
+  final1:  { title: "Final station I " },
+  final2:  { title: "Final station II " },
+  special: { title: "Special" },
+  label:   { title: "Label" },
+  live:    { title: "Live Data" },
+  stats:   { title: "Statistic" },
+  parts:   { title: " PN Base " }
 };
 
 // Содержимое страниц. Пока пусто — показывается заглушка.
@@ -20,8 +23,9 @@ const RENDERERS = {};
 
 // Текущее состояние
 const state = {
-  openTabs: ["parts", "live", "stats", "print"], // открытые вкладки
-  active: "print"                                 // активная страница
+  const state = {
+  openTabs: ["parts", "live", "stats", "final1"],
+  active: "final1"
 };
 
 // Элементы страницы
