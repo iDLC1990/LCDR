@@ -14,14 +14,14 @@
 #pnbaseSection .code-text { font-family: Consolas, 'Courier New', monospace; }
 #pnbaseSection .pb-status { font-size: 12px; font-weight: 600; color: #2563EB; margin-top: 8px; }
 #pnbaseSection .pb-hint { font-size: 12px; color: #6B7280; margin: 0 0 10px; }
-#pnbaseSection #pb_edit { background: #F3F4F6; border: 1px solid #D1D5DB; border-radius: 8px; padding: 14px; margin: 12px 0; }
+#pnbaseSection #pb_edit { background: #0e0e0e; border: 1px solid #D1D5DB; border-radius: 8px; padding: 14px; margin: 12px 0; }
 #pnbaseSection .pb-red { background: #991B1B; }
 #pnbaseSection .pb-red:hover { background: #B91C1C; }
 #pnbaseSection .pb-print { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; }
 #pnbaseSection .pb-print:hover { background: #E5E7EB; }
-#pnbaseSection .data-table { border-collapse: collapse; width: 100%; font-size: 13px; color: #111827; }
+#pnbaseSection .data-table { border-collapse: collapse; width: 100%; font-size: 13px; color: #ffffff; }
 #pnbaseSection .data-table th, #pnbaseSection .data-table td { padding: 8px 12px; border-bottom: 1px solid #E5E7EB; text-align: left; }
-#pnbaseSection .data-table th { background: #F3F4F6; color: #374151; font-weight: 600; }
+#pnbaseSection .data-table th { background: #0e0e0e; color: #374151; font-weight: 600; }
 .pb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 10000; }
 .pb-box { background: #1f2b35; border: 1px solid #374151; border-radius: 12px; padding: 20px; max-width: 340px; color: #fff; font-size: 14px; text-align: center; }
 .pb-box p { margin: 0 0 16px; }
