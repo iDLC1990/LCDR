@@ -8,29 +8,28 @@
 
 // Список всех страниц
 const PAGES = {
-  final1:  { title: "Final station I " },
-  final2:  { title: "Final station II " },
+  final1:  { title: "Final station I" },
+  final2:  { title: "Final station II" },
   special: { title: "Special" },
   label:   { title: "Label" },
   live:    { title: "Live Data" },
   stats:   { title: "Statistic" },
-  parts:   { title: " PN Base " }
+  parts:   { title: "PN Base" }
 };
 
 // Содержимое страниц. Пока пусто — показывается заглушка.
-// Пример: print: (el) => { el.innerHTML = "<h1>Печать</h1>"; }
+// Пример: final1: (el) => { el.innerHTML = "<h1>Final station I</h1>"; }
 const RENDERERS = {};
 
 // Текущее состояние
 const state = {
-  const state = {
   openTabs: ["parts", "live", "stats", "final1"],
   active: "final1"
 };
 
 // Элементы страницы
 const app        = document.getElementById("app");
-const lcdrSub    = document.getElementById("lcdrSubmenu");
+const menuToggle = document.getElementById("menuToggle");
 const tabsEl     = document.getElementById("tabs");
 const contentEl  = document.getElementById("content");
 const titleEl    = document.getElementById("pageTitle");
