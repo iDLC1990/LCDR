@@ -1,31 +1,17 @@
-/* Редактор етикеток для сторінки «Друк етикеток».
-   Підключення: <script src="sandbox.js"></script> перед </body>, ПІСЛЯ основного скрипта. */
+/* Редактор етикеток для сторінки «Label».
+   Підключення: <script src="js/label.js"></script> ПІСЛЯ js/app.js і JsBarcode.
+   Мову задає сайт через window.setLabelLang('uk' | 'pl' | 'en'). */
 (function () {
   function init() {
     const css = "/* ===== Пісочниця етикеток ===== */\n#sandboxSection .sb-hint { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }\n#sandboxSection .sb-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }\n#sandboxSection .sb-sticky { position: sticky; top: 8px; z-index: 5; }\n#sandboxSection #sbPreview { max-width: var(--sb-pv, 760px); margin: 0 auto; border: 1px solid #6B7280; border-radius: 4px; overflow: hidden; background: #fff; }\n#sandboxSection .sb-num { width: 84px; text-align: center; padding: 8px 6px; }\n#sandboxSection .sb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }\n#sandboxSection .sb-el { background: #111827; border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; }\n#sandboxSection .sb-el.sel { border-color: var(--accent-color); }\n#sandboxSection .sb-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); }\n#sandboxSection .sb-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }\n#sandboxSection .sb-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }\n#sandboxSection .btn-del { background: #991B1B; padding: 5px 9px; }\n#sandboxSection .sb-el > input[type=text] { width: 100%; }\n#sandboxSection .sb-title { font-size: 22px; font-weight: 700; color: #fff; }\n#sandboxSection .sb-sticky { position: sticky; }\n#sandboxSection .sb-grip { position: absolute; top: 0; bottom: 0; right: -9px; width: 18px; cursor: ew-resize; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px; user-select: none; touch-action: none; border-radius: 9px; }\n#sandboxSection .sb-grip:hover, #sandboxSection .sb-grip.on { background: rgba(37,99,235,.35); color: #fff; }";
-    const btnHtml = "<button class=\"sheet-tab-btn\" id=\"tabBtnSandbox\" onclick=\"switchSheet('sandbox')\">🧪 Редактор етикеток <kbd>Alt + 4</kbd></button>";
-    const sectionHtml = "<div id=\"sandboxSection\">\n  <div class=\"sb-row\" style=\"justify-content: space-between; align-items: center; margin-bottom: 4px;\">\n    <div class=\"sb-title\">🧪 Пісочниця етикеток</div>\n    <div class=\"sb-row\" style=\"align-items: center;\"><span class=\"sb-hint\" style=\"margin: 0;\">Мова</span>\n      <select id=\"sb_lang\" class=\"form-input\"><option value=\"uk\">Українська</option><option value=\"pl\">Polski</option><option value=\"en\">English</option></select></div>\n  </div>\n  <div class=\"sb-hint\">Змінюйте значення в полях, перетягуйте елементи мишкою по превʼю, підганяйте розміри й тисніть «Друк». Налаштування зберігаються автоматично.</div>\n  <div class=\"manual-input-card sb-sticky\">\n    <div id=\"sbPreview\"></div>\n    <div class=\"sb-row\" style=\"margin-top: 12px; justify-content: space-between;\">\n      <div class=\"sb-row\" id=\"sbSettings\"></div>\n      <button class=\"btn btn-brand\" onclick=\"sb.print()\">🖨️ Друк</button>\n    </div>\n  </div>\n  <div class=\"manual-input-card\">\n    <div class=\"sb-row\" style=\"margin-bottom: 12px;\">\n      <button class=\"btn\" onclick=\"sb.add('bc')\">➕ Штрихкод</button>\n      <button class=\"btn\" onclick=\"sb.add('tx')\">➕ Текст</button>\n      <button class=\"btn\" onclick=\"sb.add('im')\">➕ Картинка (лого)</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.reset()\">↺ Скинути до прикладу</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.exportJson()\">⬇️ Копіювати макет (JSON)</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.importJson()\">⬆️ Вставити макет (JSON)</button>\n    </div>\n    <div class=\"sb-hint\">Ширина «0» = авто. Для тексту ширина стискає/розтягує текст до вказаного розміру — якщо змінили текст і він деформується, поставте 0.</div>\n    <div class=\"sb-cards\" id=\"sbCards\"></div>\n  </div>\n</div>";
+    const sectionHtml = "<div id=\"sandboxSection\">\n  <div class=\"sb-row\" style=\"justify-content: space-between; align-items: center; margin-bottom: 4px;\">\n    <div class=\"sb-title\">🧪 Пісочниця етикеток</div>\n  </div>\n  <div class=\"sb-hint\">Змінюйте значення в полях, перетягуйте елементи мишкою по превʼю, підганяйте розміри й тисніть «Друк». Налаштування зберігаються автоматично.</div>\n  <div class=\"manual-input-card sb-sticky\">\n    <div id=\"sbPreview\"></div>\n    <div class=\"sb-row\" style=\"margin-top: 12px; justify-content: space-between;\">\n      <div class=\"sb-row\" id=\"sbSettings\"></div>\n      <button class=\"btn btn-brand\" onclick=\"sb.print()\">🖨️ Друк</button>\n    </div>\n  </div>\n  <div class=\"manual-input-card\">\n    <div class=\"sb-row\" style=\"margin-bottom: 12px;\">\n      <button class=\"btn\" onclick=\"sb.add('bc')\">➕ Штрихкод</button>\n      <button class=\"btn\" onclick=\"sb.add('tx')\">➕ Текст</button>\n      <button class=\"btn\" onclick=\"sb.add('im')\">➕ Картинка (лого)</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.reset()\">↺ Скинути до прикладу</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.exportJson()\">⬇️ Копіювати макет (JSON)</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.importJson()\">⬆️ Вставити макет (JSON)</button>\n    </div>\n    <div class=\"sb-hint\">Ширина «0» = авто. Для тексту ширина стискає/розтягує текст до вказаного розміру — якщо змінили текст і він деформується, поставте 0.</div>\n    <div class=\"sb-cards\" id=\"sbCards\"></div>\n  </div>\n</div>";
 
     const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
-       document.getElementById('labelPage').innerHTML = sectionHtml;
+    document.getElementById('labelPage').innerHTML = sectionHtml;
 
     // ===== редактор =====
 (function () {
   const NS = 'http://www.w3.org/2000/svg', KEY = 'labelSandboxV2';
-    const showToast = (m) => alert(m);
-
-  function printInFrame(html) {
-    const f = document.createElement('iframe');
-    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-    document.body.appendChild(f);
-    const d = f.contentDocument;
-    d.open(); d.write(html); d.close();
-    setTimeout(() => {
-      f.contentWindow.focus();
-      f.contentWindow.print();
-      setTimeout(() => f.remove(), 1500);
-    }, 400);
-  }
   const D = { lw: 82, lh: 33, pw: 130, ph: 76, ox: 24, oy: 21.5, copies: 1, dpi: 203, gstyle: 'frame', ggap: 1.5, gth: 0.5, tthr: 165, mode: 'raster' };
   const DE = [
     { t:'bc', v:'LVB500UBF0BPBF5H0X',          x:3.4, y:1.1,  h:2.5, m:1, cs:2.12, cw:21.4, cx:3.4, cy:5.7 },
@@ -49,6 +35,21 @@
   const num = (v) => (isFinite(v) ? +(+v).toFixed(2) : 0);
   const dotmm = () => 25.4 / (S.dpi || 203);
   const noTmp = (k, v) => (k[0] === '_' ? undefined : v);
+  const showToast = (m) => alert(m);
+
+  function printInFrame(html) {
+    const f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+    document.body.appendChild(f);
+    const d = f.contentDocument;
+    d.open(); d.write(html); d.close();
+    setTimeout(() => {
+      f.contentWindow.focus();
+      f.contentWindow.print();
+      setTimeout(() => f.remove(), 1500);
+    }, 400);
+  }
+
   function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.S && Array.isArray(d.els)) { S = { ...D, ...d.S }; els = d.els; } } catch (e) {} }
   function save() { try { localStorage.setItem(KEY, JSON.stringify({ S, els }, noTmp)); } catch (e) {} }
 
@@ -291,7 +292,6 @@
     return { url: fc.toDataURL('image/png'), wmm: (W * dot).toFixed(4), hmm: (H * dot).toFixed(4) };
   }
 
-
   function printVector() {
     let svg;
     try { svg = buildSvg(false); } catch (e) { alert(t('Помилка побудови етикетки')); return; }
@@ -310,13 +310,10 @@
     </style></head><body>${pages}</body></html>`);
   }
 
-  // ---------- Багатомовність (UK / PL / EN). Ключ = український текст ----------
+  // ---------- Багатомовність (UK / PL / EN). Ключ = український текст. Мову задає сайт. ----------
   const I18N = {
     'Пісочниця етикеток': { pl: 'Piaskownica etykiet', en: 'Label sandbox' },
     '🧪 Пісочниця етикеток': { pl: '🧪 Piaskownica etykiet', en: '🧪 Label sandbox' },
-    '🧪 Редактор етикеток': { pl: '🧪 Edytor etykiet', en: '🧪 Label editor' },
-    'Мова': { pl: 'Język', en: 'Language' },
-    'Потягніть, щоб розтягнути робочу зону (подвійний клік — скинути)': { pl: 'Przeciągnij, aby rozszerzyć pole robocze (dwuklik — reset)', en: 'Drag to stretch the work area (double-click to reset)' },
     'Змінюйте значення в полях, перетягуйте елементи мишкою по превʼю, підганяйте розміри й тисніть «Друк». Налаштування зберігаються автоматично.':
       { pl: 'Zmieniaj wartości w polach, przeciągaj elementy myszką po podglądzie, dopasowuj rozmiary i naciśnij „Drukuj”. Ustawienia zapisują się automatycznie.',
         en: 'Edit the values, drag elements with the mouse on the preview, fine-tune the sizes and press “Print”. Settings are saved automatically.' },
@@ -375,7 +372,8 @@
     'Макет скопійовано в буфер обміну!': { pl: 'Układ skopiowany do schowka!', en: 'Layout copied to clipboard!' },
     'Скопіюйте макет:': { pl: 'Skopiuj układ:', en: 'Copy the layout:' },
     'Вставте JSON макета:': { pl: 'Wklej JSON układu:', en: 'Paste the layout JSON:' },
-    'Невірний JSON': { pl: 'Nieprawidłowy JSON', en: 'Invalid JSON' }
+    'Невірний JSON': { pl: 'Nieprawidłowy JSON', en: 'Invalid JSON' },
+    'Потягніть, щоб розтягнути робочу зону (подвійний клік — скинути)': { pl: 'Przeciągnij, aby rozszerzyć pole robocze (dwuklik — reset)', en: 'Drag to stretch the work area (double-click to reset)' }
   };
   let LANG = 'uk';
   try { LANG = localStorage.getItem('labelLang') || 'uk'; } catch (e) {}
@@ -396,12 +394,10 @@
       const lead = n._o.match(/^\s*/)[0], trail = n._o.match(/\s*$/)[0];
       n.nodeValue = lead + t(n._o.trim()) + trail;
     });
-    const b = $('tabBtnSandbox'); if (b && b.firstChild) b.firstChild.nodeValue = t('🧪 Редактор етикеток') + ' ';
-    $('sb_lang').value = LANG;
     gripTitle(); initSettings(); renderCards(); renderPreview();
   }
 
-  // ---------- Публічне API (для onclick) ----------
+  // ---------- Публічне API ----------
   window.sb = {
     add(type) {
       els.push(type === 'bc' ? { t:'bc', v:'12345', x:3, y:3, h:4, m:1, cs:2.5, cw:0 }
@@ -441,8 +437,15 @@
       </style></head><body>${pg}</body></html>`);
     }
   };
-  window.sbShow = renderPreview;      // викликається при відкритті вкладки
+  window.sbShow = renderPreview;      // викликається app.js при відкритті вкладки Label
 
+  // Мову задає сайт: window.setLabelLang('uk' | 'pl' | 'en')
+  window.setLabelLang = function (l) {
+    if (!['uk', 'pl', 'en'].includes(l)) return;
+    LANG = l;
+    try { localStorage.setItem('labelLang', LANG); } catch (e) {}
+    applyLang();
+  };
 
   // ---------- Розтягування робочої зони (потягнути за ручку справа від превʼю) ----------
   const WKEY = 'labelSandboxW', secEl = $('sandboxSection'), panel = secEl.querySelector('.sb-sticky');
@@ -465,9 +468,8 @@
   gripTitle(); applyW();
 
   load(); initSettings(); renderCards();
-  $('sb_lang').value = LANG;
-  $('sb_lang').onchange = (ev) => { LANG = ev.target.value; try { localStorage.setItem('labelLang', LANG); } catch (e) {} applyLang(); };
   if (LANG !== 'uk') applyLang();
 })();
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
