@@ -8,10 +8,10 @@
 
 // Список всех страниц
 const PAGES = {
-  print:  { title: "Друк етикеток" },
-  live:   { title: "Live Data (дашборд)" },
-  stats:  { title: "Статистика по датам" },
-  parts:  { title: "База деталей" }
+  print:  { title: "Print" },
+  live:   { title: "Live Data " },
+  stats:  { title: "Statistic" },
+  parts:  { title: "PN Base" }
 };
 
 // Содержимое страниц. Пока пусто — показывается заглушка.
@@ -26,8 +26,6 @@ const state = {
 
 // Элементы страницы
 const app        = document.getElementById("app");
-const menuToggle = document.getElementById("menuToggle");
-const lcdrToggle = document.getElementById("lcdrToggle");
 const lcdrSub    = document.getElementById("lcdrSubmenu");
 const tabsEl     = document.getElementById("tabs");
 const contentEl  = document.getElementById("content");
@@ -99,10 +97,12 @@ menuToggle.addEventListener("click", () => {
   app.classList.toggle("collapsed");
 });
 
-// Раскрытие подменю LCDR
-lcdrToggle.addEventListener("click", () => {
-  lcdrToggle.classList.toggle("open");
-  lcdrSub.classList.toggle("open");
+// Раскрытие любых групп меню (Print, LCDR и т.д.)
+document.querySelectorAll(".nav-parent").forEach(btn => {
+  btn.addEventListener("click", () => {
+    btn.classList.toggle("open");
+    btn.nextElementSibling.classList.toggle("open");
+  });
 });
 
 // Клик по пункту меню — открыть страницу
