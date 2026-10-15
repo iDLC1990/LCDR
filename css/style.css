@@ -1,15 +1,15 @@
 /* ===== Переменные (цвета легко менять здесь) ===== */
 :root {
-  --top-bg: #3b8fc4;
-  --side-bg: #1c2832;
+  --top-bg: #000000;
+  --side-bg: #000000;
   --side-sub-bg: #17212a;
-  --side-hover: #243440;
-  --tabs-bg: #161e26;
-  --tab-bg: #1f2b35;
+  --side-hover: #181515;
+  --tabs-bg: #000000;
+  --tab-bg: #0e55657a;
   --content-bg: #eeeeee;
   --text-light: #ffffff;
-  --text-muted: #9aa5ad;
-  --text-dark: #1c2832;
+  --text-muted: #4d94ff;
+  --text-dark: #ededed;
   --border-color: #374151;
   --accent-color: #2563EB;
   --sidebar-width: 226px;
@@ -230,7 +230,7 @@ html, body {
   font: inherit;
 }
 .manual-input-card {
-  background: #0e0e0e4f;
+  background: #0e0e0e;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
   padding: 14px;
