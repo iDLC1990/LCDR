@@ -26,9 +26,10 @@ const STATIC_PAGES = {
   parts: "pnbasePage"
 };
 
+// При загрузке сайта вкладок нет — пользователь открывает их сам из меню
 const state = {
-  openTabs: ["parts", "live", "stats", "final1"],
-  active: "final1"
+  openTabs: [],
+  active: null
 };
 
 const app        = document.getElementById("app");
@@ -79,7 +80,15 @@ function renderContent() {
 
   contentEl.style.display = "flex";
   contentEl.innerHTML = "";
-  if (!state.active) return;
+
+  if (!state.active) {
+    contentEl.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🗂️</div>
+        <p>Выберите страницу в меню слева</p>
+      </div>`;
+    return;
+  }
 
   const renderer = RENDERERS[state.active];
   if (renderer) {
@@ -142,6 +151,12 @@ tabsEl.addEventListener("click", e => {
     render();
   }
 });
+
+/* ---------- Язык сайта (Label и PN Base) ---------- */
+function setSiteLang(lang) {
+  if (window.setLabelLang) window.setLabelLang(lang);
+  if (window.setPnBaseLang) window.setPnBaseLang(lang);
+}
 
 /* ---------- Старт ---------- */
 
