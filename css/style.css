@@ -248,3 +248,51 @@ html, body {
     padding: 0 12px;
   }
 }
+/* ===== Вкладка Label (редактор етикеток) ===== */
+:root {
+  --border-color: #374151;
+  --accent-color: #2563EB;
+}
+
+.label-page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+  background: var(--side-bg);
+}
+
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 11px; color: #4B5563; }
+
+.form-input {
+  padding: 6px 8px;
+  border: 1px solid #9CA3AF;
+  border-radius: 4px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+}
+
+.manual-input-card {
+  background: #ffffff;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.btn {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 4px;
+  background: #374151;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn-brand { background: var(--top-bg); }
+.btn-secondary { background: #6B7280; }
+
+#sandboxSection .sb-el .form-group label { color: #9CA3AF; }
