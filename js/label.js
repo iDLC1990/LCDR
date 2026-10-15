@@ -10,7 +10,7 @@
 #sandboxSection #sbPreview { max-width: var(--sb-pv, 760px); margin: 0 auto; border: 1px solid #6B7280; border-radius: 4px; overflow: hidden; background: #fff; }
 #sandboxSection .sb-num { width: 84px; text-align: center; padding: 8px 6px; }
 #sandboxSection .sb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
-#sandboxSection .sb-el { background: #111827; border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; }
+#sandboxSection .sb-el { background: #12111100; border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; }
 #sandboxSection .sb-el.sel { border-color: var(--accent-color); }
 #sandboxSection .sb-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 #sandboxSection .sb-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
@@ -29,11 +29,6 @@
     </div>
   </div>
   <div class="manual-input-card">
-    <div class="sb-row" style="margin-bottom: 12px;">
-      <button class="btn" onclick="sb.add('bc')">➕ Штрихкод</button>
-      <button class="btn" onclick="sb.add('tx')">➕ Текст</button>
-      <button class="btn" onclick="sb.add('im')">➕ Картинка (лого)</button>
-    </div>
     <div class="sb-cards" id="sbCards"></div>
   </div>
 </div>`;
@@ -343,9 +338,6 @@
   // ---------- Багатомовність (UK / PL / EN). Ключ = український текст. Мову задає сайт. ----------
   const I18N = {
     '🖨️ Друк': { pl: '🖨️ Drukuj', en: '🖨️ Print' },
-    '➕ Штрихкод': { pl: '➕ Kod kreskowy', en: '➕ Barcode' },
-    '➕ Текст': { pl: '➕ Tekst', en: '➕ Text' },
-    '➕ Картинка (лого)': { pl: '➕ Obraz (logo)', en: '➕ Image (logo)' },
     'Формат паперу': { pl: 'Format papieru', en: 'Paper size' },
     '130×76 мм': { pl: '130×76 mm', en: '130×76 mm' },
     '100×78 мм': { pl: '100×78 mm', en: '100×78 mm' },
