@@ -10,7 +10,7 @@
     const css = `
 #pnbaseSection .pb-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
 #pnbaseSection .pb-row .form-group { flex: 1; min-width: 150px; }
-#pnbaseSection .manual-input-title { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 10px; }
+#pnbaseSection .manual-input-title { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 10px; }
 #pnbaseSection .code-text { font-family: Consolas, 'Courier New', monospace; }
 #pnbaseSection .pb-status { font-size: 12px; font-weight: 600; color: #2563EB; margin-top: 8px; }
 #pnbaseSection .pb-hint { font-size: 12px; color: #6B7280; margin: 0 0 10px; }
