@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LCDR HUB</title>
+  <title>LCDR </title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,33 +11,42 @@
 
     <!-- Верхняя панель -->
     <header class="topbar">
-      <div class="brand">LCDR HUB</div>
+      <div class="brand">LCDR </div>
       <button class="menu-toggle" id="menuToggle" aria-label="Открыть/закрыть меню">☰</button>
-      <div class="page-title" id="pageTitle">Друк етикеток</div>
+      <div class="page-title" id="pageTitle">Print</div>
     </header>
 
     <!-- Боковое меню -->
     <aside class="sidebar" id="sidebar">
       <nav>
-        <a href="#" class="nav-item" data-page="print">
-          <span class="icon">🖨</span>
-          <span class="label">Друк етикеток</span>
-        </a>
+             <nav>
+        <div class="nav-group">
+          <button class="nav-item nav-parent">
+            <span class="icon">🖨</span>
+            <span class="label">Print</span>
+            <span class="arrow">▼</span>
+          </button>
+          <div class="submenu">
+            <a href="#" class="nav-item sub" data-page="print">
+              <span class="label">Print</span>
+            </a>
+          </div>
+        </div>
 
         <div class="nav-group">
-          <button class="nav-item nav-parent" id="lcdrToggle">
+          <button class="nav-item nav-parent">
             <span class="icon">📊</span>
             <span class="label">LCDR</span>
             <span class="arrow">▼</span>
           </button>
-          <div class="submenu" id="lcdrSubmenu">
+          <div class="submenu">
             <a href="#" class="nav-item sub" data-page="live">
               <span class="icon">▭</span>
-              <span class="label">Live Data (дашборд)</span>
+              <span class="label">Live Data </span>
             </a>
             <a href="#" class="nav-item sub" data-page="stats">
               <span class="icon">📈</span>
-              <span class="label">Статистика по датам</span>
+              <span class="label">Statistic</span>
             </a>
           </div>
         </div>
@@ -46,6 +55,7 @@
           <span class="icon">▯</span>
           <span class="label">База деталей</span>
         </a>
+      </nav>
       </nav>
     </aside>
 
