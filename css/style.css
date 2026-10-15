@@ -220,7 +220,7 @@ html, body {
   background: var(--side-bg);
 }
 .form-group { display: flex; flex-direction: column; gap: 4px; }
-.form-group label { font-size: 11px; color: #4B5563; }
+.form-group label { font-size: 11px; color:  #0062ff; }
 .form-input {
   padding: 6px 8px;
   border: 1px solid #9CA3AF;
