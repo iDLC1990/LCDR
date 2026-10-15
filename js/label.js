@@ -468,6 +468,6 @@
   $('sb_lang').value = LANG;
   $('sb_lang').onchange = (ev) => { LANG = ev.target.value; try { localStorage.setItem('labelLang', LANG); } catch (e) {} applyLang(); };
   if (LANG !== 'uk') applyLang();
-})()
+})();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
