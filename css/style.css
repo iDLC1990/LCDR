@@ -1,15 +1,17 @@
 /* ===== Переменные (цвета легко менять здесь) ===== */
 :root {
-  --top-bg: #3b8fc4;        /* верхняя синяя панель */
-  --side-bg: #1c2832;       /* боковое меню */
-  --side-sub-bg: #17212a;   /* подменю */
+  --top-bg: #3b8fc4;
+  --side-bg: #1c2832;
+  --side-sub-bg: #17212a;
   --side-hover: #243440;
-  --tabs-bg: #161e26;       /* полоса вкладок */
-  --tab-bg: #1f2b35;        /* неактивная вкладка */
-  --content-bg: #eeeeee;    /* фон рабочей области */
+  --tabs-bg: #161e26;
+  --tab-bg: #1f2b35;
+  --content-bg: #eeeeee;
   --text-light: #ffffff;
   --text-muted: #9aa5ad;
   --text-dark: #1c2832;
+  --border-color: #374151;
+  --accent-color: #2563EB;
   --sidebar-width: 226px;
   --topbar-height: 43px;
   --tabs-height: 33px;
@@ -34,8 +36,6 @@ html, body {
   height: 100vh;
   transition: grid-template-columns 0.2s ease;
 }
-
-/* Меню скрыто */
 .app.collapsed {
   grid-template-columns: 0 1fr;
 }
@@ -54,7 +54,6 @@ html, body {
   overflow: hidden;
   white-space: nowrap;
 }
-
 .brand {
   width: var(--sidebar-width);
   flex-shrink: 0;
@@ -63,7 +62,6 @@ html, body {
   font-weight: 700;
   letter-spacing: 0.5px;
 }
-
 .menu-toggle {
   margin-left: 14px;
   width: 34px;
@@ -79,7 +77,6 @@ html, body {
 .menu-toggle:hover {
   background: rgba(255, 255, 255, 0.3);
 }
-
 .page-title {
   margin-left: 14px;
   font-size: 14px;
@@ -96,7 +93,6 @@ html, body {
   color: var(--text-light);
   overflow-y: auto;
 }
-
 .nav-item {
   display: flex;
   align-items: center;
@@ -119,13 +115,11 @@ html, body {
 .nav-item.active {
   background: var(--top-bg);
 }
-
 .nav-item .icon {
   width: 20px;
   text-align: center;
   flex-shrink: 0;
 }
-
 .nav-item .arrow {
   margin-left: auto;
   font-size: 10px;
@@ -135,7 +129,6 @@ html, body {
 .nav-parent.open .arrow {
   transform: rotate(180deg);
 }
-
 .submenu {
   display: none;
   background: var(--side-sub-bg);
@@ -143,7 +136,6 @@ html, body {
 .submenu.open {
   display: block;
 }
-
 .nav-item.sub {
   height: 36px;
   padding-left: 48px;
@@ -168,7 +160,6 @@ html, body {
   overflow-x: auto;
   flex-shrink: 0;
 }
-
 .tab {
   display: flex;
   align-items: center;
@@ -189,7 +180,6 @@ html, body {
   background: #ffffff;
   color: var(--text-dark);
 }
-
 .tab .close {
   font-size: 12px;
   opacity: 0.6;
@@ -208,8 +198,6 @@ html, body {
   justify-content: center;
   padding: 20px;
 }
-
-/* Заглушка, пока страница пустая */
 .empty {
   text-align: center;
   color: #9a9a9a;
@@ -222,6 +210,45 @@ html, body {
 .empty p {
   font-size: 14px;
 }
+
+/* ===== Вкладка Label (редактор етикеток) ===== */
+.label-page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+  background: var(--side-bg);
+}
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 11px; color: #4B5563; }
+.form-input {
+  padding: 6px 8px;
+  border: 1px solid #9CA3AF;
+  border-radius: 4px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+}
+.manual-input-card {
+  background: #ffffff;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.btn {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 4px;
+  background: #374151;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn-brand { background: var(--top-bg); }
+.btn-secondary { background: #6B7280; }
+#sandboxSection .sb-el .form-group label { color: #9CA3AF; }
 
 /* ===== Адаптация для телефона ===== */
 @media (max-width: 700px) {
@@ -248,51 +275,3 @@ html, body {
     padding: 0 12px;
   }
 }
-/* ===== Вкладка Label (редактор етикеток) ===== */
-:root {
-  --border-color: #374151;
-  --accent-color: #2563EB;
-}
-
-.label-page {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 20px;
-  background: var(--side-bg);
-}
-
-.form-group { display: flex; flex-direction: column; gap: 4px; }
-.form-group label { font-size: 11px; color: #4B5563; }
-
-.form-input {
-  padding: 6px 8px;
-  border: 1px solid #9CA3AF;
-  border-radius: 4px;
-  background: #fff;
-  color: #111827;
-  font: inherit;
-}
-
-.manual-input-card {
-  background: #ffffff;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-  padding: 14px;
-  margin-bottom: 14px;
-}
-
-.btn {
-  padding: 8px 14px;
-  border: 0;
-  border-radius: 4px;
-  background: #374151;
-  color: #fff;
-  font: inherit;
-  cursor: pointer;
-}
-.btn:hover { filter: brightness(1.15); }
-.btn-brand { background: var(--top-bg); }
-.btn-secondary { background: #6B7280; }
-
-#sandboxSection .sb-el .form-group label { color: #9CA3AF; }
