@@ -10,7 +10,7 @@
 #sandboxSection #sbPreview { max-width: var(--sb-pv, 760px); margin: 0 auto; border: 1px solid #6B7280; border-radius: 4px; overflow: hidden; background: #fff; }
 #sandboxSection .sb-num { width: 84px; text-align: center; padding: 8px 6px; }
 #sandboxSection .sb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
-#sandboxSection .sb-el { background: #12111100; border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; }
+#sandboxSection .sb-el { background: #111827; border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; }
 #sandboxSection .sb-el.sel { border-color: var(--accent-color); }
 #sandboxSection .sb-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 #sandboxSection .sb-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
