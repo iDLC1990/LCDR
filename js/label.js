@@ -3,8 +3,40 @@
    Мову задає сайт через window.setLabelLang('uk' | 'pl' | 'en'). */
 (function () {
   function init() {
-    const css = "/* ===== Пісочниця етикеток ===== */\n#sandboxSection .sb-hint { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }\n#sandboxSection .sb-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }\n#sandboxSection .sb-sticky { position: sticky; top: 8px; z-index: 5; }\n#sandboxSection #sbPreview { max-width: var(--sb-pv, 760px); margin: 0 auto; border: 1px solid #6B7280; border-radius: 4px; overflow: hidden; background: #fff; }\n#sandboxSection .sb-num { width: 84px; text-align: center; padding: 8px 6px; }\n#sandboxSection .sb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }\n#sandboxSection .sb-el { background: #111827; border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; }\n#sandboxSection .sb-el.sel { border-color: var(--accent-color); }\n#sandboxSection .sb-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); }\n#sandboxSection .sb-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }\n#sandboxSection .sb-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }\n#sandboxSection .btn-del { background: #991B1B; padding: 5px 9px; }\n#sandboxSection .sb-el > input[type=text] { width: 100%; }\n#sandboxSection .sb-title { font-size: 22px; font-weight: 700; color: #fff; }\n#sandboxSection .sb-sticky { position: sticky; }\n#sandboxSection .sb-grip { position: absolute; top: 0; bottom: 0; right: -9px; width: 18px; cursor: ew-resize; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px; user-select: none; touch-action: none; border-radius: 9px; }\n#sandboxSection .sb-grip:hover, #sandboxSection .sb-grip.on { background: rgba(37,99,235,.35); color: #fff; }";
-    const sectionHtml = "<div id=\"sandboxSection\">\n  <div class=\"sb-row\" style=\"justify-content: space-between; align-items: center; margin-bottom: 4px;\">\n    <div class=\"sb-title\">🧪 Пісочниця етикеток</div>\n  </div>\n  <div class=\"sb-hint\">Змінюйте значення в полях, перетягуйте елементи мишкою по превʼю, підганяйте розміри й тисніть «Друк». Налаштування зберігаються автоматично.</div>\n  <div class=\"manual-input-card sb-sticky\">\n    <div id=\"sbPreview\"></div>\n    <div class=\"sb-row\" style=\"margin-top: 12px; justify-content: space-between;\">\n      <div class=\"sb-row\" id=\"sbSettings\"></div>\n      <button class=\"btn btn-brand\" onclick=\"sb.print()\">🖨️ Друк</button>\n    </div>\n  </div>\n  <div class=\"manual-input-card\">\n    <div class=\"sb-row\" style=\"margin-bottom: 12px;\">\n      <button class=\"btn\" onclick=\"sb.add('bc')\">➕ Штрихкод</button>\n      <button class=\"btn\" onclick=\"sb.add('tx')\">➕ Текст</button>\n      <button class=\"btn\" onclick=\"sb.add('im')\">➕ Картинка (лого)</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.reset()\">↺ Скинути до прикладу</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.exportJson()\">⬇️ Копіювати макет (JSON)</button>\n      <button class=\"btn btn-secondary\" onclick=\"sb.importJson()\">⬆️ Вставити макет (JSON)</button>\n    </div>\n    <div class=\"sb-hint\">Ширина «0» = авто. Для тексту ширина стискає/розтягує текст до вказаного розміру — якщо змінили текст і він деформується, поставте 0.</div>\n    <div class=\"sb-cards\" id=\"sbCards\"></div>\n  </div>\n</div>";
+    const css = `
+/* ===== Пісочниця етикеток ===== */
+#sandboxSection .sb-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+#sandboxSection .sb-sticky { position: sticky; top: 8px; z-index: 5; }
+#sandboxSection #sbPreview { max-width: var(--sb-pv, 760px); margin: 0 auto; border: 1px solid #6B7280; border-radius: 4px; overflow: hidden; background: #fff; }
+#sandboxSection .sb-num { width: 84px; text-align: center; padding: 8px 6px; }
+#sandboxSection .sb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+#sandboxSection .sb-el { background: #111827; border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; }
+#sandboxSection .sb-el.sel { border-color: var(--accent-color); }
+#sandboxSection .sb-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+#sandboxSection .sb-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
+#sandboxSection .sb-el > input[type=text] { width: 100%; }
+#sandboxSection .sb-grip { position: absolute; top: 0; bottom: 0; right: -9px; width: 18px; cursor: ew-resize; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px; user-select: none; touch-action: none; border-radius: 9px; }
+#sandboxSection .sb-grip:hover, #sandboxSection .sb-grip.on { background: rgba(37,99,235,.35); color: #fff; }
+`;
+
+    const sectionHtml = `
+<div id="sandboxSection">
+  <div class="manual-input-card sb-sticky">
+    <div id="sbPreview"></div>
+    <div class="sb-row" style="margin-top: 12px; justify-content: space-between;">
+      <div class="sb-row" id="sbSettings"></div>
+      <button class="btn btn-brand" onclick="sb.print()">🖨️ Друк</button>
+    </div>
+  </div>
+  <div class="manual-input-card">
+    <div class="sb-row" style="margin-bottom: 12px;">
+      <button class="btn" onclick="sb.add('bc')">➕ Штрихкод</button>
+      <button class="btn" onclick="sb.add('tx')">➕ Текст</button>
+      <button class="btn" onclick="sb.add('im')">➕ Картинка (лого)</button>
+    </div>
+    <div class="sb-cards" id="sbCards"></div>
+  </div>
+</div>`;
 
     const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
     document.getElementById('labelPage').innerHTML = sectionHtml;
@@ -152,7 +184,6 @@
       if (+g.dataset.i === sel) { r.setAttribute('stroke', '#2563EB'); r.setAttribute('stroke-width', '0.25'); r.setAttribute('stroke-dasharray', '0.8 0.5'); }
       r.style.cursor = 'move'; g.appendChild(r);
     });
-    els.forEach((e, i) => { const l = $('sbw_' + i); if (l) l.textContent = e.t === 'bc' && e._w ? `(${t('ширина')} ${e._w} ${t('мм')})` : ''; });
   }
 
   // ---------- Перетягування ----------
@@ -175,7 +206,7 @@
   });
   document.addEventListener('pointerup', () => { if (drag) { drag = null; save(); } });
 
-  // ---------- Картки елементів ----------
+  // ---------- Картки елементів (без заголовків, без ✕, без підписів полів) ----------
   const FIELDS = {
     bc: [['x','X'],['y','Y'],['h','Висота, мм'],['m','Модуль, точок (ціле)'],['cs','Підпис: розмір'],['cw','Підпис: ширина'],['cx','Підпис: X'],['cy','Підпис: Y (низ)']],
     im: [['x','X'],['y','Y'],['w','Ширина, мм'],['h','Висота, мм']],
@@ -187,14 +218,13 @@
       const d = document.createElement('div');
       d.className = 'sb-el' + (i === sel ? ' sel' : '');
       d.onclick = () => selectEl(i);
-      const nums = FIELDS[e.t].map(([k, label]) => `<div class="form-group"><label>${t(label)}</label><input type="number" class="form-input sb-num" data-k="${k}" step="${k === 'm' ? 1 : 0.1}" ${k === 'm' ? 'min="1"' : ''} id="sbf_${i}_${k}" value="${e[k] ?? 0}"></div>`).join('');
+      const nums = FIELDS[e.t].map(([k, label]) =>
+        `<input type="number" class="form-input sb-num" data-k="${k}" step="${k === 'm' ? 1 : 0.1}" ${k === 'm' ? 'min="1"' : ''} title="${t(label)}" id="sbf_${i}_${k}" value="${e[k] ?? 0}">`
+      ).join('');
       const extra = e.t === 'tx' ? `<label class="sb-chk"><input type="checkbox" data-k="b" ${e.b ? 'checked' : ''}> ${t('жирний')}</label><label class="sb-chk"><input type="checkbox" data-k="serif" ${e.serif ? 'checked' : ''}> ${t('з засічками')}</label>` : '';
-      const title = e.t === 'bc' ? '▮▮ ' + t('ШТРИХКОД + ПІДПИС') : e.t === 'im' ? '🖼 ' + t('КАРТИНКА') : 'T ' + t('ТЕКСТ');
-      d.innerHTML = `<div class="sb-head"><span>${title} #${i + 1} <span id="sbw_${i}" style="font-weight:400"></span></span><button class="btn btn-del" data-del="${i}">✕</button></div>
-        ${e.t === 'im' ? '<input type="file" accept="image/*" style="color:#9CA3AF;font-size:12px">' : `<input type="text" class="form-input code-text" data-k="v" value="${esc(e.v)}">`}
+      d.innerHTML = `${e.t === 'im' ? '<input type="file" accept="image/*" style="color:#9CA3AF;font-size:12px">' : `<input type="text" class="form-input code-text" data-k="v" value="${esc(e.v)}">`}
         <div class="sb-grid">${nums}${extra}</div>`;
       host.appendChild(d);
-      d.querySelector('[data-del]').onclick = (ev) => { ev.stopPropagation(); els.splice(i, 1); sel = -1; renderCards(); renderPreview(); save(); };
       d.querySelectorAll('input').forEach((inp) => {
         if (inp.type === 'file') {
           inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { e.src = r.result; e._k = null; renderPreview(); save(); }; r.readAsDataURL(f); };
@@ -211,10 +241,10 @@
   }
   function selectEl(i) { sel = i; document.querySelectorAll('#sbCards .sb-el').forEach((c, idx) => c.classList.toggle('sel', idx === i)); renderPreview(); }
 
-  // ---------- Налаштування ----------
+  // ---------- Налаштування (без підписів, підказка — при наведенні) ----------
   const NUM = { lw:['Етикетка Ш, мм',.5], lh:['Етикетка В, мм',.5], pw:['Папір Ш, мм',.5], ph:['Папір В, мм',.5], ox:['Зліва, мм',.1], oy:['Зверху, мм',.1], copies:['Копій',1], dpi:['DPI принтера',1], tthr:['Жирність тексту (поріг)',5], ggap:['Відступ лінії, мм',.1], gth:['Товщина, мм',.1] };
-  const fld = (k) => `<div class="form-group"><label>${t(NUM[k][0])}</label><input type="number" class="form-input sb-num" id="sb_${k}" step="${NUM[k][1]}"></div>`;
-  const sel_ = (id, label, opts) => `<div class="form-group"><label>${t(label)}</label><select class="form-input" id="${id}">${opts.map(([v, x]) => `<option value="${v}">${t(x)}</option>`).join('')}</select></div>`;
+  const fld = (k) => `<input type="number" class="form-input sb-num" id="sb_${k}" step="${NUM[k][1]}" title="${t(NUM[k][0])}">`;
+  const sel_ = (id, label, opts) => `<select class="form-input" id="${id}" title="${t(label)}">${opts.map(([v, x]) => `<option value="${v}">${t(x)}</option>`).join('')}</select>`;
   function syncSettings() {
     if (!S.paper) S.paper = (S.pw === 130 && S.ph === 76) ? '130x76' : (S.pw === 100 && S.ph === 78) ? '100x78' : 'custom';
     Object.keys(NUM).forEach((k) => { $('sb_' + k).value = S[k]; });
@@ -312,11 +342,10 @@
 
   // ---------- Багатомовність (UK / PL / EN). Ключ = український текст. Мову задає сайт. ----------
   const I18N = {
-    'Пісочниця етикеток': { pl: 'Piaskownica etykiet', en: 'Label sandbox' },
-    '🧪 Пісочниця етикеток': { pl: '🧪 Piaskownica etykiet', en: '🧪 Label sandbox' },
-    'Змінюйте значення в полях, перетягуйте елементи мишкою по превʼю, підганяйте розміри й тисніть «Друк». Налаштування зберігаються автоматично.':
-      { pl: 'Zmieniaj wartości w polach, przeciągaj elementy myszką po podglądzie, dopasowuj rozmiary i naciśnij „Drukuj”. Ustawienia zapisują się automatycznie.',
-        en: 'Edit the values, drag elements with the mouse on the preview, fine-tune the sizes and press “Print”. Settings are saved automatically.' },
+    '🖨️ Друк': { pl: '🖨️ Drukuj', en: '🖨️ Print' },
+    '➕ Штрихкод': { pl: '➕ Kod kreskowy', en: '➕ Barcode' },
+    '➕ Текст': { pl: '➕ Tekst', en: '➕ Text' },
+    '➕ Картинка (лого)': { pl: '➕ Obraz (logo)', en: '➕ Image (logo)' },
     'Формат паперу': { pl: 'Format papieru', en: 'Paper size' },
     '130×76 мм': { pl: '130×76 mm', en: '130×76 mm' },
     '100×78 мм': { pl: '100×78 mm', en: '100×78 mm' },
@@ -339,16 +368,6 @@
     'Кутики': { pl: 'Narożniki', en: 'Corner marks' },
     'Відступ лінії, мм': { pl: 'Odstęp linii, mm', en: 'Line offset, mm' },
     'Товщина, мм': { pl: 'Grubość, mm', en: 'Thickness, mm' },
-    '🖨️ Друк': { pl: '🖨️ Drukuj', en: '🖨️ Print' },
-    '➕ Штрихкод': { pl: '➕ Kod kreskowy', en: '➕ Barcode' },
-    '➕ Текст': { pl: '➕ Tekst', en: '➕ Text' },
-    '➕ Картинка (лого)': { pl: '➕ Obraz (logo)', en: '➕ Image (logo)' },
-    '↺ Скинути до прикладу': { pl: '↺ Przywróć przykład', en: '↺ Reset to example' },
-    '⬇️ Копіювати макет (JSON)': { pl: '⬇️ Kopiuj układ (JSON)', en: '⬇️ Copy layout (JSON)' },
-    '⬆️ Вставити макет (JSON)': { pl: '⬆️ Wklej układ (JSON)', en: '⬆️ Paste layout (JSON)' },
-    'Ширина «0» = авто. Для тексту ширина стискає/розтягує текст до вказаного розміру — якщо змінили текст і він деформується, поставте 0.':
-      { pl: 'Szerokość „0” = auto. Dla tekstu szerokość ściska/rozciąga tekst do podanego rozmiaru — jeśli zmieniłeś tekst i jest zniekształcony, wpisz 0.',
-        en: 'Width “0” = auto. For text, the width squeezes/stretches the text to the given size — if you changed the text and it looks distorted, set 0.' },
     'Висота, мм': { pl: 'Wysokość, mm', en: 'Height, mm' },
     'Модуль, точок (ціле)': { pl: 'Moduł, punkty (liczba całk.)', en: 'Module, dots (integer)' },
     'Підпис: розмір': { pl: 'Podpis: rozmiar', en: 'Caption: size' },
@@ -361,19 +380,13 @@
     'Ширина': { pl: 'Szerokość', en: 'Width' },
     'жирний': { pl: 'pogrubiony', en: 'bold' },
     'з засічками': { pl: 'szeryfowy', en: 'serif' },
-    'ШТРИХКОД + ПІДПИС': { pl: 'KOD KRESKOWY + PODPIS', en: 'BARCODE + CAPTION' },
-    'КАРТИНКА': { pl: 'OBRAZ', en: 'IMAGE' },
-    'ТЕКСТ': { pl: 'TEKST', en: 'TEXT' },
-    'ширина': { pl: 'szerokość', en: 'width' },
-    'мм': { pl: 'mm', en: 'mm' },
     'Помилка побудови етикетки': { pl: 'Błąd budowy etykiety', en: 'Label build error' },
     'Помилка растрового режиму: ': { pl: 'Błąd trybu rastrowego: ', en: 'Raster mode error: ' },
     'Скинути все до прикладу?': { pl: 'Przywrócić wszystko do przykładu?', en: 'Reset everything to the example?' },
     'Макет скопійовано в буфер обміну!': { pl: 'Układ skopiowany do schowka!', en: 'Layout copied to clipboard!' },
     'Скопіюйте макет:': { pl: 'Skopiuj układ:', en: 'Copy the layout:' },
     'Вставте JSON макета:': { pl: 'Wklej JSON układu:', en: 'Paste the layout JSON:' },
-    'Невірний JSON': { pl: 'Nieprawidłowy JSON', en: 'Invalid JSON' },
-    'Потягніть, щоб розтягнути робочу зону (подвійний клік — скинути)': { pl: 'Przeciągnij, aby rozszerzyć pole robocze (dwuklik — reset)', en: 'Drag to stretch the work area (double-click to reset)' }
+    'Невірний JSON': { pl: 'Nieprawidłowy JSON', en: 'Invalid JSON' }
   };
   let LANG = 'uk';
   try { LANG = localStorage.getItem('labelLang') || 'uk'; } catch (e) {}
@@ -394,7 +407,7 @@
       const lead = n._o.match(/^\s*/)[0], trail = n._o.match(/\s*$/)[0];
       n.nodeValue = lead + t(n._o.trim()) + trail;
     });
-    gripTitle(); initSettings(); renderCards(); renderPreview();
+    initSettings(); renderCards(); renderPreview();
   }
 
   // ---------- Публічне API ----------
@@ -447,7 +460,7 @@
     applyLang();
   };
 
-  // ---------- Розтягування робочої зони (потягнути за ручку справа від превʼю) ----------
+  // ---------- Розтягування робочої зони (ручка справа від превʼю) ----------
   const WKEY = 'labelSandboxW', secEl = $('sandboxSection'), panel = secEl.querySelector('.sb-sticky');
   let W = 0; try { W = parseInt(localStorage.getItem(WKEY)) || 0; } catch (e) {}
   const grip = document.createElement('div'); grip.className = 'sb-grip'; grip.textContent = '⋮'; panel.appendChild(grip);
