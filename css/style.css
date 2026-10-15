@@ -177,7 +177,7 @@ html, body {
   color: var(--text-light);
 }
 .tab.active {
-  background: #ffffff;
+  background: #2223258c;
   color: var(--text-dark);
 }
 .tab .close {
