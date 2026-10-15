@@ -32,8 +32,9 @@ html, body {
 .app {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: var(--topbar-height) 1fr;
+  grid-template-rows: var(--topbar-height) minmax(0, 1fr);
   height: 100vh;
+  overflow: hidden;
   transition: grid-template-columns 0.2s ease;
 }
 .app.collapsed {
@@ -148,6 +149,8 @@ html, body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ===== Вкладки ===== */
@@ -192,6 +195,7 @@ html, body {
 /* ===== Рабочая область ===== */
 .content {
   flex: 1;
+  min-height: 0;
   overflow: auto;
   display: flex;
   align-items: center;
@@ -220,7 +224,7 @@ html, body {
   background: var(--side-bg);
 }
 .form-group { display: flex; flex-direction: column; gap: 4px; }
-.form-group label { font-size: 11px; color:  #0062ff; }
+.form-group label { font-size: 11px; color: #0062ff; }
 .form-input {
   padding: 6px 8px;
   border: 1px solid #9CA3AF;
