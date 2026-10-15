@@ -3,7 +3,8 @@
    Добавляя новую страницу:
    1) добавьте её в PAGES
    2) добавьте пункт в index.html (с data-page="ваш_id")
-   3) при необходимости опишите её содержимое в RENDERERS
+   3) если страница строится отдельным модулем — добавьте её в STATIC_PAGES,
+      иначе опишите содержимое в RENDERERS
    ========================================================== */
 
 const PAGES = {
@@ -19,6 +20,12 @@ const PAGES = {
 // Содержимое обычных страниц. Пример: final1: (el) => { el.innerHTML = "<h1>Final 1</h1>"; }
 const RENDERERS = {};
 
+// Страницы, которые строят отдельные модули в своих контейнерах
+const STATIC_PAGES = {
+  label: "labelPage",
+  parts: "pnbasePage"
+};
+
 const state = {
   openTabs: ["parts", "live", "stats", "final1"],
   active: "final1"
@@ -28,7 +35,6 @@ const app        = document.getElementById("app");
 const menuToggle = document.getElementById("menuToggle");
 const tabsEl     = document.getElementById("tabs");
 const contentEl  = document.getElementById("content");
-const labelPage  = document.getElementById("labelPage");
 const titleEl    = document.getElementById("pageTitle");
 
 /* ---------- Отрисовка ---------- */
@@ -58,16 +64,20 @@ function renderNav() {
 }
 
 function renderContent() {
-  // Вкладка Label — отдельная статичная панель, её не пересоздаём
-  const isLabel = state.active === "label";
-  labelPage.style.display = isLabel ? "block" : "none";
-  contentEl.style.display = isLabel ? "none" : "flex";
+  // Статичные страницы: их контейнеры не пересоздаются, состояние сохраняется
+  Object.values(STATIC_PAGES).forEach(id => {
+    document.getElementById(id).style.display = "none";
+  });
 
-  if (isLabel) {
-    if (window.sbShow) window.sbShow();
+  const staticId = STATIC_PAGES[state.active];
+  if (staticId) {
+    contentEl.style.display = "none";
+    document.getElementById(staticId).style.display = "block";
+    if (state.active === "label" && window.sbShow) window.sbShow();
     return;
   }
 
+  contentEl.style.display = "flex";
   contentEl.innerHTML = "";
   if (!state.active) return;
 
