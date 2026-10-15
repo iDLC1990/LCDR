@@ -21,7 +21,7 @@
 #pnbaseSection .pb-print:hover { background: #E5E7EB; }
 #pnbaseSection .data-table { border-collapse: collapse; width: 100%; font-size: 13px; color: #ffffff; }
 #pnbaseSection .data-table th, #pnbaseSection .data-table td { padding: 8px 12px; border-bottom: 1px solid #E5E7EB; text-align: left; }
-#pnbaseSection .data-table th { background: #0e0e0e; color: #374151; font-weight: 600; }
+#pnbaseSection .data-table th { background: #0e0e0e; color: #0062ff; font-weight: 600; }
 .pb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 10000; }
 .pb-box { background: #1f2b35; border: 1px solid #374151; border-radius: 12px; padding: 20px; max-width: 340px; color: #fff; font-size: 14px; text-align: center; }
 .pb-box p { margin: 0 0 16px; }
