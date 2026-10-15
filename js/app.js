@@ -1,20 +1,57 @@
 /* ==========================================================
-   LCDR HUB — логика макета
+   LCDR HUB — логика сайта и переключатель языков
    Добавляя новую страницу:
-   1) добавьте её в PAGES
+   1) добавьте её в PAGES (key — ключ из I18N)
    2) добавьте пункт в index.html (с data-page="ваш_id")
    3) если страница строится отдельным модулем — добавьте её в STATIC_PAGES,
       иначе опишите содержимое в RENDERERS
+   Добавляя язык: добавьте его в LANG_NAMES и в I18N.
    ========================================================== */
 
+// Язык, который открывается при первом входе
+const DEFAULT_LANG = "en";
+
+// 10 языков интерфейса. Названия показываются в списке на родном языке
+const LANG_NAMES = {
+  uk: "Українська",
+  en: "English",
+  pl: "Polski",
+  ru: "Русский",
+  de: "Deutsch",
+  fr: "Français",
+  es: "Español",
+  it: "Italiano",
+  pt: "Português",
+  tr: "Türkçe"
+};
+
+// Языки, которые понимают модули. Остальным модулям передаётся English
+const LABEL_LANGS  = ["uk", "pl", "en"];
+const PNBASE_LANGS = ["ru", "uk", "pl", "en"];
+
+// Тексты сайта: меню, вкладки, подсказки
+const I18N = {
+  uk: { print:"Друк", final1:"Фінальна станція I", final2:"Фінальна станція II", special:"Спеціальна", label:"Етикетка", lcdr:"LCDR", live:"Live Data", stats:"Статистика", pnbase:"База PN", close:"Закрити", menu:"Меню", pick:"Оберіть сторінку в меню ліворуч", pending:"Вміст сторінки «{t}» ще не додано" },
+  en: { print:"Print", final1:"Final station I", final2:"Final station II", special:"Special", label:"Label", lcdr:"LCDR", live:"Live Data", stats:"Statistic", pnbase:"PN Base", close:"Close", menu:"Menu", pick:"Select a page in the menu on the left", pending:"Content of «{t}» has not been added yet" },
+  pl: { print:"Druk", final1:"Stacja końcowa I", final2:"Stacja końcowa II", special:"Specjalne", label:"Etykieta", lcdr:"LCDR", live:"Live Data", stats:"Statystyka", pnbase:"Baza PN", close:"Zamknij", menu:"Menu", pick:"Wybierz stronę w menu po lewej", pending:"Treść strony «{t}» nie została jeszcze dodana" },
+  ru: { print:"Печать", final1:"Финальная станция I", final2:"Финальная станция II", special:"Специальные", label:"Этикетка", lcdr:"LCDR", live:"Live Data", stats:"Статистика", pnbase:"База PN", close:"Закрыть", menu:"Меню", pick:"Выберите страницу в меню слева", pending:"Содержимое страницы «{t}» ещё не добавлено" },
+  de: { print:"Drucken", final1:"Endstation I", final2:"Endstation II", special:"Spezial", label:"Etikett", lcdr:"LCDR", live:"Live Data", stats:"Statistik", pnbase:"PN-Datenbank", close:"Schließen", menu:"Menü", pick:"Wählen Sie links im Menü eine Seite aus", pending:"Inhalt von «{t}» wurde noch nicht hinzugefügt" },
+  fr: { print:"Impression", final1:"Station finale I", final2:"Station finale II", special:"Spécial", label:"Étiquette", lcdr:"LCDR", live:"Live Data", stats:"Statistiques", pnbase:"Base PN", close:"Fermer", menu:"Menu", pick:"Sélectionnez une page dans le menu à gauche", pending:"Le contenu de «{t}» n'a pas encore été ajouté" },
+  es: { print:"Impresión", final1:"Estación final I", final2:"Estación final II", special:"Especial", label:"Etiqueta", lcdr:"LCDR", live:"Live Data", stats:"Estadística", pnbase:"Base PN", close:"Cerrar", menu:"Menú", pick:"Seleccione una página en el menú de la izquierda", pending:"El contenido de «{t}» aún no se ha añadido" },
+  it: { print:"Stampa", final1:"Stazione finale I", final2:"Stazione finale II", special:"Speciale", label:"Etichetta", lcdr:"LCDR", live:"Live Data", stats:"Statistiche", pnbase:"Database PN", close:"Chiudi", menu:"Menu", pick:"Seleziona una pagina dal menu a sinistra", pending:"Il contenuto di «{t}» non è ancora stato aggiunto" },
+  pt: { print:"Impressão", final1:"Estação final I", final2:"Estação final II", special:"Especial", label:"Etiqueta", lcdr:"LCDR", live:"Live Data", stats:"Estatísticas", pnbase:"Base PN", close:"Fechar", menu:"Menu", pick:"Selecione uma página no menu à esquerda", pending:"O conteúdo de «{t}» ainda não foi adicionado" },
+  tr: { print:"Yazdırma", final1:"Son istasyon I", final2:"Son istasyon II", special:"Özel", label:"Etiket", lcdr:"LCDR", live:"Live Data", stats:"İstatistik", pnbase:"PN Veritabanı", close:"Kapat", menu:"Menü", pick:"Soldaki menüden bir sayfa seçin", pending:"«{t}» sayfasının içeriği henüz eklenmedi" }
+};
+
+// Страницы сайта. key — ключ названия в I18N
 const PAGES = {
-  final1:  { title: "Final station I" },
-  final2:  { title: "Final station II" },
-  special: { title: "Special" },
-  label:   { title: "Label" },
-  live:    { title: "Live Data" },
-  stats:   { title: "Statistic" },
-  parts:   { title: "PN Base" }
+  final1:  { key: "final1" },
+  final2:  { key: "final2" },
+  special: { key: "special" },
+  label:   { key: "label" },
+  live:    { key: "live" },
+  stats:   { key: "stats" },
+  parts:   { key: "pnbase" }
 };
 
 // Содержимое обычных страниц. Пример: final1: (el) => { el.innerHTML = "<h1>Final 1</h1>"; }
@@ -38,13 +75,83 @@ const tabsEl     = document.getElementById("tabs");
 const contentEl  = document.getElementById("content");
 const titleEl    = document.getElementById("pageTitle");
 
+/* ---------- Переключатель языка ---------- */
+
+// Стили переключателя. Добавляются из JS, поэтому style.css менять не нужно
+const langStyle = document.createElement("style");
+langStyle.textContent = `
+  .page-title { min-width: 0; }
+  .lang-select {
+    margin-left: auto;
+    margin-right: 12px;
+    flex-shrink: 0;
+    padding: 4px 6px;
+    border: 1px solid #374151;
+    border-radius: 4px;
+    background: #0e1822;
+    color: #ffffff;
+    font: inherit;
+    cursor: pointer;
+  }
+  .lang-select option { background: #0e1822; color: #ffffff; }
+`;
+document.head.appendChild(langStyle);
+
+const langSelect = document.createElement("select");
+langSelect.className = "lang-select";
+langSelect.title = "Language";
+langSelect.innerHTML = Object.entries(LANG_NAMES)
+  .map(([code, name]) => `<option value="${code}">${name}</option>`)
+  .join("");
+document.querySelector(".topbar").appendChild(langSelect);
+
+let siteLang = DEFAULT_LANG;
+try {
+  const saved = localStorage.getItem("siteLang");
+  if (saved && I18N[saved]) siteLang = saved;
+} catch (e) {}
+
+// Перевод строки сайта. Если ключа нет в языке — берётся английский
+function t(key, vars = {}) {
+  const dict = I18N[siteLang] || I18N[DEFAULT_LANG];
+  let s = dict[key] ?? I18N[DEFAULT_LANG][key] ?? key;
+  Object.entries(vars).forEach(([k, v]) => { s = s.replace(`{${k}}`, v); });
+  return s;
+}
+
+function pageTitle(id) {
+  return t(PAGES[id].key);
+}
+
+// Переводит статичные надписи меню и верхней панели
+function applySiteText() {
+  document.documentElement.lang = siteLang;
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  menuToggle.setAttribute("aria-label", t("menu"));
+  langSelect.value = siteLang;
+}
+
+// Смена языка всего сайта: сайт сам передаёт язык модулям Label и PN Base
+function setSiteLang(lang) {
+  if (!I18N[lang]) lang = DEFAULT_LANG;
+  siteLang = lang;
+  try { localStorage.setItem("siteLang", lang); } catch (e) {}
+
+  applySiteText();
+  if (window.setLabelLang)  window.setLabelLang(LABEL_LANGS.includes(lang) ? lang : "en");
+  if (window.setPnBaseLang) window.setPnBaseLang(PNBASE_LANGS.includes(lang) ? lang : "en");
+  render();
+}
+
 /* ---------- Отрисовка ---------- */
 
 function render() {
   renderTabs();
   renderNav();
   renderContent();
-  titleEl.textContent = state.active ? PAGES[state.active].title : "";
+  titleEl.textContent = state.active ? pageTitle(state.active) : "";
 }
 
 function renderTabs() {
@@ -53,7 +160,7 @@ function renderTabs() {
     const tab = document.createElement("div");
     tab.className = "tab" + (id === state.active ? " active" : "");
     tab.dataset.id = id;
-    tab.innerHTML = `<span class="tab-title">${PAGES[id].title}</span><span class="close" title="Закрыть">✕</span>`;
+    tab.innerHTML = `<span class="tab-title">${pageTitle(id)}</span><span class="close" title="${t("close")}">✕</span>`;
     tabsEl.appendChild(tab);
   });
 }
@@ -85,7 +192,7 @@ function renderContent() {
     contentEl.innerHTML = `
       <div class="empty">
         <div class="empty-icon">🗂️</div>
-        <p>Выберите страницу в меню слева</p>
+        <p>${t("pick")}</p>
       </div>`;
     return;
   }
@@ -97,7 +204,7 @@ function renderContent() {
     contentEl.innerHTML = `
       <div class="empty">
         <div class="empty-icon">📄</div>
-        <p>Содержимое страницы «${PAGES[state.active].title}» ещё не добавлено</p>
+        <p>${t("pending", { t: pageTitle(state.active) })}</p>
       </div>`;
   }
 }
@@ -152,11 +259,7 @@ tabsEl.addEventListener("click", e => {
   }
 });
 
-/* ---------- Язык сайта (Label и PN Base) ---------- */
-function setSiteLang(lang) {
-  if (window.setLabelLang) window.setLabelLang(lang);
-  if (window.setPnBaseLang) window.setPnBaseLang(lang);
-}
+langSelect.addEventListener("change", e => setSiteLang(e.target.value));
 
 /* ---------- Старт ---------- */
 
@@ -164,4 +267,8 @@ if (window.innerWidth < 700) {
   app.classList.add("collapsed");
 }
 
+applySiteText();
 render();
+
+// Модули Label и PN Base создаются после app.js, поэтому язык передаём после загрузки страницы
+window.addEventListener("load", () => setSiteLang(siteLang));
