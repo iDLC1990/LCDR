@@ -6,7 +6,6 @@
    3) при необходимости опишите её содержимое в RENDERERS
    ========================================================== */
 
-// Список всех страниц
 const PAGES = {
   final1:  { title: "Final station I" },
   final2:  { title: "Final station II" },
@@ -17,21 +16,19 @@ const PAGES = {
   parts:   { title: "PN Base" }
 };
 
-// Содержимое страниц. Пока пусто — показывается заглушка.
-// Пример: final1: (el) => { el.innerHTML = "<h1>Final station I</h1>"; }
+// Содержимое обычных страниц. Пример: final1: (el) => { el.innerHTML = "<h1>Final 1</h1>"; }
 const RENDERERS = {};
 
-// Текущее состояние
 const state = {
   openTabs: ["parts", "live", "stats", "final1"],
   active: "final1"
 };
 
-// Элементы страницы
 const app        = document.getElementById("app");
 const menuToggle = document.getElementById("menuToggle");
 const tabsEl     = document.getElementById("tabs");
 const contentEl  = document.getElementById("content");
+const labelPage  = document.getElementById("labelPage");
 const titleEl    = document.getElementById("pageTitle");
 
 /* ---------- Отрисовка ---------- */
@@ -61,6 +58,16 @@ function renderNav() {
 }
 
 function renderContent() {
+  // Вкладка Label — отдельная статичная панель, её не пересоздаём
+  const isLabel = state.active === "label";
+  labelPage.style.display = isLabel ? "block" : "none";
+  contentEl.style.display = isLabel ? "none" : "flex";
+
+  if (isLabel) {
+    if (window.sbShow) window.sbShow();
+    return;
+  }
+
   contentEl.innerHTML = "";
   if (!state.active) return;
 
@@ -95,12 +102,10 @@ function closePage(id) {
 
 /* ---------- Обработчики событий ---------- */
 
-// Кнопка ☰ — скрыть/показать меню
 menuToggle.addEventListener("click", () => {
   app.classList.toggle("collapsed");
 });
 
-// Раскрытие любых групп меню (Print, LCDR и т.д.)
 document.querySelectorAll(".nav-parent").forEach(btn => {
   btn.addEventListener("click", () => {
     btn.classList.toggle("open");
@@ -108,7 +113,6 @@ document.querySelectorAll(".nav-parent").forEach(btn => {
   });
 });
 
-// Клик по пункту меню — открыть страницу
 document.querySelectorAll(".nav-item[data-page]").forEach(item => {
   item.addEventListener("click", e => {
     e.preventDefault();
@@ -116,7 +120,6 @@ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
   });
 });
 
-// Клики по вкладкам (делегирование)
 tabsEl.addEventListener("click", e => {
   const tab = e.target.closest(".tab");
   if (!tab) return;
@@ -132,7 +135,6 @@ tabsEl.addEventListener("click", e => {
 
 /* ---------- Старт ---------- */
 
-// На телефоне меню по умолчанию скрыто
 if (window.innerWidth < 700) {
   app.classList.add("collapsed");
 }
