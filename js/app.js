@@ -5,18 +5,18 @@
    2) добавьте пункт в index.html (с data-page="ваш_id")
    3) если страница строится отдельным модулем — добавьте её в STATIC_PAGES,
       иначе опишите содержимое в RENDERERS
-   Добавляя язык: добавьте его в LANG_NAMES и в I18N.
+   Добавляя язык: добавьте его в LANG_NAMES и в I18N (все ключи).
    ========================================================== */
 
-// Язык, который открывается при первом входе
+// Язык по умолчанию — английский
 const DEFAULT_LANG = "en";
 
-// 10 языков интерфейса. Названия показываются в списке на родном языке
+// 10 языков. Названия в списке показываются на родном языке
 const LANG_NAMES = {
-  uk: "Українська",
   en: "English",
-  pl: "Polski",
+  uk: "Українська",
   ru: "Русский",
+  pl: "Polski",
   de: "Deutsch",
   fr: "Français",
   es: "Español",
@@ -29,18 +29,18 @@ const LANG_NAMES = {
 const LABEL_LANGS  = ["uk", "pl", "en"];
 const PNBASE_LANGS = ["ru", "uk", "pl", "en"];
 
-// Тексты сайта: меню, вкладки, подсказки
+// Все тексты сайта: меню, вкладки, служебные надписи
 const I18N = {
-  uk: { print:"Друк", final1:"Фінальна станція I", final2:"Фінальна станція II", special:"Спеціальна", label:"Етикетка", lcdr:"LCDR", live:"Live Data", stats:"Статистика", pnbase:"База PN", close:"Закрити", menu:"Меню", pick:"Оберіть сторінку в меню ліворуч", pending:"Вміст сторінки «{t}» ще не додано" },
-  en: { print:"Print", final1:"Final station I", final2:"Final station II", special:"Special", label:"Label", lcdr:"LCDR", live:"Live Data", stats:"Statistic", pnbase:"PN Base", close:"Close", menu:"Menu", pick:"Select a page in the menu on the left", pending:"Content of «{t}» has not been added yet" },
-  pl: { print:"Druk", final1:"Stacja końcowa I", final2:"Stacja końcowa II", special:"Specjalne", label:"Etykieta", lcdr:"LCDR", live:"Live Data", stats:"Statystyka", pnbase:"Baza PN", close:"Zamknij", menu:"Menu", pick:"Wybierz stronę w menu po lewej", pending:"Treść strony «{t}» nie została jeszcze dodana" },
-  ru: { print:"Печать", final1:"Финальная станция I", final2:"Финальная станция II", special:"Специальные", label:"Этикетка", lcdr:"LCDR", live:"Live Data", stats:"Статистика", pnbase:"База PN", close:"Закрыть", menu:"Меню", pick:"Выберите страницу в меню слева", pending:"Содержимое страницы «{t}» ещё не добавлено" },
-  de: { print:"Drucken", final1:"Endstation I", final2:"Endstation II", special:"Spezial", label:"Etikett", lcdr:"LCDR", live:"Live Data", stats:"Statistik", pnbase:"PN-Datenbank", close:"Schließen", menu:"Menü", pick:"Wählen Sie links im Menü eine Seite aus", pending:"Inhalt von «{t}» wurde noch nicht hinzugefügt" },
-  fr: { print:"Impression", final1:"Station finale I", final2:"Station finale II", special:"Spécial", label:"Étiquette", lcdr:"LCDR", live:"Live Data", stats:"Statistiques", pnbase:"Base PN", close:"Fermer", menu:"Menu", pick:"Sélectionnez une page dans le menu à gauche", pending:"Le contenu de «{t}» n'a pas encore été ajouté" },
-  es: { print:"Impresión", final1:"Estación final I", final2:"Estación final II", special:"Especial", label:"Etiqueta", lcdr:"LCDR", live:"Live Data", stats:"Estadística", pnbase:"Base PN", close:"Cerrar", menu:"Menú", pick:"Seleccione una página en el menú de la izquierda", pending:"El contenido de «{t}» aún no se ha añadido" },
-  it: { print:"Stampa", final1:"Stazione finale I", final2:"Stazione finale II", special:"Speciale", label:"Etichetta", lcdr:"LCDR", live:"Live Data", stats:"Statistiche", pnbase:"Database PN", close:"Chiudi", menu:"Menu", pick:"Seleziona una pagina dal menu a sinistra", pending:"Il contenuto di «{t}» non è ancora stato aggiunto" },
-  pt: { print:"Impressão", final1:"Estação final I", final2:"Estação final II", special:"Especial", label:"Etiqueta", lcdr:"LCDR", live:"Live Data", stats:"Estatísticas", pnbase:"Base PN", close:"Fechar", menu:"Menu", pick:"Selecione uma página no menu à esquerda", pending:"O conteúdo de «{t}» ainda não foi adicionado" },
-  tr: { print:"Yazdırma", final1:"Son istasyon I", final2:"Son istasyon II", special:"Özel", label:"Etiket", lcdr:"LCDR", live:"Live Data", stats:"İstatistik", pnbase:"PN Veritabanı", close:"Kapat", menu:"Menü", pick:"Soldaki menüden bir sayfa seçin", pending:"«{t}» sayfasının içeriği henüz eklenmedi" }
+  en: { print:"Print", final1:"Final inspection station I", final2:"Final inspection station II", special:"Special Label", panelLabel:"Panel Label", repairCenter:"LCD Repair Center", statDay:"Statistic per day", stats:"Statistic", repairBase:"LCD Repair Center Base", close:"Close", menu:"Menu", language:"Language", pick:"Select a page in the menu on the left", pending:"Content of “{t}” has not been added yet" },
+  uk: { print:"Друк", final1:"Фінальна станція контролю I", final2:"Фінальна станція контролю II", special:"Спеціальна етикетка", panelLabel:"Панельна етикетка", repairCenter:"Центр ремонту LCD", statDay:"Статистика за днями", stats:"Статистика", repairBase:"База Центру ремонту LCD", close:"Закрити", menu:"Меню", language:"Мова", pick:"Оберіть сторінку в меню ліворуч", pending:"Вміст сторінки «{t}» ще не додано" },
+  ru: { print:"Печать", final1:"Финальная станция контроля I", final2:"Финальная станция контроля II", special:"Специальная этикетка", panelLabel:"Панельная этикетка", repairCenter:"Центр ремонта LCD", statDay:"Статистика по дням", stats:"Статистика", repairBase:"База центра ремонта LCD", close:"Закрыть", menu:"Меню", language:"Язык", pick:"Выберите страницу в меню слева", pending:"Содержимое страницы «{t}» ещё не добавлено" },
+  pl: { print:"Druk", final1:"Stacja końcowej kontroli I", final2:"Stacja końcowej kontroli II", special:"Etykieta specjalna", panelLabel:"Etykieta panelu", repairCenter:"Centrum naprawy LCD", statDay:"Statystyka dzienna", stats:"Statystyka", repairBase:"Baza centrum naprawy LCD", close:"Zamknij", menu:"Menu", language:"Język", pick:"Wybierz stronę w menu po lewej", pending:"Treść strony «{t}» nie została jeszcze dodana" },
+  de: { print:"Drucken", final1:"Endkontrollstation I", final2:"Endkontrollstation II", special:"Spezialetikett", panelLabel:"Panel-Etikett", repairCenter:"LCD-Reparaturzentrum", statDay:"Tagesstatistik", stats:"Statistik", repairBase:"LCD-Reparaturzentrum Basis", close:"Schließen", menu:"Menü", language:"Sprache", pick:"Wählen Sie links im Menü eine Seite aus", pending:"Inhalt von „{t}“ wurde noch nicht hinzugefügt" },
+  fr: { print:"Impression", final1:"Station d'inspection finale I", final2:"Station d'inspection finale II", special:"Étiquette spéciale", panelLabel:"Étiquette panneau", repairCenter:"Centre de réparation LCD", statDay:"Statistiques par jour", stats:"Statistiques", repairBase:"Base du centre de réparation LCD", close:"Fermer", menu:"Menu", language:"Langue", pick:"Sélectionnez une page dans le menu à gauche", pending:"Le contenu de « {t} » n'a pas encore été ajouté" },
+  es: { print:"Impresión", final1:"Estación de inspección final I", final2:"Estación de inspección final II", special:"Etiqueta especial", panelLabel:"Etiqueta de panel", repairCenter:"Centro de reparación LCD", statDay:"Estadística por día", stats:"Estadística", repairBase:"Base del centro de reparación LCD", close:"Cerrar", menu:"Menú", language:"Idioma", pick:"Seleccione una página en el menú de la izquierda", pending:"El contenido de «{t}» aún no se ha añadido" },
+  it: { print:"Stampa", final1:"Stazione di ispezione finale I", final2:"Stazione di ispezione finale II", special:"Etichetta speciale", panelLabel:"Etichetta pannello", repairCenter:"Centro riparazione LCD", statDay:"Statistiche giornaliere", stats:"Statistiche", repairBase:"Base centro riparazione LCD", close:"Chiudi", menu:"Menu", language:"Lingua", pick:"Seleziona una pagina dal menu a sinistra", pending:"Il contenuto di «{t}» non è ancora stato aggiunto" },
+  pt: { print:"Impressão", final1:"Estação de inspeção final I", final2:"Estação de inspeção final II", special:"Etiqueta especial", panelLabel:"Etiqueta de painel", repairCenter:"Centro de reparo LCD", statDay:"Estatísticas por dia", stats:"Estatísticas", repairBase:"Base do centro de reparo LCD", close:"Fechar", menu:"Menu", language:"Idioma", pick:"Selecione uma página no menu à esquerda", pending:"O conteúdo de «{t}» ainda não foi adicionado" },
+  tr: { print:"Yazdırma", final1:"Son kontrol istasyonu I", final2:"Son kontrol istasyonu II", special:"Özel etiket", panelLabel:"Panel etiketi", repairCenter:"LCD Onarım Merkezi", statDay:"Günlük istatistik", stats:"İstatistik", repairBase:"LCD Onarım Merkezi Veritabanı", close:"Kapat", menu:"Menü", language:"Dil", pick:"Soldaki menüden bir sayfa seçin", pending:"«{t}» sayfasının içeriği henüz eklenmedi" }
 };
 
 // Страницы сайта. key — ключ названия в I18N
@@ -48,10 +48,10 @@ const PAGES = {
   final1:  { key: "final1" },
   final2:  { key: "final2" },
   special: { key: "special" },
-  label:   { key: "label" },
-  live:    { key: "live" },
+  label:   { key: "panelLabel" },
+  live:    { key: "statDay" },
   stats:   { key: "stats" },
-  parts:   { key: "pnbase" }
+  parts:   { key: "repairBase" }
 };
 
 // Содержимое обычных страниц. Пример: final1: (el) => { el.innerHTML = "<h1>Final 1</h1>"; }
@@ -75,31 +75,10 @@ const tabsEl     = document.getElementById("tabs");
 const contentEl  = document.getElementById("content");
 const titleEl    = document.getElementById("pageTitle");
 
-/* ---------- Переключатель языка ---------- */
-
-// Стили переключателя. Добавляются из JS, поэтому style.css менять не нужно
-const langStyle = document.createElement("style");
-langStyle.textContent = `
-  .page-title { min-width: 0; }
-  .lang-select {
-    margin-left: auto;
-    margin-right: 12px;
-    flex-shrink: 0;
-    padding: 4px 6px;
-    border: 1px solid #374151;
-    border-radius: 4px;
-    background: #0e1822;
-    color: #ffffff;
-    font: inherit;
-    cursor: pointer;
-  }
-  .lang-select option { background: #0e1822; color: #ffffff; }
-`;
-document.head.appendChild(langStyle);
+/* ---------- Язык ---------- */
 
 const langSelect = document.createElement("select");
 langSelect.className = "lang-select";
-langSelect.title = "Language";
 langSelect.innerHTML = Object.entries(LANG_NAMES)
   .map(([code, name]) => `<option value="${code}">${name}</option>`)
   .join("");
@@ -111,7 +90,7 @@ try {
   if (saved && I18N[saved]) siteLang = saved;
 } catch (e) {}
 
-// Перевод строки сайта. Если ключа нет в языке — берётся английский
+// Перевод строки. Если ключа нет в языке — берётся английский
 function t(key, vars = {}) {
   const dict = I18N[siteLang] || I18N[DEFAULT_LANG];
   let s = dict[key] ?? I18N[DEFAULT_LANG][key] ?? key;
@@ -130,10 +109,11 @@ function applySiteText() {
     el.textContent = t(el.dataset.i18n);
   });
   menuToggle.setAttribute("aria-label", t("menu"));
+  langSelect.title = t("language");
   langSelect.value = siteLang;
 }
 
-// Смена языка всего сайта: сайт сам передаёт язык модулям Label и PN Base
+// Смена языка всего сайта. Модули Label и PN Base получают язык от сайта
 function setSiteLang(lang) {
   if (!I18N[lang]) lang = DEFAULT_LANG;
   siteLang = lang;
@@ -219,7 +199,7 @@ function openPage(id) {
 }
 
 function closePage(id) {
-  state.openTabs = state.openTabs.filter(t => t !== id);
+  state.openTabs = state.openTabs.filter(tab => tab !== id);
   if (state.active === id) {
     state.active = state.openTabs[state.openTabs.length - 1] || null;
   }
