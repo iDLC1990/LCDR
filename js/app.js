@@ -61,7 +61,8 @@ const RENDERERS = {};
 const STATIC_PAGES = {
   label: "labelPage",
   parts: "pnbasePage",
-  special: "specialPage"
+  special: "specialPage",
+  live: "livePage"
 };
 
 // При загрузке сайта вкладок нет — пользователь открывает их сам из меню
@@ -164,6 +165,7 @@ function renderContent() {
     contentEl.style.display = "none";
     document.getElementById(staticId).style.display = "block";
     if (state.active === "label" && window.sbShow) window.sbShow();
+    if (state.active === "live" && window.liveShow) window.liveShow();
     return;
   }
 
