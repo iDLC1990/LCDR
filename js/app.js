@@ -27,7 +27,7 @@ const LANG_NAMES = {
 
 // Языки, которые понимают модули. Остальным модулям передаётся English
 const LABEL_LANGS  = ["uk", "pl", "en"];
-const PNBASE_LANGS = ["ru", "uk", "pl", "en"];
+const PNBASE_LANGS = Object.keys(LANG_NAMES);
 
 // Все тексты сайта: меню, вкладки, служебные надписи
 const I18N = {
