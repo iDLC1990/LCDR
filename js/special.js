@@ -7,7 +7,12 @@
 
   // 203 dpi = 8 точок на міліметр
   const DOTS_PER_MM = 8;
-  const ICON_THRESHOLD = 200;       // поріг чорно-білого: більше = жирніші лінії
+
+  // Режим ICON:
+  //   'dither'    - дизеринг: оттінки сірого передаються точками, тонкі лінії зберігаються (рекомендовано)
+  //   'threshold' - жорсткий поріг: чорно-біле без точок, але тонкі лінії можуть зникати
+  const ICON_MODE = 'dither';
+  const ICON_THRESHOLD = 200;       // використовується лише в режимі 'threshold'
 
   // Розміри SCC-етикеток (мм):
   //   label  - висота етикетки
@@ -187,8 +192,8 @@
     return `<div class="txt" style="font-size:${pt}pt">${esc(text)}</div>`;
   }
 
-  // ===== ICON: icon.jpg обрізається по малюнку один раз,
-  // потім для кожного розміру етикетки малюється заново в точних розмірах з чорно-білим порогом.
+  // ===== ICON: icon.jpg обрізається по малюнку один раз у повній роздільній здатності.
+  // Для кожного розміру етикетки малюнок масштабується до точних точок принтера і перетворюється на чорно-біле.
   let iconCrop = null;
 
   function loadIcon() {
@@ -229,6 +234,46 @@
     img.src = ICON_SRC;
   }
 
+  // Чорно-біле з дизерингом Floyd–Steinberg: оттінки сірого передаються розрідженням точок,
+  // тонкі лінії та тіні зберігаються, а не зникають як при жорсткому порозі.
+  function ditherToBW(octx, W, H) {
+    const id = octx.getImageData(0, 0, W, H), d = id.data;
+    const g = new Float32Array(W * H);
+    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+      g[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    }
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const p = y * W + x;
+        const old = g[p];
+        const nv = old < 128 ? 0 : 255;
+        const err = old - nv;
+        g[p] = nv;
+        if (x + 1 < W) g[p + 1] += err * 7 / 16;
+        if (y + 1 < H) {
+          if (x > 0) g[p + W - 1] += err * 3 / 16;
+          g[p + W] += err * 5 / 16;
+          if (x + 1 < W) g[p + W + 1] += err * 1 / 16;
+        }
+      }
+    }
+    for (let p = 0, i = 0; p < W * H; p++, i += 4) {
+      const v = g[p];
+      d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255;
+    }
+    octx.putImageData(id, 0, 0);
+  }
+
+  function thresholdToBW(octx, W, H) {
+    const od = octx.getImageData(0, 0, W, H), px = od.data;
+    for (let i = 0; i < px.length; i += 4) {
+      const g = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+      const v = g < ICON_THRESHOLD ? 0 : 255;
+      px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
+    }
+    octx.putImageData(od, 0, 0);
+  }
+
   // Повертає PNG-картинку ICON розміром wDots × hDots точок (малюнок вписується з центруванням)
   function iconPng(wDots, hDots) {
     const cw = iconCrop.width, ch = iconCrop.height;
@@ -247,13 +292,9 @@
     octx.imageSmoothingQuality = 'high';
     octx.drawImage(iconCrop, 0, 0, cw, ch, ox, oy, w, h);
 
-    const od = octx.getImageData(0, 0, wDots, hDots), px = od.data;
-    for (let i = 0; i < px.length; i += 4) {
-      const g = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
-      const v = g < ICON_THRESHOLD ? 0 : 255;
-      px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
-    }
-    octx.putImageData(od, 0, 0);
+    if (ICON_MODE === 'threshold') thresholdToBW(octx, wDots, hDots);
+    else ditherToBW(octx, wDots, hDots);
+
     return out.toDataURL('image/png');
   }
 
@@ -329,7 +370,9 @@
       if ($('spChk2').checked && v2) blocks.push({ html: buildWrappedText(v2, size.text), pic: false });
       if ($('spChkIcon').checked) {
         if (!iconCrop) return alert(t('alertImg'));
-        const wDots = size.iconW * DOTS_PER_MM, hDots = size.iconH * DOTS_PER_MM;
+        // Точні точки: 48 мм = 384 точки, 28 мм = 224 точки (203 dpi). Браузер не масштабує картинку.
+        const wDots = Math.round(size.iconW * DOTS_PER_MM);
+        const hDots = Math.round(size.iconH * DOTS_PER_MM);
         blocks.push({
           html: `<img class="pic" style="width:${size.iconW}mm;height:${size.iconH}mm" src="${iconPng(wDots, hDots)}" alt="">`,
           pic: true
@@ -358,7 +401,8 @@
         .lbl-pic { padding: 0 1mm; }
         .txt { width: 100%; color: #000; font-family: Arial, Helvetica, sans-serif; font-weight: 900;
                line-height: 1.1; overflow-wrap: anywhere; text-align: center; }
-        .pic { display: block; image-rendering: pixelated; }
+        /* Картинка друкується без згладжування: кожна точка залишається точкою */
+        .pic { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
         .lbl:not(:last-child) { break-after: page; page-break-after: always; }
       </style></head><body>${body}</body></html>`);
     }
