@@ -125,6 +125,7 @@ function setSiteLang(lang) {
   if (window.setLabelLang)  window.setLabelLang(LABEL_LANGS.includes(lang) ? lang : "en");
   if (window.setPnBaseLang) window.setPnBaseLang(PNBASE_LANGS.includes(lang) ? lang : "en");
   if (window.setSpecialLang) window.setSpecialLang(siteLang);
+  if (window.setLiveLang) window.setLiveLang(siteLang);
   render();
 }
 
