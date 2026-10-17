@@ -1,4 +1,5 @@
 /* Статистика по днях (Statistic per day): LCDR Live Data, версія для сайту.
+   Язык берётся с сайта через window.setLiveLang(код). Все 10 мов сайту.
    Підключення: <script src="js/livedata.js"></script> ПІСЛЯ js/app.js.
    Контейнер: <section id="livePage">. Дані завантажуються при першому відкритті сторінки. */
 (function () {
@@ -10,6 +11,140 @@
 
   const diagonalMapPrefix = {'WH8':55,'WC8':32,'WU0':43,'SQ1':43,'WM5':50,'WC7':32,'WP5':65,'WW1':75,'WM6':50};
   const diagonalMapSuffix = {'860':86,'850':85,'750':75,'700':70,'650':65,'580':58,'575':58,'550':55,'545':55,'500':50,'498':50,'495':50,'490':50,'438':43,'435':43,'430':43,'428':43,'425':43,'420':43,'418':43,'415':43,'398':43,'395':43,'390':43,'348':32,'345':32,'340':32,'328':32,'325':32,'320':32,'318':32,'315':32,'278':27,'275':27,'270':27,'248':24,'245':24,'240':24,'238':24,'235':24,'230':24};
+
+  /* ===== Переклади (10 мов, як на сайті) ===== */
+  const I18N = {
+    en: {
+      dateLabel: 'DATE', titleHint: 'Click to show the table full screen',
+      searchPh: 'Enter SN / part number (Enter)', bulkPh: 'Paste SN numbers, one per line. Ctrl+Enter = search',
+      modeSingle: 'Single', modeBulk: 'Bulk', bulkRun: 'SEARCH',
+      overviewSub: 'FI Station Overview', diagTitle: 'FI Station Diagonals',
+      sum: 'SUM', total: 'TOTAL', name: 'NAME',
+      copyHint: 'Click to copy SN', copyOk: '✓ Copied: {n}', copyNone: 'No data', copyErr: 'Copy error',
+      pnLoading: 'Loading data (pn)...', pnEmpty: 'No data in the pn sheet!', pnCopyHint: 'Click to copy the whole row',
+      noInfo: 'No info!', notFound: 'NOT FOUND', notFoundCount: 'NOT FOUND — [{n}]',
+      close: 'CLOSE', modalNoData: 'No data for this employee today.',
+      hSerial: 'Serial', hType: 'Type', hStatus: 'Status', hOc: 'OC', hComment: 'Comment',
+      hDate: 'Date', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Repairer', hTime: 'Time', unknown: 'UNKNOWN'
+    },
+    uk: {
+      dateLabel: 'ДАТА', titleHint: 'Натисніть, щоб показати таблицю на весь екран',
+      searchPh: 'Введіть SN / PN деталі (Enter)', bulkPh: 'Вставте SN, кожен з нового рядка. Ctrl+Enter = пошук',
+      modeSingle: 'Один', modeBulk: 'Список', bulkRun: 'ПОШУК',
+      overviewSub: 'Огляд станцій FI', diagTitle: 'Діагоналі станцій FI',
+      sum: 'СУМА', total: 'РАЗОМ', name: 'ПРАЦІВНИК',
+      copyHint: 'Натисніть, щоб скопіювати SN', copyOk: '✓ Скопійовано: {n}', copyNone: 'Немає даних', copyErr: 'Помилка копіювання',
+      pnLoading: 'Завантаження даних (pn)...', pnEmpty: 'На аркуші pn немає даних!', pnCopyHint: 'Натисніть, щоб скопіювати весь рядок',
+      noInfo: 'Немає інформації!', notFound: 'НЕ ЗНАЙДЕНО', notFoundCount: 'НЕ ЗНАЙДЕНО — [{n}]',
+      close: 'ЗАКРИТИ', modalNoData: 'На сьогодні даних по цьому працівнику немає.',
+      hSerial: 'Serial', hType: 'Тип', hStatus: 'Статус', hOc: 'OC', hComment: 'Коментар',
+      hDate: 'Дата', hFinal: 'Фінальна', hInfo: 'Інфо', hRepairer: 'Ремонтник', hTime: 'Час', unknown: 'НЕВІДОМО'
+    },
+    ru: {
+      dateLabel: 'ДАТА', titleHint: 'Нажмите, чтобы показать таблицу на весь экран',
+      searchPh: 'Введите SN / PN детали (Enter)', bulkPh: 'Вставьте SN, каждый с новой строки. Ctrl+Enter = поиск',
+      modeSingle: 'Один', modeBulk: 'Список', bulkRun: 'ПОИСК',
+      overviewSub: 'Обзор станций FI', diagTitle: 'Диагонали станций FI',
+      sum: 'СУММА', total: 'ИТОГО', name: 'СОТРУДНИК',
+      copyHint: 'Нажмите, чтобы скопировать SN', copyOk: '✓ Скопировано: {n}', copyNone: 'Нет данных', copyErr: 'Ошибка копирования',
+      pnLoading: 'Загрузка данных (pn)...', pnEmpty: 'На листе pn нет данных!', pnCopyHint: 'Нажмите, чтобы скопировать всю строку',
+      noInfo: 'Нет информации!', notFound: 'НЕ НАЙДЕНО', notFoundCount: 'НЕ НАЙДЕНО — [{n}]',
+      close: 'ЗАКРЫТЬ', modalNoData: 'На сегодня данных по этому сотруднику нет.',
+      hSerial: 'Serial', hType: 'Тип', hStatus: 'Статус', hOc: 'OC', hComment: 'Комментарий',
+      hDate: 'Дата', hFinal: 'Финальная', hInfo: 'Инфо', hRepairer: 'Ремонтник', hTime: 'Время', unknown: 'НЕИЗВЕСТНО'
+    },
+    pl: {
+      dateLabel: 'DATA', titleHint: 'Kliknij, aby pokazać tabelę na pełnym ekranie',
+      searchPh: 'Podaj SN / PN części (Enter)', bulkPh: 'Wklej numery SN, każdy w nowej linii. Ctrl+Enter = szukaj',
+      modeSingle: 'Pojedynczy', modeBulk: 'Zbiorczy', bulkRun: 'SZUKAJ',
+      overviewSub: 'Przegląd stanowisk FI', diagTitle: 'Przekątne stanowisk FI',
+      sum: 'SUMA', total: 'RAZEM', name: 'PRACOWNIK',
+      copyHint: 'Kliknij, aby skopiować SN', copyOk: '✓ Skopiowano: {n}', copyNone: 'Brak danych', copyErr: 'Błąd kopiowania',
+      pnLoading: 'Pobieranie danych (pn)...', pnEmpty: 'Brak danych na arkuszu pn!', pnCopyHint: 'Kliknij, aby skopiować cały wiersz',
+      noInfo: 'Brak info!', notFound: 'NIE ZNALEZIONO', notFoundCount: 'NIE ZNALEZIONO — [{n}]',
+      close: 'ZAMKNIJ', modalNoData: 'Brak danych dla wybranego pracownika na dzisiaj.',
+      hSerial: 'Serial', hType: 'Typ', hStatus: 'Status', hOc: 'OC', hComment: 'Komentarz',
+      hDate: 'Data', hFinal: 'Finalna', hInfo: 'Info', hRepairer: 'Naprawiający', hTime: 'Godzina', unknown: 'NIEZNANY'
+    },
+    de: {
+      dateLabel: 'DATUM', titleHint: 'Klicken, um die Tabelle im Vollbild anzuzeigen',
+      searchPh: 'SN / Teilenummer eingeben (Enter)', bulkPh: 'SN-Nummern einfügen, eine pro Zeile. Strg+Enter = suchen',
+      modeSingle: 'Einzeln', modeBulk: 'Liste', bulkRun: 'SUCHEN',
+      overviewSub: 'FI-Stationsübersicht', diagTitle: 'FI-Stationsdiagonalen',
+      sum: 'SUMME', total: 'GESAMT', name: 'NAME',
+      copyHint: 'Klicken, um SN zu kopieren', copyOk: '✓ Kopiert: {n}', copyNone: 'Keine Daten', copyErr: 'Kopierfehler',
+      pnLoading: 'Daten werden geladen (pn)...', pnEmpty: 'Keine Daten im Blatt pn!', pnCopyHint: 'Klicken, um die ganze Zeile zu kopieren',
+      noInfo: 'Keine Info!', notFound: 'NICHT GEFUNDEN', notFoundCount: 'NICHT GEFUNDEN — [{n}]',
+      close: 'SCHLIESSEN', modalNoData: 'Heute keine Daten für diesen Mitarbeiter.',
+      hSerial: 'Serial', hType: 'Typ', hStatus: 'Status', hOc: 'OC', hComment: 'Kommentar',
+      hDate: 'Datum', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparateur', hTime: 'Uhrzeit', unknown: 'UNBEKANNT'
+    },
+    fr: {
+      dateLabel: 'DATE', titleHint: 'Cliquez pour afficher le tableau en plein écran',
+      searchPh: 'Saisissez SN / référence (Entrée)', bulkPh: 'Collez les SN, un par ligne. Ctrl+Entrée = rechercher',
+      modeSingle: 'Unitaire', modeBulk: 'Liste', bulkRun: 'RECHERCHER',
+      overviewSub: 'Aperçu des stations FI', diagTitle: 'Diagonales des stations FI',
+      sum: 'SOMME', total: 'TOTAL', name: 'NOM',
+      copyHint: 'Cliquez pour copier le SN', copyOk: '✓ Copié : {n}', copyNone: 'Aucune donnée', copyErr: 'Erreur de copie',
+      pnLoading: 'Chargement des données (pn)...', pnEmpty: 'Aucune donnée dans la feuille pn !', pnCopyHint: 'Cliquez pour copier toute la ligne',
+      noInfo: 'Aucune info !', notFound: 'INTROUVABLE', notFoundCount: 'INTROUVABLE — [{n}]',
+      close: 'FERMER', modalNoData: "Aucune donnée pour cet employé aujourd'hui.",
+      hSerial: 'Serial', hType: 'Type', hStatus: 'Statut', hOc: 'OC', hComment: 'Commentaire',
+      hDate: 'Date', hFinal: 'Finale', hInfo: 'Info', hRepairer: 'Réparateur', hTime: 'Heure', unknown: 'INCONNU'
+    },
+    es: {
+      dateLabel: 'FECHA', titleHint: 'Haga clic para mostrar la tabla en pantalla completa',
+      searchPh: 'Introduzca SN / referencia (Intro)', bulkPh: 'Pegue los SN, uno por línea. Ctrl+Intro = buscar',
+      modeSingle: 'Individual', modeBulk: 'Lista', bulkRun: 'BUSCAR',
+      overviewSub: 'Resumen de estaciones FI', diagTitle: 'Diagonales de estaciones FI',
+      sum: 'SUMA', total: 'TOTAL', name: 'NOMBRE',
+      copyHint: 'Haga clic para copiar el SN', copyOk: '✓ Copiados: {n}', copyNone: 'Sin datos', copyErr: 'Error al copiar',
+      pnLoading: 'Cargando datos (pn)...', pnEmpty: '¡No hay datos en la hoja pn!', pnCopyHint: 'Haga clic para copiar toda la fila',
+      noInfo: '¡Sin información!', notFound: 'NO ENCONTRADO', notFoundCount: 'NO ENCONTRADO — [{n}]',
+      close: 'CERRAR', modalNoData: 'No hay datos de este empleado para hoy.',
+      hSerial: 'Serial', hType: 'Tipo', hStatus: 'Estado', hOc: 'OC', hComment: 'Comentario',
+      hDate: 'Fecha', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparador', hTime: 'Hora', unknown: 'DESCONOCIDO'
+    },
+    it: {
+      dateLabel: 'DATA', titleHint: 'Clicca per mostrare la tabella a schermo intero',
+      searchPh: 'Inserisci SN / codice parte (Invio)', bulkPh: 'Incolla gli SN, uno per riga. Ctrl+Invio = cerca',
+      modeSingle: 'Singolo', modeBulk: 'Elenco', bulkRun: 'CERCA',
+      overviewSub: 'Panoramica stazioni FI', diagTitle: 'Diagonali stazioni FI',
+      sum: 'SOMMA', total: 'TOTALE', name: 'NOME',
+      copyHint: "Clicca per copiare l'SN", copyOk: '✓ Copiati: {n}', copyNone: 'Nessun dato', copyErr: 'Errore di copia',
+      pnLoading: 'Caricamento dati (pn)...', pnEmpty: 'Nessun dato nel foglio pn!', pnCopyHint: "Clicca per copiare l'intera riga",
+      noInfo: 'Nessuna info!', notFound: 'NON TROVATO', notFoundCount: 'NON TROVATO — [{n}]',
+      close: 'CHIUDI', modalNoData: 'Nessun dato per questo dipendente oggi.',
+      hSerial: 'Serial', hType: 'Tipo', hStatus: 'Stato', hOc: 'OC', hComment: 'Commento',
+      hDate: 'Data', hFinal: 'Finale', hInfo: 'Info', hRepairer: 'Riparatore', hTime: 'Ora', unknown: 'SCONOSCIUTO'
+    },
+    pt: {
+      dateLabel: 'DATA', titleHint: 'Clique para mostrar a tabela em tela cheia',
+      searchPh: 'Digite SN / referência (Enter)', bulkPh: 'Cole os SN, um por linha. Ctrl+Enter = pesquisar',
+      modeSingle: 'Individual', modeBulk: 'Lista', bulkRun: 'PESQUISAR',
+      overviewSub: 'Visão geral das estações FI', diagTitle: 'Diagonais das estações FI',
+      sum: 'SOMA', total: 'TOTAL', name: 'NOME',
+      copyHint: 'Clique para copiar o SN', copyOk: '✓ Copiados: {n}', copyNone: 'Sem dados', copyErr: 'Erro ao copiar',
+      pnLoading: 'Carregando dados (pn)...', pnEmpty: 'Sem dados na planilha pn!', pnCopyHint: 'Clique para copiar a linha inteira',
+      noInfo: 'Sem informações!', notFound: 'NÃO ENCONTRADO', notFoundCount: 'NÃO ENCONTRADO — [{n}]',
+      close: 'FECHAR', modalNoData: 'Não há dados deste funcionário para hoje.',
+      hSerial: 'Serial', hType: 'Tipo', hStatus: 'Status', hOc: 'OC', hComment: 'Comentário',
+      hDate: 'Data', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparador', hTime: 'Hora', unknown: 'DESCONHECIDO'
+    },
+    tr: {
+      dateLabel: 'TARİH', titleHint: 'Tabloyu tam ekranda göstermek için tıklayın',
+      searchPh: 'SN / parça numarası girin (Enter)', bulkPh: 'SN numaralarını yapıştırın, her satıra bir tane. Ctrl+Enter = ara',
+      modeSingle: 'Tekli', modeBulk: 'Toplu', bulkRun: 'ARA',
+      overviewSub: 'FI İstasyon özeti', diagTitle: 'FI İstasyon köşegenleri',
+      sum: 'TOPLAM', total: 'TOPLAM', name: 'AD',
+      copyHint: 'SN’yi kopyalamak için tıklayın', copyOk: '✓ Kopyalandı: {n}', copyNone: 'Veri yok', copyErr: 'Kopyalama hatası',
+      pnLoading: 'Veriler yükleniyor (pn)...', pnEmpty: 'pn sayfasında veri yok!', pnCopyHint: 'Tüm satırı kopyalamak için tıklayın',
+      noInfo: 'Bilgi yok!', notFound: 'BULUNAMADI', notFoundCount: 'BULUNAMADI — [{n}]',
+      close: 'KAPAT', modalNoData: 'Bugün bu çalışan için veri yok.',
+      hSerial: 'Serial', hType: 'Tip', hStatus: 'Durum', hOc: 'OC', hComment: 'Yorum',
+      hDate: 'Tarih', hFinal: 'Final', hInfo: 'Bilgi', hRepairer: 'Onarımcı', hTime: 'Saat', unknown: 'BİLİNMİYOR'
+    }
+  };
 
   const CSS = `
 #livePage {
@@ -39,7 +174,7 @@
   padding: 12px 18px; background: #111827; color: #fff;
   font-size: 15px; font-weight: 700; border-bottom: 1px solid #1f2937;
 }
-#livePage .lv-block-title span.sub { color: #9CA3AF; font-size: 12px; font-weight: 500; }
+#livePage .lv-block-title .sub { color: #9CA3AF; font-size: 12px; font-weight: 500; }
 #livePage #table-title { cursor: pointer; user-select: none; color: #4d94ff; }
 #livePage #table-title:hover { color: #fff; }
 
@@ -49,7 +184,7 @@
 }
 #livePage .lv-toggle:hover { background: #4B5563; }
 
-/* ----- Поиск ----- */
+/* ----- Пошук ----- */
 #livePage .lv-search-row { display: flex; gap: 10px; align-items: stretch; max-width: 720px; margin: 0 auto; }
 #livePage #search, #livePage #bulk-input {
   flex: 1; min-width: 0; padding: 12px 14px; font-size: 15px;
@@ -73,6 +208,7 @@
 #livePage #bulk-run:hover { filter: brightness(1.15); }
 
 #livePage #search-result { margin-top: 16px; }
+#livePage .lv-msg { color: #9CA3AF; text-align: center; }
 
 /* ----- Таблицы ----- */
 #livePage table { width: 100%; border-collapse: collapse; background: #0e0e0e; }
@@ -93,6 +229,14 @@
 #livePage .latest-record td { background: rgba(37,99,235,0.2); font-weight: 700; color: #fff; }
 
 #livePage .lv-table-wrap { overflow-x: auto; }
+
+/* ----- Групи пакетного пошуку ----- */
+#livePage details.bulk-group { margin-bottom: 10px; border: 1px solid #1f2937; border-radius: 8px; overflow: hidden; }
+#livePage details.bulk-group summary {
+  padding: 10px 14px; cursor: pointer; background: #111827; color: #fff; font-weight: 600;
+}
+#livePage details.bulk-missing summary { color: #F87171; }
+#livePage .bulk-missing-list { padding: 10px 14px; color: #F87171; word-break: break-word; }
 
 /* ----- Модальное окно ----- */
 #livePage #modal {
@@ -130,21 +274,21 @@
 
   const MARKUP = `
 <div class="lv-header">
-  <h1 class="lv-title" id="main-title" title="Kliknij, aby pokazać tabelę na pełnym ekranie">LCDR LIVE DATA 2026</h1>
-  <div class="lv-date" id="date-info">DATE: --</div>
+  <h1 class="lv-title" id="main-title" data-lv-title="titleHint">LCDR LIVE DATA 2026</h1>
+  <div class="lv-date" id="date-info">--</div>
 </div>
 
 <div class="lv-wrap" id="search-wrap">
   <div class="lv-search-row">
-    <input type="text" id="search" placeholder="Podaj SN / pn części (Enter)" autocomplete="off">
-    <textarea id="bulk-input" placeholder="Wklej numery SN (każdy w nowej linii). Ctrl+Enter = szukaj" style="display:none"></textarea>
+    <input type="text" id="search" data-lv-ph="searchPh" autocomplete="off">
+    <textarea id="bulk-input" data-lv-ph="bulkPh" style="display:none"></textarea>
     <div class="mode-switch" id="mode-switch">
-      <button type="button" data-mode="single" class="active">Pojedynczy</button>
-      <button type="button" data-mode="bulk">Zbiorczy</button>
+      <button type="button" data-mode="single" class="active" data-lv="modeSingle"></button>
+      <button type="button" data-mode="bulk" data-lv="modeBulk"></button>
     </div>
   </div>
   <div class="bulk-actions" id="bulk-actions" style="display:none">
-    <button type="button" id="bulk-run">SZUKAJ</button>
+    <button type="button" id="bulk-run" data-lv="bulkRun"></button>
   </div>
   <div id="search-result"></div>
 </div>
@@ -153,14 +297,14 @@
   <button type="button" id="overview-toggle" class="lv-toggle">▲</button>
   <div class="lv-card" id="overview-block">
     <div class="lv-block-title">
-      <span id="table-title" title="Kliknij, aby skopiować SN">--.--.----</span>
-      <span class="sub">FI Station Overview</span>
+      <span id="table-title" data-lv-title="copyHint">--.--.----</span>
+      <span class="sub" data-lv="overviewSub"></span>
     </div>
     <div class="lv-table-wrap">
       <table id="combined-table">
         <thead>
           <tr>
-            <th></th><th>NDF</th><th>OK</th><th>WAITING</th><th>SCRAP TTL</th><th class="sum-col">SUMA</th>
+            <th></th><th>NDF</th><th>OK</th><th>WAITING</th><th>SCRAP TTL</th><th class="sum-col" data-lv="sum"></th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -172,7 +316,7 @@
 <div class="lv-wrap" id="diag-wrap">
   <button type="button" id="diag-toggle" class="lv-toggle">▲</button>
   <div class="lv-card" id="diag-block">
-    <div class="lv-block-title"><span>FI Station Diagonals</span></div>
+    <div class="lv-block-title"><span data-lv="diagTitle"></span></div>
     <div class="lv-table-wrap">
       <table id="diag-table">
         <thead></thead>
@@ -184,25 +328,61 @@
 
 <div id="modal">
   <div id="modal-content">
-    <button type="button" id="modal-close">ZAMKNIJ</button>
+    <button type="button" id="modal-close" data-lv="close"></button>
     <div id="modal-body"></div>
   </div>
 </div>
 `;
 
   const $ = (id) => document.getElementById(id);
-  let combinedDataCache = [];
-  let isPnVisible = false;
-  let bulkMode = false;
+
+  let lvLang = 'en';
+  let initialized = false;
   let started = false;
+  let combinedDataCache = [];
+  let lastFiltered = [];
+  let lastDateStr = '';
+  let bulkMode = false;
+  let resultMode = null;        // 'single' | 'bulk' | 'pn' | null
   let pnCache = { rows: null, time: 0 };
   let helperSheetTitle = null;
   let titleBusy = false;
   let titleTimer = null;
 
+  function t(key, vars) {
+    const dict = I18N[lvLang] || I18N.en;
+    let s = dict[key] !== undefined ? dict[key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
+    if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]);
+    return s;
+  }
+
+  function applyText() {
+    document.querySelectorAll('#livePage [data-lv]').forEach(el => { el.textContent = t(el.dataset.lv); });
+    document.querySelectorAll('#livePage [data-lv-ph]').forEach(el => { el.placeholder = t(el.dataset.lvPh); });
+    document.querySelectorAll('#livePage [data-lv-title]').forEach(el => { el.title = t(el.dataset.lvTitle); });
+  }
+
+  function setDateInfo() {
+    $('date-info').textContent = `${t('dateLabel')}: ${lastDateStr || '--'}`;
+  }
+
   function isVisible() {
     const r = $('livePage');
     return !!r && r.style.display !== 'none';
+  }
+
+  function getUserCustomClass(name) {
+    switch (name) {
+      case 'KOVALCHYK Y.': return 'king-user';
+      case 'KUKU O.': return 'owl-user';
+      case 'BŁASZKOWSKA M.': return 'pl-user';
+      case 'POKALCHUK A.': return 'flower-user';
+      case 'NIKOLAIEV D.': return 'boxer-user';
+      case 'YAROSHENKO L.': return 'heart-user';
+      case 'ZAHUBYPALETS K.': return 'cat-user';
+      case 'ULANOVYCH R.': return 'stepan-user';
+      default: return '';
+    }
   }
 
   function escHtml(s) {
@@ -303,15 +483,16 @@
   }
 
   function openModal(name) {
-    const dInfoText = $('date-info').textContent;
-    const lastDateStr = dInfoText.includes(':') ? dInfoText.split(':')[1].trim() : '';
     const records = combinedDataCache.filter(r => r.name === name && (r.date || '').split(' ')[0] === lastDateStr);
     const body = $('modal-body');
 
     if (!records.length) {
-      body.innerHTML = '<p>Brak danych dla wybranego pracownika na dzisiaj.</p>';
+      body.innerHTML = `<p class="lv-msg">${escHtml(t('modalNoData'))}</p>`;
     } else {
-      let html = '<table><thead><tr><th>Serial</th><th>Type</th><th>Status</th><th>OC</th><th>COMMENT</th></tr></thead><tbody>';
+      let html = `<table><thead><tr>
+        <th>${escHtml(t('hSerial'))}</th><th>${escHtml(t('hType'))}</th><th>${escHtml(t('hStatus'))}</th>
+        <th>${escHtml(t('hOc'))}</th><th>${escHtml(t('hComment'))}</th>
+      </tr></thead><tbody>`;
       records.forEach(r => {
         html += `<tr><td>${escHtml(r.serial || '--')}</td><td>${escHtml(r.type || '--')}</td><td>${escHtml(r.status || '--')}</td><td>${escHtml(r.ocAfterRepair || '--')}</td><td>${escHtml(r.comment || '--')}</td></tr>`;
       });
@@ -325,7 +506,7 @@
     let tNDF = 0, tOK = 0, tWAIT = 0, tTTL = 0, gTotal = 0;
 
     filtered.forEach(r => {
-      const n = r.name || 'UNKNOWN';
+      const n = r.name || t('unknown');
       if (!stats[n]) stats[n] = { NDF:0, OK:0, WAITING:0, 'SCRAP TTL':0, total:0 };
       if (r.status === 'NDF') { stats[n].NDF++; tNDF++; }
       if (r.status === 'OK') { stats[n].OK++; tOK++; }
@@ -350,7 +531,7 @@
 
     const tr = document.createElement('tr');
     tr.className = 'total-row';
-    tr.innerHTML = `<td>TOTAL</td><td>${tNDF}</td><td>${tOK}</td><td>${tWAIT}</td><td>${tTTL}</td><td class="sum-col">${gTotal}</td>`;
+    tr.innerHTML = `<td>${escHtml(t('total'))}</td><td>${tNDF}</td><td>${tOK}</td><td>${tWAIT}</td><td>${tTTL}</td><td class="sum-col">${gTotal}</td>`;
     tbody.appendChild(tr);
   }
 
@@ -360,7 +541,7 @@
       if (status !== 'OK' && status !== 'NDF') return;
       const diag = extractDiagonal(serial);
       if (!diag) return;
-      const nm = name || 'UNKNOWN';
+      const nm = name || t('unknown');
       if (!diagStats[nm]) diagStats[nm] = {};
       diagStats[nm][diag] = (diagStats[nm][diag] || 0) + 1;
     });
@@ -369,12 +550,12 @@
     const thead = document.querySelector('#diag-table thead');
     const allDiagonals = [...new Set(Object.values(diagStats).flatMap(o => Object.keys(o)))].map(Number).sort((a, b) => a - b);
 
-    thead.innerHTML = `<tr><th>NAME</th>${allDiagonals.map(d => `<th>${d}</th>`).join('')}<th class="sum-col">SUMA</th></tr>`;
+    thead.innerHTML = `<tr><th>${escHtml(t('name'))}</th>${allDiagonals.map(d => `<th>${d}</th>`).join('')}<th class="sum-col">${escHtml(t('sum'))}</th></tr>`;
     tbody.innerHTML = '';
 
     Object.entries(diagStats).sort().forEach(([name, diags]) => {
       const row = document.createElement('tr');
-      row.innerHTML = `<td class="ld-name" style="cursor:default">${escHtml(name)}</td>` +
+      row.innerHTML = `<td style="cursor:default; text-align:left; color:#fff; font-weight:600;">${escHtml(name)}</td>` +
         allDiagonals.map(d => `<td>${diags[d] || 0}</td>`).join('') +
         `<td class="sum-col">${Object.values(diags).reduce((a, b) => a + b, 0)}</td>`;
       tbody.appendChild(row);
@@ -383,11 +564,11 @@
 
   async function updateStats() {
     if (await fetchAndCacheData()) {
-      const lastDateStr = getLastDate(combinedDataCache).toISOString().split('T')[0];
-      $('date-info').textContent = `DATE: ${lastDateStr}`;
-      const filtered = combinedDataCache.filter(r => (r.date || '').split(' ')[0] === lastDateStr);
-      displayCombinedStats(filtered);
-      displayDiagonalStats(filtered);
+      lastDateStr = getLastDate(combinedDataCache).toISOString().split('T')[0];
+      setDateInfo();
+      lastFiltered = combinedDataCache.filter(r => (r.date || '').split(' ')[0] === lastDateStr);
+      displayCombinedStats(lastFiltered);
+      displayDiagonalStats(lastFiltered);
     }
   }
 
@@ -399,8 +580,6 @@
   // Клик по дате: копирует SN оператора KOVALCHYK за последний день
   function copySecret() {
     const title = $('table-title');
-    const dInfoText = $('date-info').textContent;
-    const lastDateStr = dInfoText.includes(':') ? dInfoText.split(':')[1].trim() : '';
 
     const records = combinedDataCache.filter(r => {
       const recordDate = parseDatePart(r.date);
@@ -416,11 +595,11 @@
     clearTimeout(titleTimer);
 
     if (!records.length) {
-      title.textContent = 'Brak danych';
+      title.textContent = t('copyNone');
     } else {
       navigator.clipboard.writeText(records.map(r => r.serial).join('\n'))
-        .then(() => { title.textContent = `✓ Skopiowano: ${records.length}`; })
-        .catch(() => { title.textContent = 'Błąd kopiowania'; });
+        .then(() => { title.textContent = t('copyOk', { n: records.length }); })
+        .catch(() => { title.textContent = t('copyErr'); });
     }
 
     titleTimer = setTimeout(() => {
@@ -429,7 +608,7 @@
     }, 1500);
   }
 
-  // Переключатель поиска: Pojedynczy / Zbiorczy
+  // Переключатель поиска: Single / Bulk
   function setMode(mode) {
     bulkMode = mode === 'bulk';
     document.querySelectorAll('#mode-switch button').forEach(b => {
@@ -439,26 +618,29 @@
     $('bulk-input').style.display = bulkMode ? 'block' : 'none';
     $('bulk-actions').style.display = bulkMode ? 'flex' : 'none';
     $('search-result').innerHTML = '';
-    isPnVisible = false;
+    resultMode = null;
     (bulkMode ? $('bulk-input') : $('search')).focus();
   }
 
   function runSingleSearch() {
     const serial = $('search').value.trim().toUpperCase();
     const output = $('search-result');
-    isPnVisible = false;
-    if (!serial) { output.innerHTML = ''; return; }
+    if (!serial) { output.innerHTML = ''; resultMode = null; return; }
+    resultMode = 'single';
 
     const matches = combinedDataCache
       .filter(r => (r.serial || '').trim().toUpperCase() === serial)
       .sort((a, b) => (parseDatePart(b.date) || 0) - (parseDatePart(a.date) || 0));
 
     if (!matches.length) {
-      output.innerHTML = "<p style='color:#9CA3AF'>Brak info!</p>";
+      output.innerHTML = `<p class="lv-msg">${escHtml(t('noInfo'))}</p>`;
       return;
     }
 
-    output.innerHTML = `<table><thead><tr><th>Data</th><th>Status</th><th>NAPRAWIACZ</th><th>FINALNA</th><th>INFO</th></tr></thead>
+    output.innerHTML = `<table><thead><tr>
+        <th>${escHtml(t('hDate'))}</th><th>${escHtml(t('hStatus'))}</th><th>${escHtml(t('hRepairer'))}</th>
+        <th>${escHtml(t('hFinal'))}</th><th>${escHtml(t('hInfo'))}</th>
+      </tr></thead>
       <tbody>${matches.map((d, i) => `
         <tr ${i === 0 ? 'class="latest-record"' : ''}>
           <td>${escHtml(d.date)}</td><td>${escHtml(d.status)}</td><td>${escHtml(d.name)}</td>
@@ -469,10 +651,9 @@
 
   function runBulkSearch() {
     const output = $('search-result');
-    isPnVisible = false;
-
     const snList = $('bulk-input').value.split('\n').map(s => s.trim().toUpperCase()).filter(s => s !== '');
-    if (!snList.length) { output.innerHTML = ''; return; }
+    if (!snList.length) { output.innerHTML = ''; resultMode = null; return; }
+    resultMode = 'bulk';
 
     const groups = {};
     const notFound = [];
@@ -482,7 +663,7 @@
       if (matches.length) {
         matches.sort((a, b) => (parseDatePart(b.date) || 0) - (parseDatePart(a.date) || 0));
         const record = matches[0];
-        const wName = record.name || 'UNKNOWN';
+        const wName = record.name || t('unknown');
         if (!groups[wName]) groups[wName] = [];
         groups[wName].push(record);
       } else {
@@ -499,7 +680,8 @@
         <summary>${escHtml(name)} — [${groups[name].length}]</summary>
         <table>
           <thead><tr>
-            <th>Serial</th><th>Data</th><th>Status</th><th>Finalna</th><th>OC</th><th>Info</th>
+            <th>${escHtml(t('hSerial'))}</th><th>${escHtml(t('hDate'))}</th><th>${escHtml(t('hStatus'))}</th>
+            <th>${escHtml(t('hFinal'))}</th><th>${escHtml(t('hOc'))}</th><th>${escHtml(t('hInfo'))}</th>
           </tr></thead>
           <tbody>
             ${groups[name].map(r => `
@@ -519,12 +701,12 @@
     if (notFound.length) {
       resHtml += `
       <details class="bulk-group bulk-missing">
-        <summary>NIE ZNALEZIONO — [${notFound.length}]</summary>
+        <summary>${escHtml(t('notFoundCount', { n: notFound.length }))}</summary>
         <div class="bulk-missing-list">${escHtml(notFound.join(', '))}</div>
       </details>`;
     }
 
-    output.innerHTML = resHtml || '<p style="color:#9CA3AF">NIE ZNALEZIONO</p>';
+    output.innerHTML = resHtml || `<p class="lv-msg">${escHtml(t('notFound'))}</p>`;
   }
 
   function onSearchKey(e) {
@@ -556,12 +738,13 @@
   async function refreshPnRecord(showLoader = false) {
     const output = $('search-result');
     if (!output) return;
-    if (showLoader) output.innerHTML = "<p style='color:#9CA3AF;'>Pobieranie danych (pn)...</p>";
+    resultMode = 'pn';
+    if (showLoader) output.innerHTML = `<p class="lv-msg">${escHtml(t('pnLoading'))}</p>`;
 
     const title = await getHelperSheetTitle();
     const rows = await getData(title || 'pn', sheetIdArchive);
     if (!rows || rows.length === 0) {
-      output.innerHTML = "<p style='color:#9CA3AF;'>Brak danych na arkuszu pn!</p>";
+      output.innerHTML = `<p class="lv-msg">${escHtml(t('pnEmpty'))}</p>`;
       return;
     }
 
@@ -571,7 +754,7 @@
 
     let html = '<table>';
     if (headers) html += '<thead><tr>' + headers.map(h => `<th>${escHtml(h)}</th>`).join('') + '</tr></thead>';
-    html += '<tbody><tr class="latest-record" style="cursor:pointer;" title="Kliknij, aby skopiować cały wiersz">' +
+    html += `<tbody><tr class="latest-record" style="cursor:pointer;" title="${escHtml(t('pnCopyHint'))}">` +
       lastRow.map(v => `<td>${escHtml(v || '--')}</td>`).join('') + '</tr></tbody></table>';
     output.innerHTML = html;
 
@@ -589,11 +772,10 @@
   async function togglePnRecord() {
     const output = $('search-result');
     if (!output) return;
-    if (isPnVisible) {
+    if (resultMode === 'pn') {
       output.innerHTML = '';
-      isPnVisible = false;
+      resultMode = null;
     } else {
-      isPnVisible = true;
       await refreshPnRecord(true);
     }
   }
@@ -645,9 +827,28 @@
     if (e.key === 'Escape') closeOverlays();
   }
 
+  // Перерисовка всего модуля при смене языка сайта
+  function refreshLanguage() {
+    applyText();
+    setDateInfo();
+    refreshTitleDate();
+    if (lastFiltered.length) {
+      displayCombinedStats(lastFiltered);
+      displayDiagonalStats(lastFiltered);
+    }
+    if (resultMode === 'single') runSingleSearch();
+    else if (resultMode === 'bulk') runBulkSearch();
+    else if (resultMode === 'pn') refreshPnRecord(false);
+  }
+
   function init() {
     const root = $('livePage');
     if (!root) return;
+
+    try {
+      const saved = localStorage.getItem('siteLang');
+      if (saved && I18N[saved]) lvLang = saved;
+    } catch (e) {}
 
     const style = document.createElement('style');
     style.textContent = CSS;
@@ -680,12 +881,21 @@
     document.addEventListener('keydown', onGlobalKey, true);
 
     setInterval(() => {
-      if (isPnVisible && isVisible()) refreshPnRecord(false);
+      if (resultMode === 'pn' && isVisible()) refreshPnRecord(false);
     }, 5000);
 
+    applyText();
+    setDateInfo();
     refreshTitleDate();
     setInterval(refreshTitleDate, 60000);
+    initialized = true;
   }
+
+  // Язык задаёт сайт (app.js): window.setLiveLang('uk' | 'ru' | 'pl' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'pt' | 'tr')
+  window.setLiveLang = function (l) {
+    lvLang = I18N[l] ? l : 'en';
+    if (initialized) refreshLanguage();
+  };
 
   // Вызывается сайтом (app.js) при открытии вкладки Statistic per day.
   // Данные загружаются только один раз, при первом открытии.
