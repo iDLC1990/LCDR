@@ -1,7 +1,7 @@
 /* Страница «PN Base» (база деталей).
    Подключение: <script src="js/pnbase.js"></script> ПІСЛЯ js/app.js і JsBarcode.
    Контейнер: <section id="pnbasePage">.
-   Мову задає сайт через window.setPnBaseLang('uk' | 'ru' | 'pl' | 'en'). */
+   Мову задає сайт через window.setPnBaseLang(код). Підтримуються 10 мов. */
 (function () {
   function init() {
     const page = document.getElementById('pnbasePage');
@@ -10,18 +10,18 @@
     const css = `
 #pnbaseSection .pb-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
 #pnbaseSection .pb-row .form-group { flex: 1; min-width: 150px; }
-#pnbaseSection .manual-input-title { font-size: 16px; font-weight: 700; color: #0062ff; margin-bottom: 10px; }
+#pnbaseSection .manual-input-title { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 10px; }
 #pnbaseSection .code-text { font-family: Consolas, 'Courier New', monospace; }
 #pnbaseSection .pb-status { font-size: 12px; font-weight: 600; color: #2563EB; margin-top: 8px; }
 #pnbaseSection .pb-hint { font-size: 12px; color: #6B7280; margin: 0 0 10px; }
-#pnbaseSection #pb_edit { background: #0e0e0e; border: 1px solid #D1D5DB; border-radius: 8px; padding: 14px; margin: 12px 0; }
+#pnbaseSection #pb_edit { background: #F3F4F6; border: 1px solid #D1D5DB; border-radius: 8px; padding: 14px; margin: 12px 0; }
 #pnbaseSection .pb-red { background: #991B1B; }
 #pnbaseSection .pb-red:hover { background: #B91C1C; }
 #pnbaseSection .pb-print { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; }
 #pnbaseSection .pb-print:hover { background: #E5E7EB; }
-#pnbaseSection .data-table { border-collapse: collapse; width: 100%; font-size: 13px; color: #ffffff; }
+#pnbaseSection .data-table { border-collapse: collapse; width: 100%; font-size: 13px; color: #111827; }
 #pnbaseSection .data-table th, #pnbaseSection .data-table td { padding: 8px 12px; border-bottom: 1px solid #E5E7EB; text-align: left; }
-#pnbaseSection .data-table th { background: #0e0e0e; color: #0062ff; font-weight: 600; }
+#pnbaseSection .data-table th { background: #F3F4F6; color: #374151; font-weight: 600; }
 .pb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 10000; }
 .pb-box { background: #1f2b35; border: 1px solid #374151; border-radius: 12px; padding: 20px; max-width: 340px; color: #fff; font-size: 14px; text-align: center; }
 .pb-box p { margin: 0 0 16px; }
@@ -30,9 +30,9 @@
     const section = `
 <div id="pnbaseSection">
   <div class="manual-input-card">
-    <div class="manual-input-title" data-i18n="addTitle">Масове додавання</div>
+    <div class="manual-input-title" data-i18n="addTitle">Bulk Add</div>
     <div class="form-group" style="margin-bottom: 12px;">
-      <label data-i18n="labelPanelPn">Panel_pn (Список з нового рядка)</label>
+      <label data-i18n="labelPanelPn">Panel_pn (List, one per line)</label>
       <textarea id="pb_panelPn" class="form-input code-text" rows="3" placeholder="750TBV500S74HHN000&#10;750TBV500S78AHN000..."></textarea>
     </div>
     <div class="pb-row">
@@ -41,28 +41,28 @@
       <div class="form-group"><label data-i18n="labelLocation">Location</label><input type="text" id="pb_addLocation" class="form-input code-text" placeholder="KUWETA 666"></div>
       <div class="form-group"><label data-i18n="labelInfo">info</label><input type="text" id="pb_addInfo" class="form-input code-text" placeholder="DIFF PLATE 50"></div>
     </div>
-    <button class="btn" onclick="pb.addBulk()" data-i18n="btnAdd">+ Додати список</button>
+    <button class="btn" onclick="pb.addBulk()" data-i18n="btnAdd">+ Add List</button>
     <div id="pb_addStatus" class="pb-status"></div>
   </div>
 
   <div class="manual-input-card">
-    <div class="manual-input-title" data-i18n="searchTitle">Пошук та Редагування</div>
+    <div class="manual-input-title" data-i18n="searchTitle">Search & Edit</div>
     <div class="pb-row" style="margin-bottom: 6px;">
-      <input type="text" id="pb_query" class="form-input code-text" style="flex: 3; min-width: 200px;" data-i18n-placeholder="searchPlaceholder" placeholder="Введіть PN або Panel_pn">
-      <button class="btn" style="flex: 1;" onclick="pb.search()" data-i18n="btnSearch">Знайти</button>
+      <input type="text" id="pb_query" class="form-input code-text" style="flex: 3; min-width: 200px;" data-i18n-placeholder="searchPlaceholder" placeholder="Enter PN or Panel_pn">
+      <button class="btn" style="flex: 1;" onclick="pb.search()" data-i18n="btnSearch">Search</button>
     </div>
     <div id="pb_searchStatus" class="pb-status"></div>
     <div id="pb_edit" style="display: none;">
-      <div class="manual-input-title" data-i18n="editTitle">Змінити знайдені рядки</div>
-      <p class="pb-hint" data-i18n="editHint"></p>
+      <div class="manual-input-title" data-i18n="editTitle">Edit Found Rows</div>
+      <p class="pb-hint" data-i18n="editHint">Leave the field empty if you don't want to change it.</p>
       <div class="pb-row">
-        <div class="form-group"><label data-i18n="labelNewData">Нова Дата</label><input type="date" id="pb_editData" class="form-input"></div>
-        <div class="form-group"><label data-i18n="labelNewLocation">Нова Локація</label><input type="text" id="pb_editLocation" class="form-input code-text"></div>
-        <div class="form-group"><label data-i18n="labelNewInfo">Нове info</label><input type="text" id="pb_editInfo" class="form-input code-text"></div>
+        <div class="form-group"><label data-i18n="labelNewData">New Date</label><input type="date" id="pb_editData" class="form-input"></div>
+        <div class="form-group"><label data-i18n="labelNewLocation">New Location</label><input type="text" id="pb_editLocation" class="form-input code-text"></div>
+        <div class="form-group"><label data-i18n="labelNewInfo">New info</label><input type="text" id="pb_editInfo" class="form-input code-text"></div>
       </div>
-      <button class="btn btn-brand" onclick="pb.update()" data-i18n="btnUpdate">Застосувати зміни</button>
+      <button class="btn btn-brand" onclick="pb.update()" data-i18n="btnUpdate">Apply Changes</button>
     </div>
-    <button class="btn pb-red" id="pb_dedupeBtn" style="display: none; margin-bottom: 10px;" onclick="pb.dedupe()" data-i18n="btnDedupe">Видалити дублікати</button>
+    <button class="btn pb-red" id="pb_dedupeBtn" style="display: none; margin-bottom: 10px;" onclick="pb.dedupe()" data-i18n="btnDedupe">Remove duplicates</button>
     <div style="overflow-x: auto;"><div id="pb_results"></div></div>
   </div>
 </div>`;
@@ -74,20 +74,26 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbwCvcIfaYATD8AFk9PZezOnMILNgecMKkefI7P81pSR4hxiLQXIa9rirL8LCM7s0AzT/exec";
     const $ = (id) => document.getElementById(id);
     const showToast = (m) => alert(m);
-    let results = [], lang = 'uk';
-    try { lang = localStorage.getItem('pnbase_lang') || 'uk'; } catch (e) {}
+    let results = [], lang = 'en';
+    try { lang = localStorage.getItem('pnbase_lang') || 'en'; } catch (e) {}
 
     const TR = {
-      ru:{addTitle:"Массовое добавление",labelPanelPn:"Panel_pn (Список с новой строки)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Добавить список",searchTitle:"Поиск и Редактирование",searchPlaceholder:"Введите PN или Panel_pn",btnSearch:"Найти",editTitle:"Изменить найденные строки",editHint:"",labelNewData:"Новая Дата",labelNewLocation:"Новая Локация",labelNewInfo:"Новое info",btnUpdate:"Применить изменения",statusRecord:"Запись...",statusSearch:"Поиск...",statusUpdate:"Обновление...",notFound:"Ничего не найдено.",errEnterPn:"Введите хотя бы один Panel_pn",errEnterQuery:"Введите запрос",errFillOne:"Заполните хотя бы одно поле!",confirmUpdate:c=>`Обновить ${c} строк?`,confirmYes:"Да",confirmNo:"Отмена",btnDedupe:"Удалить дубликаты",noDuplicates:"Дубликатов нет.",statusDedupe:"Удаление...",confirmDedupe:c=>`Удалить ${c} дубликатов? Останется только последняя по дате запись.`,err:"Ошибка",printTip:"Печать этикетки",pasteNoCol:"Колонка Customer Model не найдена",pasteAdded:c=>`✅ Добавлено Panel_pn: ${c}`},
-      uk:{addTitle:"Масове додавання",labelPanelPn:"Panel_pn (Список з нового рядка)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Додати список",searchTitle:"Пошук та Редагування",searchPlaceholder:"Введіть PN або Panel_pn",btnSearch:"Знайти",editTitle:"Змінити знайдені рядки",editHint:"",labelNewData:"Нова Дата",labelNewLocation:"Нова Локація",labelNewInfo:"Нове info",btnUpdate:"Застосувати зміни",statusRecord:"Запис...",statusSearch:"Пошук...",statusUpdate:"Оновлення...",notFound:"Нічого не знайдено.",errEnterPn:"Введіть хоча б один Panel_pn",errEnterQuery:"Введіть запит",errFillOne:"Заповніть хоча б одне поле!",confirmUpdate:c=>`Оновити ${c} рядків?`,confirmYes:"Так",confirmNo:"Скасувати",btnDedupe:"Видалити дублікати",noDuplicates:"Дублікатів немає.",statusDedupe:"Видалення...",confirmDedupe:c=>`Видалити ${c} дублікатів? Залишиться лише останній запис за датою.`,err:"Помилка",printTip:"Друк етикетки",pasteNoCol:"Колонку Customer Model не знайдено",pasteAdded:c=>`✅ Додано Panel_pn: ${c}`},
-      pl:{addTitle:"Masowe dodawanie",labelPanelPn:"Panel_pn (Lista z nowej linii)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Dodaj listę",searchTitle:"Wyszukiwanie i Edycja",searchPlaceholder:"Wpisz PN lub Panel_pn",btnSearch:"Szukaj",editTitle:"Edytuj znalezione wiersze",editHint:"",labelNewData:"Nowa Data",labelNewLocation:"Nowa Lokalizacja",labelNewInfo:"Nowe info",btnUpdate:"Zastosuj zmiany",statusRecord:"Zapisywanie...",statusSearch:"Szukanie...",statusUpdate:"Aktualizacja...",notFound:"Nic nie znaleziono.",errEnterPn:"Wprowadź co najmniej jeden Panel_pn",errEnterQuery:"Wprowadź zapytanie",errFillOne:"Wypełnij co najmniej jedno pole!",confirmUpdate:c=>`Zaktualizować ${c} wierszy?`,confirmYes:"Tak",confirmNo:"Anuluj",btnDedupe:"Usuń duplikaty",noDuplicates:"Brak duplikatów.",statusDedupe:"Usuwanie...",confirmDedupe:c=>`Usunąć ${c} duplikatów? Zostanie tylko najnowszy wpis wg daty.`,err:"Błąd",printTip:"Drukuj etykietę",pasteNoCol:"Nie znaleziono kolumny Customer Model",pasteAdded:c=>`✅ Dodano Panel_pn: ${c}`},
-      en:{addTitle:"Bulk Add",labelPanelPn:"Panel_pn (List, one per line)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Add List",searchTitle:"Search & Edit",searchPlaceholder:"Enter PN or Panel_pn",btnSearch:"Search",editTitle:"Edit Found Rows",editHint:"",labelNewData:"New Date",labelNewLocation:"New Location",labelNewInfo:"New info",btnUpdate:"Apply Changes",statusRecord:"Saving...",statusSearch:"Searching...",statusUpdate:"Updating...",notFound:"Nothing found.",errEnterPn:"Enter at least one Panel_pn",errEnterQuery:"Enter search query",errFillOne:"Fill out at least one field!",confirmUpdate:c=>`Update ${c} rows?`,confirmYes:"Yes",confirmNo:"Cancel",btnDedupe:"Remove duplicates",noDuplicates:"No duplicates.",statusDedupe:"Deleting...",confirmDedupe:c=>`Delete ${c} duplicates? Only the latest entry by date will be kept.`,err:"Error",printTip:"Print label",pasteNoCol:"Customer Model column not found",pasteAdded:c=>`✅ Panel_pn added: ${c}`}
+      en: {addTitle:"Bulk Add",labelPanelPn:"Panel_pn (List, one per line)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Add List",searchTitle:"Search & Edit",searchPlaceholder:"Enter PN or Panel_pn",btnSearch:"Search",editTitle:"Edit Found Rows",editHint:"Leave the field empty if you don't want to change it.",labelNewData:"New Date",labelNewLocation:"New Location",labelNewInfo:"New info",btnUpdate:"Apply Changes",statusRecord:"Saving...",statusSearch:"Searching...",statusUpdate:"Updating...",notFound:"Nothing found.",errEnterPn:"Enter at least one Panel_pn",errEnterQuery:"Enter search query",errFillOne:"Fill out at least one field!",confirmUpdate:c=>`Update ${c} rows?`,confirmYes:"Yes",confirmNo:"Cancel",btnDedupe:"Remove duplicates",noDuplicates:"No duplicates.",statusDedupe:"Deleting...",confirmDedupe:c=>`Delete ${c} duplicates? Only the latest entry by date will be kept.`,err:"Error",printTip:"Print label",pasteNoCol:"Customer Model column not found",pasteAdded:c=>`✅ Panel_pn added: ${c}`},
+      uk: {addTitle:"Масове додавання",labelPanelPn:"Panel_pn (Список з нового рядка)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Додати список",searchTitle:"Пошук та Редагування",searchPlaceholder:"Введіть PN або Panel_pn",btnSearch:"Знайти",editTitle:"Змінити знайдені рядки",editHint:"Залиште поле порожнім, якщо не хочете його змінювати.",labelNewData:"Нова Дата",labelNewLocation:"Нова Локація",labelNewInfo:"Нове info",btnUpdate:"Застосувати зміни",statusRecord:"Запис...",statusSearch:"Пошук...",statusUpdate:"Оновлення...",notFound:"Нічого не знайдено.",errEnterPn:"Введіть хоча б один Panel_pn",errEnterQuery:"Введіть запит",errFillOne:"Заповніть хоча б одне поле!",confirmUpdate:c=>`Оновити ${c} рядків?`,confirmYes:"Так",confirmNo:"Скасувати",btnDedupe:"Видалити дублікати",noDuplicates:"Дублікатів немає.",statusDedupe:"Видалення...",confirmDedupe:c=>`Видалити ${c} дублікатів? Залишиться лише останній запис за датою.`,err:"Помилка",printTip:"Друк етикетки",pasteNoCol:"Колонку Customer Model не знайдено",pasteAdded:c=>`✅ Додано Panel_pn: ${c}`},
+      ru: {addTitle:"Массовое добавление",labelPanelPn:"Panel_pn (Список с новой строки)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Добавить список",searchTitle:"Поиск и Редактирование",searchPlaceholder:"Введите PN или Panel_pn",btnSearch:"Найти",editTitle:"Изменить найденные строки",editHint:"Оставьте поле пустым, если не хотите его менять.",labelNewData:"Новая Дата",labelNewLocation:"Новая Локация",labelNewInfo:"Новое info",btnUpdate:"Применить изменения",statusRecord:"Запись...",statusSearch:"Поиск...",statusUpdate:"Обновление...",notFound:"Ничего не найдено.",errEnterPn:"Введите хотя бы один Panel_pn",errEnterQuery:"Введите запрос",errFillOne:"Заполните хотя бы одно поле!",confirmUpdate:c=>`Обновить ${c} строк?`,confirmYes:"Да",confirmNo:"Отмена",btnDedupe:"Удалить дубликаты",noDuplicates:"Дубликатов нет.",statusDedupe:"Удаление...",confirmDedupe:c=>`Удалить ${c} дубликатов? Останется только последняя по дате запись.`,err:"Ошибка",printTip:"Печать этикетки",pasteNoCol:"Колонка Customer Model не найдена",pasteAdded:c=>`✅ Добавлено Panel_pn: ${c}`},
+      pl: {addTitle:"Masowe dodawanie",labelPanelPn:"Panel_pn (Lista z nowej linii)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Dodaj listę",searchTitle:"Wyszukiwanie i Edycja",searchPlaceholder:"Wpisz PN lub Panel_pn",btnSearch:"Szukaj",editTitle:"Edytuj znalezione wiersze",editHint:"Pozostaw pole puste, jeśli chcesz je pominąć.",labelNewData:"Nowa Data",labelNewLocation:"Nowa Lokalizacja",labelNewInfo:"Nowe info",btnUpdate:"Zastosuj zmiany",statusRecord:"Zapisywanie...",statusSearch:"Szukanie...",statusUpdate:"Aktualizacja...",notFound:"Nic nie znaleziono.",errEnterPn:"Wprowadź co najmniej jeden Panel_pn",errEnterQuery:"Wprowadź zapytanie",errFillOne:"Wypełnij co najmniej jedno pole!",confirmUpdate:c=>`Zaktualizować ${c} wierszy?`,confirmYes:"Tak",confirmNo:"Anuluj",btnDedupe:"Usuń duplikaty",noDuplicates:"Brak duplikatów.",statusDedupe:"Usuwanie...",confirmDedupe:c=>`Usunąć ${c} duplikatów? Zostanie tylko najnowszy wpis wg daty.`,err:"Błąd",printTip:"Drukuj etykietę",pasteNoCol:"Nie znaleziono kolumny Customer Model",pasteAdded:c=>`✅ Dodano Panel_pn: ${c}`},
+      de: {addTitle:"Massenerfassung",labelPanelPn:"Panel_pn (Liste, eine pro Zeile)",labelData:"DATUM",labelPn:"PN",labelLocation:"Standort",labelInfo:"Info",btnAdd:"+ Liste hinzufügen",searchTitle:"Suchen & Bearbeiten",searchPlaceholder:"PN oder Panel_pn eingeben",btnSearch:"Suchen",editTitle:"Gefundene Zeilen bearbeiten",editHint:"Feld leer lassen, wenn es nicht geändert werden soll.",labelNewData:"Neues Datum",labelNewLocation:"Neuer Standort",labelNewInfo:"Neue Info",btnUpdate:"Änderungen übernehmen",statusRecord:"Wird gespeichert...",statusSearch:"Suche läuft...",statusUpdate:"Wird aktualisiert...",notFound:"Nichts gefunden.",errEnterPn:"Bitte mindestens einen Panel_pn eingeben",errEnterQuery:"Bitte Suchbegriff eingeben",errFillOne:"Bitte mindestens ein Feld ausfüllen!",confirmUpdate:c=>`${c} Zeilen aktualisieren?`,confirmYes:"Ja",confirmNo:"Abbrechen",btnDedupe:"Duplikate entfernen",noDuplicates:"Keine Duplikate.",statusDedupe:"Wird gelöscht...",confirmDedupe:c=>`${c} Duplikate löschen? Nur der neueste Eintrag nach Datum bleibt erhalten.`,err:"Fehler",printTip:"Etikett drucken",pasteNoCol:"Spalte Customer Model nicht gefunden",pasteAdded:c=>`✅ Panel_pn hinzugefügt: ${c}`},
+      fr: {addTitle:"Ajout en masse",labelPanelPn:"Panel_pn (liste, une par ligne)",labelData:"DATE",labelPn:"PN",labelLocation:"Emplacement",labelInfo:"info",btnAdd:"+ Ajouter la liste",searchTitle:"Recherche et modification",searchPlaceholder:"Saisissez un PN ou Panel_pn",btnSearch:"Rechercher",editTitle:"Modifier les lignes trouvées",editHint:"Laissez le champ vide si vous ne voulez pas le modifier.",labelNewData:"Nouvelle date",labelNewLocation:"Nouvel emplacement",labelNewInfo:"Nouvelle info",btnUpdate:"Appliquer les modifications",statusRecord:"Enregistrement...",statusSearch:"Recherche...",statusUpdate:"Mise à jour...",notFound:"Aucun résultat.",errEnterPn:"Saisissez au moins un Panel_pn",errEnterQuery:"Saisissez une requête",errFillOne:"Remplissez au moins un champ !",confirmUpdate:c=>`Mettre à jour ${c} lignes ?`,confirmYes:"Oui",confirmNo:"Annuler",btnDedupe:"Supprimer les doublons",noDuplicates:"Aucun doublon.",statusDedupe:"Suppression...",confirmDedupe:c=>`Supprimer ${c} doublons ? Seule l'entrée la plus récente sera conservée.`,err:"Erreur",printTip:"Imprimer l'étiquette",pasteNoCol:"Colonne Customer Model introuvable",pasteAdded:c=>`✅ Panel_pn ajouté : ${c}`},
+      es: {addTitle:"Adición masiva",labelPanelPn:"Panel_pn (lista, una por línea)",labelData:"FECHA",labelPn:"PN",labelLocation:"Ubicación",labelInfo:"info",btnAdd:"+ Añadir lista",searchTitle:"Buscar y editar",searchPlaceholder:"Introduzca PN o Panel_pn",btnSearch:"Buscar",editTitle:"Editar filas encontradas",editHint:"Deje el campo vacío si no desea cambiarlo.",labelNewData:"Nueva fecha",labelNewLocation:"Nueva ubicación",labelNewInfo:"Nueva info",btnUpdate:"Aplicar cambios",statusRecord:"Guardando...",statusSearch:"Buscando...",statusUpdate:"Actualizando...",notFound:"No se encontró nada.",errEnterPn:"Introduzca al menos un Panel_pn",errEnterQuery:"Introduzca una consulta",errFillOne:"¡Complete al menos un campo!",confirmUpdate:c=>`¿Actualizar ${c} filas?`,confirmYes:"Sí",confirmNo:"Cancelar",btnDedupe:"Eliminar duplicados",noDuplicates:"No hay duplicados.",statusDedupe:"Eliminando...",confirmDedupe:c=>`¿Eliminar ${c} duplicados? Solo se conservará el registro más reciente por fecha.`,err:"Error",printTip:"Imprimir etiqueta",pasteNoCol:"No se encontró la columna Customer Model",pasteAdded:c=>`✅ Panel_pn añadido: ${c}`},
+      it: {addTitle:"Aggiunta multipla",labelPanelPn:"Panel_pn (elenco, uno per riga)",labelData:"DATA",labelPn:"PN",labelLocation:"Posizione",labelInfo:"info",btnAdd:"+ Aggiungi elenco",searchTitle:"Cerca e modifica",searchPlaceholder:"Inserisci PN o Panel_pn",btnSearch:"Cerca",editTitle:"Modifica le righe trovate",editHint:"Lascia vuoto il campo se non vuoi modificarlo.",labelNewData:"Nuova data",labelNewLocation:"Nuova posizione",labelNewInfo:"Nuove info",btnUpdate:"Applica modifiche",statusRecord:"Salvataggio...",statusSearch:"Ricerca...",statusUpdate:"Aggiornamento...",notFound:"Nessun risultato.",errEnterPn:"Inserisci almeno un Panel_pn",errEnterQuery:"Inserisci una ricerca",errFillOne:"Compila almeno un campo!",confirmUpdate:c=>`Aggiornare ${c} righe?`,confirmYes:"Sì",confirmNo:"Annulla",btnDedupe:"Rimuovi duplicati",noDuplicates:"Nessun duplicato.",statusDedupe:"Eliminazione...",confirmDedupe:c=>`Eliminare ${c} duplicati? Verrà mantenuta solo la voce più recente per data.`,err:"Errore",printTip:"Stampa etichetta",pasteNoCol:"Colonna Customer Model non trovata",pasteAdded:c=>`✅ Panel_pn aggiunto: ${c}`},
+      pt: {addTitle:"Adição em massa",labelPanelPn:"Panel_pn (lista, uma por linha)",labelData:"DATA",labelPn:"PN",labelLocation:"Localização",labelInfo:"info",btnAdd:"+ Adicionar lista",searchTitle:"Pesquisar e editar",searchPlaceholder:"Digite PN ou Panel_pn",btnSearch:"Pesquisar",editTitle:"Editar linhas encontradas",editHint:"Deixe o campo vazio se não quiser alterá-lo.",labelNewData:"Nova data",labelNewLocation:"Nova localização",labelNewInfo:"Nova info",btnUpdate:"Aplicar alterações",statusRecord:"Salvando...",statusSearch:"Pesquisando...",statusUpdate:"Atualizando...",notFound:"Nada encontrado.",errEnterPn:"Digite pelo menos um Panel_pn",errEnterQuery:"Digite um termo de pesquisa",errFillOne:"Preencha pelo menos um campo!",confirmUpdate:c=>`Atualizar ${c} linhas?`,confirmYes:"Sim",confirmNo:"Cancelar",btnDedupe:"Remover duplicatas",noDuplicates:"Nenhuma duplicata.",statusDedupe:"Excluindo...",confirmDedupe:c=>`Excluir ${c} duplicatas? Apenas o registro mais recente por data será mantido.`,err:"Erro",printTip:"Imprimir etiqueta",pasteNoCol:"Coluna Customer Model não encontrada",pasteAdded:c=>`✅ Panel_pn adicionado: ${c}`},
+      tr: {addTitle:"Toplu ekleme",labelPanelPn:"Panel_pn (satır başına bir tane)",labelData:"TARİH",labelPn:"PN",labelLocation:"Konum",labelInfo:"info",btnAdd:"+ Listeyi ekle",searchTitle:"Ara ve düzenle",searchPlaceholder:"PN veya Panel_pn girin",btnSearch:"Ara",editTitle:"Bulunan satırları düzenle",editHint:"Değiştirmek istemiyorsanız alanı boş bırakın.",labelNewData:"Yeni tarih",labelNewLocation:"Yeni konum",labelNewInfo:"Yeni info",btnUpdate:"Değişiklikleri uygula",statusRecord:"Kaydediliyor...",statusSearch:"Aranıyor...",statusUpdate:"Güncelleniyor...",notFound:"Hiçbir şey bulunamadı.",errEnterPn:"En az bir Panel_pn girin",errEnterQuery:"Arama metni girin",errFillOne:"En az bir alanı doldurun!",confirmUpdate:c=>`${c} satır güncellensin mi?`,confirmYes:"Evet",confirmNo:"İptal",btnDedupe:"Yinelenenleri kaldır",noDuplicates:"Yinelenen yok.",statusDedupe:"Siliniyor...",confirmDedupe:c=>`${c} yinelenen silinsin mi? Tarihe göre yalnızca en son kayıt kalacak.`,err:"Hata",printTip:"Etiketi yazdır",pasteNoCol:"Customer Model sütunu bulunamadı",pasteAdded:c=>`✅ Panel_pn eklendi: ${c}`}
     };
-    if (!TR[lang]) lang = 'uk';
+    if (!TR[lang]) lang = 'en';
     const T = () => TR[lang];
 
     function setLang(l) {
-      lang = TR[l] ? l : 'uk';
+      lang = TR[l] ? l : 'en';
       try { localStorage.setItem('pnbase_lang', lang); } catch (e) {}
       document.querySelectorAll('#pnbaseSection [data-i18n]').forEach((el) => { const v = T()[el.dataset.i18n]; if (v) el.textContent = v; });
       document.querySelectorAll('#pnbaseSection [data-i18n-placeholder]').forEach((el) => { const v = T()[el.dataset.i18nPlaceholder]; if (v) el.placeholder = v; });
@@ -197,9 +203,10 @@ html,body{margin:0;padding:0;background:#fff}
       } else $('pb_results').innerHTML = `<p class="pb-hint">${T().notFound}</p>`;
     }
     function renderTable(data) {
-      let h = '<table class="data-table"><thead><tr><th></th><th>Panel_pn</th><th>DATA</th><th>PN</th><th>Location</th><th>info</th></tr></thead><tbody>';
+      const x = T();
+      let h = `<table class="data-table"><thead><tr><th></th><th>Panel_pn</th><th>${esc(x.labelData)}</th><th>${esc(x.labelPn)}</th><th>${esc(x.labelLocation)}</th><th>${esc(x.labelInfo)}</th></tr></thead><tbody>`;
       data.forEach((r, i) => {
-        h += `<tr><td>${i === 0 ? `<button class="pb-print" data-print="0" title="${esc(T().printTip)}">🖨️</button>` : ''}</td><td class="code-text">${esc(r.panel_pn)}</td><td>${esc(r.data)}</td><td class="code-text">${esc(r.pn)}</td><td>${esc(r.location)}</td><td>${esc(r.info)}</td></tr>`;
+        h += `<tr><td>${i === 0 ? `<button class="pb-print" data-print="0" title="${esc(x.printTip)}">🖨️</button>` : ''}</td><td class="code-text">${esc(r.panel_pn)}</td><td>${esc(r.data)}</td><td class="code-text">${esc(r.pn)}</td><td>${esc(r.location)}</td><td>${esc(r.info)}</td></tr>`;
       });
       $('pb_results').innerHTML = h + '</tbody></table>';
       const b = $('pb_results').querySelector('[data-print]');
