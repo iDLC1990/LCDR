@@ -60,7 +60,8 @@ const RENDERERS = {};
 // Страницы, которые строят отдельные модули в своих контейнерах
 const STATIC_PAGES = {
   label: "labelPage",
-  parts: "pnbasePage"
+  parts: "pnbasePage",
+  special: "specialPage"
 };
 
 // При загрузке сайта вкладок нет — пользователь открывает их сам из меню
@@ -122,6 +123,7 @@ function setSiteLang(lang) {
   applySiteText();
   if (window.setLabelLang)  window.setLabelLang(LABEL_LANGS.includes(lang) ? lang : "en");
   if (window.setPnBaseLang) window.setPnBaseLang(PNBASE_LANGS.includes(lang) ? lang : "en");
+  if (window.setSpecialLang) window.setSpecialLang(siteLang);
   render();
 }
 
