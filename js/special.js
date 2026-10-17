@@ -1,26 +1,17 @@
 /* Спеціальні етикетки (Special Label): великий текст, рамка з 11 рядків, SCC 50x30 / 50x25 мм.
    Підключення: <script src="js/special.js"></script> ПІСЛЯ js/app.js.
    Контейнер: <section id="specialPage">. Мову задає сайт через window.setSpecialLang(код).
-   Картинка ICON береться з файлу icon.jpg у корені репозиторію. */
+   Картинка ICON береться з файлу icon.jpg у корені репозиторію без обробки кольорів. */
 (function () {
   const ICON_SRC = 'icon.jpg';
-
-  // 203 dpi = 8 точок на міліметр
-  const DOTS_PER_MM = 8;
-
-  // Режим ICON:
-  //   'hybrid'    - темні зони стають суцільно чорними, світлі - суцільно білими, точки лише в проміжних тонах (рекомендовано)
-  //   'dither'    - дизеринг по всій картинці (для фотографій, для ліній дає пунктир)
-  //   'threshold' - жорсткий поріг: без точок, але тонкі лінії можуть зникати
-  const ICON_MODE = 'hybrid';
-  const ICON_THRESHOLD = 200;        // використовується лише в режимі 'threshold'
-  const ICON_SOLID_BELOW = 165;      // гібрид: темніше цього значення — суцільний чорний
-  const ICON_WHITE_ABOVE = 215;      // гібрид: світліше цього значення — суцільний білий
+  // true  - обрізати білі поля навколо малюнка (кольори та якість не змінюються)
+  // false - використовувати повний файл icon.jpg як є
+  const ICON_TRIM = true;
 
   // Розміри SCC-етикеток (мм):
   //   label  - висота етикетки
   //   text   - висота зони для тексту
-  //   iconW / iconH - точний розмір картинки ICON
+  //   iconW / iconH - розмір картинки ICON на етикетці
   const SCC_SIZES = {
     '50x30': { label: 30, text: 25, iconW: 48, iconH: 28 },
     '50x25': { label: 25, text: 20, iconW: 48, iconH: 23 }
@@ -195,13 +186,16 @@
     return `<div class="txt" style="font-size:${pt}pt">${esc(text)}</div>`;
   }
 
-  // ===== ICON: icon.jpg обрізається по малюнку один раз у повній роздільній здатності.
-  // Для кожного розміру етикетки малюнок масштабується до точних точок принтера і перетворюється на чорно-біле.
-  let iconCrop = null;
+  // ===== ICON: файл icon.jpg використовується як є.
+  // Якщо ICON_TRIM = true, білі поля обрізаються без зміни кольорів (піксель у піксель).
+  let iconUrl = '';
 
   function loadIcon() {
+    const url = new URL(ICON_SRC, document.baseURI).href;
     const img = new Image();
     img.onload = () => {
+      if (!ICON_TRIM) { iconUrl = url; return; }
+
       const sw = img.naturalWidth, sh = img.naturalHeight;
       const src = document.createElement('canvas');
       src.width = sw; src.height = sh;
@@ -209,13 +203,13 @@
       sctx.drawImage(img, 0, 0);
       const sd = sctx.getImageData(0, 0, sw, sh).data;
 
-      // Межі малюнка: усе, що не є білим
+      // Шукаємо межі малюнка (тільки для обрізки, самі пікселі не змінюються)
       let minX = sw, minY = sh, maxX = -1, maxY = -1;
       for (let y = 0; y < sh; y++) {
         for (let x = 0; x < sw; x++) {
           const i = (y * sw + x) * 4;
           const g = 0.299 * sd[i] + 0.587 * sd[i + 1] + 0.114 * sd[i + 2];
-          if (g < 230) {
+          if (g < 235) {
             if (x < minX) minX = x;
             if (x > maxX) maxX = x;
             if (y < minY) minY = y;
@@ -223,119 +217,23 @@
           }
         }
       }
-      if (maxX < 0) return;
+      if (maxX < 0) { iconUrl = url; return; }
 
-      const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.01);
+      const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.02);
       minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
       maxX = Math.min(sw - 1, maxX + pad); maxY = Math.min(sh - 1, maxY + pad);
       const cw = maxX - minX + 1, ch = maxY - minY + 1;
 
-      iconCrop = document.createElement('canvas');
-      iconCrop.width = cw; iconCrop.height = ch;
-      iconCrop.getContext('2d').drawImage(src, minX, minY, cw, ch, 0, 0, cw, ch);
+      // Копіюємо обрізану ділянку без масштабування і без фільтрів
+      const out = document.createElement('canvas');
+      out.width = cw; out.height = ch;
+      const octx = out.getContext('2d');
+      octx.imageSmoothingEnabled = false;
+      octx.drawImage(src, minX, minY, cw, ch, 0, 0, cw, ch);
+      iconUrl = out.toDataURL('image/png');
     };
-    img.src = ICON_SRC;
-  }
-
-  // Floyd–Steinberg: відтінки сірого точками (для фотографій)
-  function ditherToBW(octx, W, H) {
-    const id = octx.getImageData(0, 0, W, H), d = id.data;
-    const g = new Float32Array(W * H);
-    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-      g[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-    }
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const p = y * W + x;
-        const old = g[p];
-        const nv = old < 128 ? 0 : 255;
-        const err = old - nv;
-        g[p] = nv;
-        if (x + 1 < W) g[p + 1] += err * 7 / 16;
-        if (y + 1 < H) {
-          if (x > 0) g[p + W - 1] += err * 3 / 16;
-          g[p + W] += err * 5 / 16;
-          if (x + 1 < W) g[p + W + 1] += err * 1 / 16;
-        }
-      }
-    }
-    for (let p = 0, i = 0; p < W * H; p++, i += 4) {
-      const v = g[p];
-      d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255;
-    }
-    octx.putImageData(id, 0, 0);
-  }
-
-  // Гібрид: суцільний чорний і суцільний білий, точки лише в проміжних тонах (для ліній і заливок)
-  function hybridToBW(octx, W, H) {
-    const id = octx.getImageData(0, 0, W, H), d = id.data;
-    const g = new Float32Array(W * H);
-    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-      g[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-    }
-    const spread = (p, e) => {
-      if (g[p] >= ICON_SOLID_BELOW && g[p] <= ICON_WHITE_ABOVE) g[p] += e;
-    };
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const p = y * W + x;
-        const old = g[p];
-        let nv, err = 0;
-        if (old < ICON_SOLID_BELOW) nv = 0;
-        else if (old > ICON_WHITE_ABOVE) nv = 255;
-        else { nv = old < 128 ? 0 : 255; err = old - nv; }
-        g[p] = nv;
-        if (err !== 0) {
-          if (x + 1 < W) spread(p + 1, err * 7 / 16);
-          if (y + 1 < H) {
-            if (x > 0) spread(p + W - 1, err * 3 / 16);
-            spread(p + W, err * 5 / 16);
-            if (x + 1 < W) spread(p + W + 1, err * 1 / 16);
-          }
-        }
-      }
-    }
-    for (let p = 0, i = 0; p < W * H; p++, i += 4) {
-      const v = g[p];
-      d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255;
-    }
-    octx.putImageData(id, 0, 0);
-  }
-
-  // Жорсткий поріг: без точок, але тонкі лінії можуть зникати
-  function thresholdToBW(octx, W, H) {
-    const od = octx.getImageData(0, 0, W, H), px = od.data;
-    for (let i = 0; i < px.length; i += 4) {
-      const g = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
-      const v = g < ICON_THRESHOLD ? 0 : 255;
-      px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
-    }
-    octx.putImageData(od, 0, 0);
-  }
-
-  // Повертає PNG-картинку ICON розміром wDots × hDots точок (малюнок вписується з центруванням)
-  function iconPng(wDots, hDots) {
-    const cw = iconCrop.width, ch = iconCrop.height;
-    const scale = Math.min(wDots / cw, hDots / ch);
-    const w = Math.max(1, Math.round(cw * scale));
-    const h = Math.max(1, Math.round(ch * scale));
-    const ox = Math.round((wDots - w) / 2);
-    const oy = Math.round((hDots - h) / 2);
-
-    const out = document.createElement('canvas');
-    out.width = wDots; out.height = hDots;
-    const octx = out.getContext('2d', { willReadFrequently: true });
-    octx.fillStyle = '#FFFFFF';
-    octx.fillRect(0, 0, wDots, hDots);
-    octx.imageSmoothingEnabled = true;
-    octx.imageSmoothingQuality = 'high';
-    octx.drawImage(iconCrop, 0, 0, cw, ch, ox, oy, w, h);
-
-    if (ICON_MODE === 'threshold') thresholdToBW(octx, wDots, hDots);
-    else if (ICON_MODE === 'dither') ditherToBW(octx, wDots, hDots);
-    else hybridToBW(octx, wDots, hDots);
-
-    return out.toDataURL('image/png');
+    img.onerror = () => { iconUrl = ''; };
+    img.src = url;
   }
 
   function init() {
@@ -409,12 +307,9 @@
       if ($('spChk1').checked && v1) blocks.push({ html: buildWrappedText(v1, size.text), pic: false });
       if ($('spChk2').checked && v2) blocks.push({ html: buildWrappedText(v2, size.text), pic: false });
       if ($('spChkIcon').checked) {
-        if (!iconCrop) return alert(t('alertImg'));
-        // Точні точки: 48 мм = 384 точки, 28 мм = 224 точки (203 dpi). Браузер не масштабує картинку.
-        const wDots = Math.round(size.iconW * DOTS_PER_MM);
-        const hDots = Math.round(size.iconH * DOTS_PER_MM);
+        if (!iconUrl) return alert(t('alertImg'));
         blocks.push({
-          html: `<img class="pic" style="width:${size.iconW}mm;height:${size.iconH}mm" src="${iconPng(wDots, hDots)}" alt="">`,
+          html: `<img class="pic" style="width:${size.iconW}mm;height:${size.iconH}mm" src="${iconUrl}" alt="">`,
           pic: true
         });
       }
@@ -437,12 +332,11 @@
         html, body { margin: 0; padding: 0; background: #fff; }
         .lbl { display: grid; place-items: center; width: ${SCC_WIDTH_MM}mm; height: ${lblH}mm; padding: 2mm;
                box-sizing: border-box; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
-        /* Для картинки ICON бокові відступи менші: 48 мм з 50 мм етикетки */
         .lbl-pic { padding: 0 1mm; }
         .txt { width: 100%; color: #000; font-family: Arial, Helvetica, sans-serif; font-weight: 900;
                line-height: 1.1; overflow-wrap: anywhere; text-align: center; }
-        /* Картинка друкується без згладжування: кожна точка залишається точкою */
-        .pic { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+        /* Картинка друкується як є: браузер лише масштабує її до розміру, без порогів і точок */
+        .pic { display: block; object-fit: contain; image-rendering: auto; }
         .lbl:not(:last-child) { break-after: page; page-break-after: always; }
       </style></head><body>${body}</body></html>`);
     }
