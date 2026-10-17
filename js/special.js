@@ -9,10 +9,13 @@
   const DOTS_PER_MM = 8;
 
   // Режим ICON:
-  //   'dither'    - дизеринг: оттінки сірого передаються точками, тонкі лінії зберігаються (рекомендовано)
-  //   'threshold' - жорсткий поріг: чорно-біле без точок, але тонкі лінії можуть зникати
-  const ICON_MODE = 'dither';
-  const ICON_THRESHOLD = 200;       // використовується лише в режимі 'threshold'
+  //   'hybrid'    - темні зони стають суцільно чорними, світлі - суцільно білими, точки лише в проміжних тонах (рекомендовано)
+  //   'dither'    - дизеринг по всій картинці (для фотографій, для ліній дає пунктир)
+  //   'threshold' - жорсткий поріг: без точок, але тонкі лінії можуть зникати
+  const ICON_MODE = 'hybrid';
+  const ICON_THRESHOLD = 200;        // використовується лише в режимі 'threshold'
+  const ICON_SOLID_BELOW = 165;      // гібрид: темніше цього значення — суцільний чорний
+  const ICON_WHITE_ABOVE = 215;      // гібрид: світліше цього значення — суцільний білий
 
   // Розміри SCC-етикеток (мм):
   //   label  - висота етикетки
@@ -234,8 +237,7 @@
     img.src = ICON_SRC;
   }
 
-  // Чорно-біле з дизерингом Floyd–Steinberg: оттінки сірого передаються розрідженням точок,
-  // тонкі лінії та тіні зберігаються, а не зникають як при жорсткому порозі.
+  // Floyd–Steinberg: відтінки сірого точками (для фотографій)
   function ditherToBW(octx, W, H) {
     const id = octx.getImageData(0, 0, W, H), d = id.data;
     const g = new Float32Array(W * H);
@@ -264,6 +266,43 @@
     octx.putImageData(id, 0, 0);
   }
 
+  // Гібрид: суцільний чорний і суцільний білий, точки лише в проміжних тонах (для ліній і заливок)
+  function hybridToBW(octx, W, H) {
+    const id = octx.getImageData(0, 0, W, H), d = id.data;
+    const g = new Float32Array(W * H);
+    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+      g[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    }
+    const spread = (p, e) => {
+      if (g[p] >= ICON_SOLID_BELOW && g[p] <= ICON_WHITE_ABOVE) g[p] += e;
+    };
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const p = y * W + x;
+        const old = g[p];
+        let nv, err = 0;
+        if (old < ICON_SOLID_BELOW) nv = 0;
+        else if (old > ICON_WHITE_ABOVE) nv = 255;
+        else { nv = old < 128 ? 0 : 255; err = old - nv; }
+        g[p] = nv;
+        if (err !== 0) {
+          if (x + 1 < W) spread(p + 1, err * 7 / 16);
+          if (y + 1 < H) {
+            if (x > 0) spread(p + W - 1, err * 3 / 16);
+            spread(p + W, err * 5 / 16);
+            if (x + 1 < W) spread(p + W + 1, err * 1 / 16);
+          }
+        }
+      }
+    }
+    for (let p = 0, i = 0; p < W * H; p++, i += 4) {
+      const v = g[p];
+      d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255;
+    }
+    octx.putImageData(id, 0, 0);
+  }
+
+  // Жорсткий поріг: без точок, але тонкі лінії можуть зникати
   function thresholdToBW(octx, W, H) {
     const od = octx.getImageData(0, 0, W, H), px = od.data;
     for (let i = 0; i < px.length; i += 4) {
@@ -293,7 +332,8 @@
     octx.drawImage(iconCrop, 0, 0, cw, ch, ox, oy, w, h);
 
     if (ICON_MODE === 'threshold') thresholdToBW(octx, wDots, hDots);
-    else ditherToBW(octx, wDots, hDots);
+    else if (ICON_MODE === 'dither') ditherToBW(octx, wDots, hDots);
+    else hybridToBW(octx, wDots, hDots);
 
     return out.toDataURL('image/png');
   }
