@@ -1,6 +1,7 @@
-/* Статистика по днях (Statistic per day): LCDR Live Data.
+/* Статистика по днях (Statistic per day): LCDR Live Data, версія для сайту.
+   Основа логіки: оригінальний дашборд LCDR LIVE DATA 2026.
    Підключення: <script src="js/livedata.js"></script> ПІСЛЯ js/app.js.
-   Контейнер: <section id="livePage">. Дані з Google Таблиць завантажуються при першому відкритті сторінки. */
+   Контейнер: <section id="livePage">. Дані завантажуються при першому відкритті сторінки. */
 (function () {
   const apiKey = 'AIzaSyCP7tzYiGwIZ6cymLAlv_9QgPIEshnRgqI';
   const sheetId = '10W03bvKlVFlIUcxsHkzP_v_13gtnYRBmnrrO0ujB1bU';
@@ -56,7 +57,8 @@
 #livePage.helper-docked { padding-right: 310px; box-sizing: border-box; }
 
 #livePage .header { display:flex; justify-content:space-between; align-items:center; padding:20px 10%; background-color: rgba(17,17,17,0.7); border-bottom: 1px solid rgba(0,128,128,0.3); }
-#livePage .header h1 { margin:0; color:#008080; font-size:24px; }
+#livePage .header h1 { margin:0; color:#008080; font-size:24px; cursor:pointer; transition:0.3s; }
+#livePage .header h1:hover { text-shadow: 0 0 10px #0ff; }
 #livePage .date-info { color:#008080; font-size:18px; font-weight:bold; }
 
 #livePage .table-container { width:95%; max-width:1200px; margin:24px auto; transition: all 0.4s ease-in-out; }
@@ -70,7 +72,11 @@
   #livePage .fullscreen-mode th, #livePage .fullscreen-mode td { font-size: min(14px, 2.5vh) !important; }
 }
 
-#livePage .table-header { background-color:#008080; color:#000; font-weight:bold; font-size:18px; padding:10px 16px; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center; }
+#livePage .table-header { background-color:#008080; color:#000; font-weight:bold; font-size:18px; padding:10px 16px; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center; position:relative; }
+#livePage #table-title { cursor:pointer; user-select:none; transition: text-shadow 0.3s; }
+#livePage #table-title:hover { text-shadow: 0 0 6px rgba(255,255,255,0.8); }
+#livePage #live-clock { position:absolute; left:50%; transform:translateX(-50%); color:#0ff; background:#000; padding:0 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:20px; }
+
 #livePage .toggle-btn { margin:8px 0; font-size:20px; cursor:pointer; background:none; border:none; color:#0ff; padding:5px 10px; transition:0.3s; }
 #livePage .toggle-btn:hover { text-shadow: 0 0 8px #0ff; }
 
@@ -78,11 +84,21 @@
 #livePage table, #livePage th, #livePage td { border:1px solid #fff; }
 #livePage th, #livePage td { padding:10px; text-align:center; }
 #livePage th { font-weight:bold; font-size:16px; background: rgba(0,128,128,0.2); }
-#livePage td { font-size:16px; cursor:pointer; }
+#livePage td { font-size:16px; }
+#livePage td.ld-name { cursor:pointer; }
 #livePage .total-row { font-weight:bold; background-color:#333; color:#008080; }
 #livePage .sum-col { background-color: rgba(0,0,0,0.3); color:#0ff; font-weight:bold; }
 
-#livePage #search { width:100%; max-width:600px; padding:12px; font-size:16px; border-radius:5px; border:1px solid #008080; background: rgba(0,0,0,0.6); color:#fff; margin:20px auto; display:block; outline:none; box-sizing: border-box; }
+/* ----- Пошук: перемикач Pojedynczy / Zbiorczy ----- */
+#livePage .search-row { display:flex; gap:10px; align-items:stretch; width:100%; max-width:720px; margin:20px auto 0; }
+#livePage #search { flex:1; min-width:0; padding:12px; font-size:16px; border-radius:5px; border:1px solid #008080; background: rgba(0,0,0,0.6); color:#fff; outline:none; box-sizing:border-box; }
+#livePage #bulk-input { flex:1; min-width:0; min-height:90px; background:#000; color:#0ff; border:1px solid #008080; padding:10px; font-family:monospace; resize:vertical; box-sizing:border-box; outline:none; }
+#livePage .mode-switch { display:flex; flex-shrink:0; border:1px solid #008080; border-radius:5px; overflow:hidden; }
+#livePage .mode-switch button { background: rgba(0,0,0,0.6); color:#0ff; border:none; padding:0 14px; cursor:pointer; font-weight:bold; font-size:13px; }
+#livePage .mode-switch button.active { background:#008080; color:#000; }
+#livePage .bulk-actions { display:flex; justify-content:center; width:100%; max-width:720px; margin:10px auto 0; }
+#livePage #bulk-run { background:#008080; color:#000; border:none; padding:10px 25px; cursor:pointer; font-weight:bold; border-radius:4px; }
+
 #livePage #search-result { margin-top:15px; }
 #livePage #search-result table { margin-top:10px; border:2px solid #0ff; background-color:#333; }
 
@@ -97,13 +113,6 @@
 #livePage #modal.show { display:flex; }
 #livePage #modal-content { background:#1a1a1a; color:#0ff; padding:20px; border:2px solid #008080; border-radius:10px; max-height:85%; overflow:auto; width:90%; max-width:1000px; box-shadow: 0 0 20px rgba(0,255,255,0.2); }
 #livePage #modal-close { background:#008080; color:#000; border:none; padding:8px 20px; cursor:pointer; font-weight:bold; margin-bottom:15px; border-radius:4px; }
-
-#livePage .header-actions { display:flex; align-items:center; gap:15px; }
-#livePage #bulk-search-btn { cursor:pointer; font-size:20px; opacity:0.8; }
-#livePage #secret-btn-kovalchyk { cursor:pointer; opacity:0.4; font-size:20px; transition: all 0.3s; user-select:none; padding:0 5px; color:#0ff; }
-#livePage #secret-btn-kovalchyk:hover { opacity:1; text-shadow: 0 0 8px #0ff; }
-#livePage #bulk-input { width:100%; height:150px; background:#000; color:#0ff; border:1px solid #008080; padding:10px; margin-top:10px; font-family:monospace; resize:vertical; box-sizing:border-box; }
-#livePage #run-bulk-search { background:#008080; color:#000; border:none; padding:10px 25px; margin-top:10px; cursor:pointer; font-weight:bold; border-radius:4px; }
 
 @media (max-width: 1080px) {
   #livePage .table-container { width:100%; }
@@ -194,12 +203,22 @@
 
   const MARKUP = `
 <div class="header">
-  <h1 id="main-title" style="cursor:pointer;transition:0.3s;" onmouseover="this.style.textShadow='0 0 10px #0ff'" onmouseout="this.style.textShadow='none'" title="Kliknij, aby pokazać i dopasować tabelę">LCDR LIVE DATA 2026</h1>
+  <h1 id="main-title" title="Kliknij, aby pokazać tabelę na pełnym ekranie">LCDR LIVE DATA 2026</h1>
   <div class="date-info" id="date-info">DATE: --</div>
 </div>
 
 <div class="table-container">
-  <input type="text" id="search" placeholder="Podaj SN / pn części (Enter)">
+  <div class="search-row">
+    <input type="text" id="search" placeholder="Podaj SN / pn części (Enter)" autocomplete="off">
+    <textarea id="bulk-input" placeholder="Wklej numery SN (każdy w nowej linii). Ctrl+Enter = szukaj" style="display:none"></textarea>
+    <div class="mode-switch" id="mode-switch">
+      <button type="button" data-mode="single" class="active">Pojedynczy</button>
+      <button type="button" data-mode="bulk">Zbiorczy</button>
+    </div>
+  </div>
+  <div class="bulk-actions" id="bulk-actions" style="display:none">
+    <button type="button" id="bulk-run">SZUKAJ</button>
+  </div>
   <div id="search-result"></div>
 </div>
 
@@ -245,13 +264,9 @@
 <div class="table-container">
   <button id="overview-toggle" class="toggle-btn"> </button>
   <div id="overview-block">
-    <div class="table-header" style="position:relative;">
-      <span>FI Station Overview</span>
-      <span id="live-clock" style="position:absolute;left:50%;transform:translateX(-50%);color:#0ff;font-family:monospace;font-weight:bold;font-size:20px;">00:00:00</span>
-      <div class="header-actions">
-        <span id="bulk-search-btn" title="Search">🔍</span>
-        <span id="secret-btn-kovalchyk" title=" ">·</span>
-      </div>
+    <div class="table-header">
+      <span id="table-title" title="Kliknij, aby skopiować SN">--.--.----</span>
+      <span id="live-clock">00:00:00</span>
     </div>
     <table id="combined-table">
       <thead>
@@ -286,11 +301,14 @@
   const $ = (id) => document.getElementById(id);
   let combinedDataCache = [];
   let isPnVisible = false;
+  let bulkMode = false;
   let started = false;
   let bgIndex = 5;
   let pnCache = { rows: null, time: 0 };
   let helperSheetTitle = null;
   let robotTalkTimer = null;
+  let titleBusy = false;
+  let titleTimer = null;
 
   const ROBOT_MOUTHS = {
     idle: 'M82 104 Q100 110 118 104',
@@ -322,6 +340,12 @@
 
   function escHtml(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  // Сьогоднішня дата у форматі 18.10.2026
+  function todayStr() {
+    const d = new Date();
+    return [String(d.getDate()).padStart(2, '0'), String(d.getMonth() + 1).padStart(2, '0'), d.getFullYear()].join('.');
   }
 
   function extractDiagonal(serial) {
@@ -504,19 +528,22 @@
     }
   }
 
+  // Часы в шапке и текущая дата в заголовке таблицы
   function startLiveClock() {
     const el = $('live-clock');
     const tick = () => {
       const now = new Date();
       el.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()]
         .map(v => String(v).padStart(2, '0')).join(':');
+      if (!titleBusy) $('table-title').textContent = todayStr();
     };
     tick();
     setInterval(tick, 1000);
   }
 
+  // Клик по дате таблицы: копирует SN оператора KOVALCHYK за последний день в буфер
   function copySecret() {
-    const btn = $('secret-btn-kovalchyk');
+    const title = $('table-title');
     const dInfoText = $('date-info').textContent;
     const lastDateStr = dInfoText.includes(':') ? dInfoText.split(':')[1].trim() : '';
 
@@ -528,110 +555,139 @@
              ['OK', 'NDF', 'SCRAP TTL'].includes(r.status) &&
              r.type !== 'MNT';
     });
-    if (!records.length) return;
 
-    navigator.clipboard.writeText(records.map(r => r.serial).join('\n')).then(() => {
-      const old = btn.textContent;
-      btn.textContent = '✓';
-      setTimeout(() => { btn.textContent = old; }, 1200);
+    const base = todayStr();
+    titleBusy = true;
+    clearTimeout(titleTimer);
+
+    if (!records.length) {
+      title.textContent = 'Brak danych';
+    } else {
+      navigator.clipboard.writeText(records.map(r => r.serial).join('\n'))
+        .then(() => { title.textContent = `✓ Skopiowano: ${records.length}`; })
+        .catch(() => { title.textContent = 'Błąd kopiowania'; });
+    }
+
+    titleTimer = setTimeout(() => {
+      titleBusy = false;
+      title.textContent = base;
+    }, 1500);
+  }
+
+  // Переключатель поиска: Pojedynczy (как раньше) / Zbiorczy (как раньше по лупе)
+  function setMode(mode) {
+    bulkMode = mode === 'bulk';
+    document.querySelectorAll('#mode-switch button').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
     });
+    $('search').style.display = bulkMode ? 'none' : 'block';
+    $('bulk-input').style.display = bulkMode ? 'block' : 'none';
+    $('bulk-actions').style.display = bulkMode ? 'flex' : 'none';
+    $('search-result').innerHTML = '';
+    isPnVisible = false;
+    (bulkMode ? $('bulk-input') : $('search')).focus();
   }
 
-  function openBulkSearch() {
-    const body = $('modal-body');
-    body.innerHTML = `
-      <h3 style="color:#0ff; margin-top:0;">Bulk Search</h3>
-      <textarea id="bulk-input" placeholder="Wklej numery SN rozdzielone enterem..."></textarea>
-      <button id="run-bulk-search">SZUKAJ</button>
-      <div id="bulk-result" style="margin-top:20px;"></div>`;
-    $('modal').classList.add('show');
-
-    $('run-bulk-search').onclick = () => {
-      const snList = $('bulk-input').value.split('\n').map(s => s.trim().toUpperCase()).filter(s => s !== '');
-      if (!snList.length) return;
-
-      const groups = {};
-      const notFound = [];
-
-      snList.forEach(sn => {
-        const matches = combinedDataCache.filter(r => (r.serial || '').trim().toUpperCase() === sn);
-        if (matches.length) {
-          matches.sort((a, b) => (parseDatePart(b.date) || 0) - (parseDatePart(a.date) || 0));
-          const record = matches[0];
-          const wName = record.name || 'UNKNOWN';
-          if (!groups[wName]) groups[wName] = [];
-          groups[wName].push(record);
-        } else {
-          notFound.push(sn);
-        }
-      });
-
-      const sortedNames = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
-      let resHtml = '';
-
-      sortedNames.forEach(name => {
-        const userClass = getUserCustomClass(name);
-        resHtml += `
-        <details style="margin-bottom:10px; border:1px solid #008080; border-radius:5px;">
-          <summary style="padding:10px; cursor:pointer; background:rgba(0,128,128,0.2); font-weight:bold;">
-            <span class="${userClass}" style="display:inline-flex;">${escHtml(name)}</span> — [${groups[name].length}]
-          </summary>
-          <table style="width:100%; border-collapse:collapse; background:#222;">
-            <thead><tr style="background:#333;">
-              <th style="border:1px solid #fff; padding:10px;">Serial</th>
-              <th style="border:1px solid #fff; padding:10px;">Data</th>
-              <th style="border:1px solid #fff; padding:10px;">Status</th>
-              <th style="border:1px solid #fff; padding:10px;">Finalna</th>
-              <th style="border:1px solid #fff; padding:10px;">OC</th>
-              <th style="border:1px solid #fff; padding:10px;">Info</th>
-            </tr></thead>
-            <tbody>
-              ${groups[name].map(r => `
-                <tr>
-                  <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.serial)}</td>
-                  <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.date)}</td>
-                  <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.status)}</td>
-                  <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.nameG || ' ')}</td>
-                  <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.ocAfterRepair || ' ')}</td>
-                  <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.comment)}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </details>`;
-      });
-
-      if (notFound.length) {
-        resHtml += `
-        <details style="margin-top:20px; border:1px solid #ff5555; border-radius:5px;">
-          <summary style="padding:10px; cursor:pointer; background:rgba(255,85,85,0.2); color:#ff5555; font-weight:bold;">
-            NIE ZNALEZIONO — [${notFound.length}]
-          </summary>
-          <div style="padding:10px; color:#ff5555;">${escHtml(notFound.join(', '))}</div>
-        </details>`;
-      }
-
-      $('bulk-result').innerHTML = resHtml || '<p>NIE ZNALEZIONO</p>';
-    };
-  }
-
-  async function onSearchKey(e) {
-    if (e.key !== 'Enter') return;
-    const serial = e.target.value.trim().toUpperCase();
+  function runSingleSearch() {
+    const serial = $('search').value.trim().toUpperCase();
     const output = $('search-result');
+    isPnVisible = false;
     if (!serial) { output.innerHTML = ''; return; }
 
     const matches = combinedDataCache
       .filter(r => (r.serial || '').trim().toUpperCase() === serial)
       .sort((a, b) => (parseDatePart(b.date) || 0) - (parseDatePart(a.date) || 0));
 
-    if (matches.length) {
-      output.innerHTML = `<table><thead><tr><th>Data</th><th>Status</th><th>NAPRAWIACZ</th><th>FINALNA</th><th>INFO</th></tr></thead>
-        <tbody>${matches.map((d, i) => {
-          const userClass = getUserCustomClass(d.name);
-          return `<tr ${i === 0 ? 'class="latest-record"' : ''}><td>${escHtml(d.date)}</td><td>${escHtml(d.status)}</td><td class="${userClass}">${escHtml(d.name)}</td><td>${escHtml(d.nameG)}</td><td>${escHtml(d.comment)}</td></tr>`;
-        }).join('')}</tbody></table>`;
-    } else {
+    if (!matches.length) {
       output.innerHTML = "<p style='color:yellow'>Brak info!</p>";
+      return;
+    }
+
+    output.innerHTML = `<table><thead><tr><th>Data</th><th>Status</th><th>NAPRAWIACZ</th><th>FINALNA</th><th>INFO</th></tr></thead>
+      <tbody>${matches.map((d, i) => {
+        const userClass = getUserCustomClass(d.name);
+        return `<tr ${i === 0 ? 'class="latest-record"' : ''}><td>${escHtml(d.date)}</td><td>${escHtml(d.status)}</td><td class="${userClass}">${escHtml(d.name)}</td><td>${escHtml(d.nameG)}</td><td>${escHtml(d.comment)}</td></tr>`;
+      }).join('')}</tbody></table>`;
+  }
+
+  function runBulkSearch() {
+    const output = $('search-result');
+    isPnVisible = false;
+
+    const snList = $('bulk-input').value.split('\n').map(s => s.trim().toUpperCase()).filter(s => s !== '');
+    if (!snList.length) { output.innerHTML = ''; return; }
+
+    const groups = {};
+    const notFound = [];
+
+    snList.forEach(sn => {
+      const matches = combinedDataCache.filter(r => (r.serial || '').trim().toUpperCase() === sn);
+      if (matches.length) {
+        matches.sort((a, b) => (parseDatePart(b.date) || 0) - (parseDatePart(a.date) || 0));
+        const record = matches[0];
+        const wName = record.name || 'UNKNOWN';
+        if (!groups[wName]) groups[wName] = [];
+        groups[wName].push(record);
+      } else {
+        notFound.push(sn);
+      }
+    });
+
+    const sortedNames = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
+    let resHtml = '';
+
+    sortedNames.forEach(name => {
+      const userClass = getUserCustomClass(name);
+      resHtml += `
+      <details style="margin-bottom:10px; border:1px solid #008080; border-radius:5px;">
+        <summary style="padding:10px; cursor:pointer; background:rgba(0,128,128,0.2); font-weight:bold;">
+          <span class="${userClass}" style="display:inline-flex;">${escHtml(name)}</span> — [${groups[name].length}]
+        </summary>
+        <table style="width:100%; border-collapse:collapse; background:#222;">
+          <thead><tr style="background:#333;">
+            <th style="border:1px solid #fff; padding:10px;">Serial</th>
+            <th style="border:1px solid #fff; padding:10px;">Data</th>
+            <th style="border:1px solid #fff; padding:10px;">Status</th>
+            <th style="border:1px solid #fff; padding:10px;">Finalna</th>
+            <th style="border:1px solid #fff; padding:10px;">OC</th>
+            <th style="border:1px solid #fff; padding:10px;">Info</th>
+          </tr></thead>
+          <tbody>
+            ${groups[name].map(r => `
+              <tr>
+                <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.serial)}</td>
+                <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.date)}</td>
+                <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.status)}</td>
+                <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.nameG || ' ')}</td>
+                <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.ocAfterRepair || ' ')}</td>
+                <td style="border:1px solid #fff; padding:10px; text-align:center;">${escHtml(r.comment)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </details>`;
+    });
+
+    if (notFound.length) {
+      resHtml += `
+      <details style="margin-top:20px; border:1px solid #ff5555; border-radius:5px;">
+        <summary style="padding:10px; cursor:pointer; background:rgba(255,85,85,0.2); color:#ff5555; font-weight:bold;">
+          NIE ZNALEZIONO — [${notFound.length}]
+        </summary>
+        <div style="padding:10px; color:#ff5555;">${escHtml(notFound.join(', '))}</div>
+      </details>`;
+    }
+
+    output.innerHTML = resHtml || '<p>NIE ZNALEZIONO</p>';
+  }
+
+  function onSearchKey(e) {
+    if (e.key === 'Enter') runSingleSearch();
+  }
+
+  function onBulkKey(e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      runBulkSearch();
     }
   }
 
@@ -871,8 +927,8 @@
 
     $('modal-close').onclick = closeModal;
     $('modal').onclick = (e) => { if (e.target === $('modal')) closeModal(); };
-    $('secret-btn-kovalchyk').onclick = copySecret;
-    $('bulk-search-btn').onclick = openBulkSearch;
+
+    $('table-title').onclick = copySecret;
 
     $('combined-table').querySelector('tbody').addEventListener('click', (e) => {
       const td = e.target.closest('.ld-name');
@@ -881,7 +937,15 @@
 
     $('overview-toggle').onclick = () => toggleBlock('overview-block');
     $('diag-toggle').onclick = () => toggleBlock('diag-block');
-    $('search').addEventListener('keypress', onSearchKey);
+
+    $('mode-switch').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (b) setMode(b.dataset.mode);
+    });
+    $('search').addEventListener('keydown', onSearchKey);
+    $('bulk-input').addEventListener('keydown', onBulkKey);
+    $('bulk-run').onclick = runBulkSearch;
+
     $('main-title').onclick = toggleFullscreen;
     $('helper-input').addEventListener('keydown', onHelperKey);
 
