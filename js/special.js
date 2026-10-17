@@ -7,14 +7,15 @@
 
   // 203 dpi = 8 точок на міліметр
   const DOTS_PER_MM = 8;
-  const ICON_DOTS_W = 368;          // 46 мм
   const ICON_THRESHOLD = 200;       // поріг чорно-білого: більше = жирніші лінії
 
-  // Розміри SCC-етикеток.
-  //   label - висота етикетки (мм), text - висота робочої зони для тексту (мм), icon - висота картинки (точки)
+  // Розміри SCC-етикеток (мм):
+  //   label  - висота етикетки
+  //   text   - висота зони для тексту
+  //   iconW / iconH - точний розмір картинки ICON
   const SCC_SIZES = {
-    '50x30': { label: 30, text: 25, iconDots: 202 },
-    '50x25': { label: 25, text: 20, iconDots: 160 }
+    '50x30': { label: 30, text: 25, iconW: 48, iconH: 28 },
+    '50x25': { label: 25, text: 20, iconW: 48, iconH: 23 }
   };
   const SCC_WIDTH_MM = 50, SCC_TEXT_WIDTH_MM = 46;
   const SCC_MAX_PT = 60, SCC_MIN_PT = 8, SCC_LINE_HEIGHT = 1.1;
@@ -186,9 +187,9 @@
     return `<div class="txt" style="font-size:${pt}pt">${esc(text)}</div>`;
   }
 
-  // ===== ICON: icon.jpg обрізається по малюнку один раз, потім під кожен розмір етикетки
-  // малюється заново в потрібних розмірах (точки) з чорно-білим порогом.
-  let iconCrop = null;   // canvas з обрізаним малюнком (ще без чорно-білого)
+  // ===== ICON: icon.jpg обрізається по малюнку один раз,
+  // потім для кожного розміру етикетки малюється заново в точних розмірах з чорно-білим порогом.
+  let iconCrop = null;
 
   function loadIcon() {
     const img = new Image();
@@ -228,26 +229,25 @@
     img.src = ICON_SRC;
   }
 
-  // Повертає PNG-картинку ICON для заданої висоти області (у точках), ширина завжди 46 мм
-  function iconPng(heightDots) {
-    const W = ICON_DOTS_W, H = heightDots;
+  // Повертає PNG-картинку ICON розміром wDots × hDots точок (малюнок вписується з центруванням)
+  function iconPng(wDots, hDots) {
     const cw = iconCrop.width, ch = iconCrop.height;
-    const scale = Math.min(W / cw, H / ch);
+    const scale = Math.min(wDots / cw, hDots / ch);
     const w = Math.max(1, Math.round(cw * scale));
     const h = Math.max(1, Math.round(ch * scale));
-    const ox = Math.round((W - w) / 2);
-    const oy = Math.round((H - h) / 2);
+    const ox = Math.round((wDots - w) / 2);
+    const oy = Math.round((hDots - h) / 2);
 
     const out = document.createElement('canvas');
-    out.width = W; out.height = H;
+    out.width = wDots; out.height = hDots;
     const octx = out.getContext('2d', { willReadFrequently: true });
     octx.fillStyle = '#FFFFFF';
-    octx.fillRect(0, 0, W, H);
+    octx.fillRect(0, 0, wDots, hDots);
     octx.imageSmoothingEnabled = true;
     octx.imageSmoothingQuality = 'high';
     octx.drawImage(iconCrop, 0, 0, cw, ch, ox, oy, w, h);
 
-    const od = octx.getImageData(0, 0, W, H), px = od.data;
+    const od = octx.getImageData(0, 0, wDots, hDots), px = od.data;
     for (let i = 0; i < px.length; i += 4) {
       const g = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
       const v = g < ICON_THRESHOLD ? 0 : 255;
@@ -320,18 +320,20 @@
     }
 
     function printSCC() {
-      const sizeKey = $('spSccSize').value;
-      const size = SCC_SIZES[sizeKey] || SCC_SIZES['50x30'];
+      const size = SCC_SIZES[$('spSccSize').value] || SCC_SIZES['50x30'];
       const lblH = (size.label - 0.5).toFixed(1);
 
       const v1 = $('spVal1').value.trim(), v2 = $('spVal2').value.trim();
       const blocks = [];
-      if ($('spChk1').checked && v1) blocks.push(buildWrappedText(v1, size.text));
-      if ($('spChk2').checked && v2) blocks.push(buildWrappedText(v2, size.text));
+      if ($('spChk1').checked && v1) blocks.push({ html: buildWrappedText(v1, size.text), pic: false });
+      if ($('spChk2').checked && v2) blocks.push({ html: buildWrappedText(v2, size.text), pic: false });
       if ($('spChkIcon').checked) {
         if (!iconCrop) return alert(t('alertImg'));
-        const hMm = (size.iconDots / DOTS_PER_MM).toFixed(2);
-        blocks.push(`<img class="pic" style="height:${hMm}mm" src="${iconPng(size.iconDots)}" alt="">`);
+        const wDots = size.iconW * DOTS_PER_MM, hDots = size.iconH * DOTS_PER_MM;
+        blocks.push({
+          html: `<img class="pic" style="width:${size.iconW}mm;height:${size.iconH}mm" src="${iconPng(wDots, hDots)}" alt="">`,
+          pic: true
+        });
       }
 
       if (blocks.length === 0) return alert(t('alertScc'));
@@ -342,7 +344,9 @@
 
       let body = '';
       for (let i = 0; i < n; i++) {
-        blocks.forEach(b => { body += `<div class="lbl">${b}</div>`; });
+        blocks.forEach(b => {
+          body += `<div class="lbl${b.pic ? ' lbl-pic' : ''}">${b.html}</div>`;
+        });
       }
 
       printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
@@ -350,9 +354,11 @@
         html, body { margin: 0; padding: 0; background: #fff; }
         .lbl { display: grid; place-items: center; width: ${SCC_WIDTH_MM}mm; height: ${lblH}mm; padding: 2mm;
                box-sizing: border-box; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+        /* Для картинки ICON бокові відступи менші: 48 мм з 50 мм етикетки */
+        .lbl-pic { padding: 0 1mm; }
         .txt { width: 100%; color: #000; font-family: Arial, Helvetica, sans-serif; font-weight: 900;
                line-height: 1.1; overflow-wrap: anywhere; text-align: center; }
-        .pic { width: ${SCC_TEXT_WIDTH_MM}mm; display: block; image-rendering: pixelated; }
+        .pic { display: block; image-rendering: pixelated; }
         .lbl:not(:last-child) { break-after: page; page-break-after: always; }
       </style></head><body>${body}</body></html>`);
     }
