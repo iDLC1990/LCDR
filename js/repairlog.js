@@ -59,13 +59,13 @@
   let allRows = [];
   let searchTimer = null;
 
-  // Язык сайта: берём из выпадающего списка в верхней панели, иначе из атрибута lang
+  // Язык сайта: из выпадающего списка в верхней панели, иначе из атрибута lang
   function currentLang() {
     const sel = document.querySelector(".topbar select");
     const raw = ((sel && sel.value) || document.documentElement.lang || "en").toLowerCase();
-    if (raw.includes("ru") || raw.includes("рус")) return "ru";
-    if (raw.includes("uk") || raw.includes("укр")) return "uk";
-    if (raw.includes("pl") || raw.includes("pol")) return "pl";
+    if (raw.startsWith("ru")) return "ru";
+    if (raw.startsWith("uk")) return "uk";
+    if (raw.startsWith("pl")) return "pl";
     return "en";
   }
 
@@ -117,4 +117,167 @@
 
   function expandStatus(input) {
     return input.trim().split(/\s+/)
-      .map(p => { const u = p.toUpperCase(); return STATUS_MAP[u]
+      .map(p => { const u = p.toUpperCase(); return STATUS_MAP[u] || u; })
+      .join(" ");
+  }
+
+  function colorFor(status) {
+    for (const w of String(status).split(" ")) {
+      if (STATUS_COLORS[w]) return STATUS_COLORS[w];
+    }
+    return "transparent";
+  }
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // Подписи интерфейса под текущий язык сайта
+  function applyLang() {
+    const t = tr();
+    page.querySelector("#rlTitle").textContent = t.title;
+    snInput.placeholder = t.sn;
+    statusInput.placeholder = t.statusPh;
+    page.querySelector("#rlAdd").textContent = t.add;
+    page.querySelector("#rlClear").title = t.clear;
+    searchInput.placeholder = t.search;
+    page.querySelector("#thSn").textContent = t.sn;
+    page.querySelector("#thDate").textContent = t.date;
+    page.querySelector("#thTime").textContent = t.time;
+    page.querySelector("#thStatus").textContent = t.status;
+    render();
+  }
+
+  function render() {
+    if (!allRows.length) {
+      body.innerHTML = `<tr><td colspan="4" class="rl-empty">${tr().empty}</td></tr>`;
+      return;
+    }
+    body.innerHTML = allRows.map(r => `
+      <tr style="--row-color:${colorFor(r.status)}">
+        <td class="col-sn rl-sn">${esc(r.panel_sn)}</td>
+        <td class="col-date">${esc(r.repair_date)}</td>
+        <td class="col-time">${esc(r.repair_time)}</td>
+        <td class="col-status">${esc(r.status)}</td>
+      </tr>`).join("");
+  }
+
+  // Без поиска: записи за сегодня. С поиском: по всей таблице, по SN.
+  async function load() {
+    const q = searchInput.value.trim().toUpperCase();
+    let query = db.from(TABLE).select("*").order("id", { ascending: false });
+
+    if (q) {
+      query = query.ilike("panel_sn", `%${q}%`).limit(500);
+    } else {
+      query = query.eq("repair_date", localDate(new Date())).limit(1000);
+    }
+
+    const { data, error } = await query;
+    if (error) { alert(tr().errLoad + error.message); return; }
+    allRows = data;
+    render();
+  }
+
+  // Следующий номер за день: 1, 2, 3... и снова с 1 на следующий день
+  async function nextDailyNo(date) {
+    const { data, error } = await db.from(TABLE)
+      .select("log_no")
+      .eq("repair_date", date)
+      .order("log_no", { ascending: false })
+      .limit(1);
+    if (error) throw error;
+    return data.length ? data[0].log_no + 1 : 1;
+  }
+
+  codesBox.addEventListener("click", (e) => {
+    const btn = e.target.closest(".rl-code");
+    if (!btn) return;
+
+    if (btn.dataset.action === "clear") {
+      statusInput.value = "";
+    } else {
+      const cur = statusInput.value.trim();
+      statusInput.value = cur ? cur + " " + btn.dataset.code : btn.dataset.code;
+    }
+    statusInput.focus();
+  });
+
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(load, 300);
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const sn = snInput.value.trim().toUpperCase();
+    const status = expandStatus(statusInput.value);
+    if (!sn || !status) return;
+
+    const now = new Date();
+    const today = localDate(now);
+
+    try {
+      const logNo = await nextDailyNo(today);
+      const { error } = await db.from(TABLE).insert({
+        log_no: logNo,
+        panel_sn: sn,
+        repair_date: today,
+        repair_time: localTime(now),
+        status
+      });
+      if (error) throw error;
+    } catch (err) {
+      alert(tr().errSave + err.message);
+      return;
+    }
+
+    // Автопечать, если статус содержит отдельное слово OK (модуль autoprint.js)
+    if (status.split(" ").includes("OK") && window.autoPrintOk) {
+      window.autoPrintOk(sn);
+    }
+
+    snInput.value = "";
+    statusInput.value = "";
+    snInput.focus();
+    load();
+  });
+
+  // Смена языка на сайте: переписываем подписи
+  document.addEventListener("change", (e) => {
+    if (e.target.closest && e.target.closest(".topbar select")) applyLang();
+  }, true);
+
+  // Открытие Repair Log: только по пункту Secret
+  document.querySelectorAll('[data-page="secret"]').forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll(".label-page").forEach(s => s.style.display = "none");
+      document.getElementById("content").style.display = "none";
+      page.style.display = "";
+      document.getElementById("pageTitle").textContent = tr().title;
+      applyLang();
+      load();
+    });
+  });
+
+  // Любой другой пункт меню закрывает Repair Log
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-page]");
+    if (el && el.dataset.page !== "secret") {
+      page.style.display = "none";
+    }
+  }, true);
+
+  // Скрытие вкладки по Alt+Q закрывает и страницу
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey && (e.key === "q" || e.key === "Q" || e.code === "KeyQ")) {
+      setTimeout(() => {
+        if (tab.style.display === "none") page.style.display = "none";
+      }, 0);
+    }
+  });
+
+  applyLang();
+})();
