@@ -37,8 +37,9 @@
             <a href="#" class="nav-item sub" data-page="label">
               <span class="label" data-i18n="panelLabel">Panel Label</span>
             </a>
-            <a href="#" class="nav-item" id="secretTab" data-page="secret" style="display:none">
-              <span class="label"> </span>
+            <!-- Скрытая вкладка: появляется по Alt++ -->
+            <a href="#" class="nav-item sub" id="secretTab" data-page="secret" style="display:none">
+              <span class="label">Secret</span>
             </a>
           </div>
         </div>
@@ -75,6 +76,7 @@
       <section class="label-page" id="statsPage" style="display:none"></section>
       <section class="label-page" id="final1Page" style="display:none"></section>
       <section class="label-page" id="final2Page" style="display:none"></section>
+      <section class="label-page" id="secretPage" style="display:none"></section>
     </main>
 
   </div>
@@ -92,5 +94,17 @@
   <script src="js/livedata.js"></script>
   <script src="js/statistic.js"></script>
   <script src="js/collapse.js"></script>
+
+  <!-- Показ скрытой вкладки по Alt++ -->
+  <script>
+    document.addEventListener('keydown', (e) => {
+      const isPlus = e.key === '+' || e.key === '=' || e.code === 'NumpadAdd';
+      if (e.altKey && isPlus) {
+        e.preventDefault();
+        const tab = document.getElementById('secretTab');
+        tab.style.display = tab.style.display === 'none' ? '' : 'none';
+      }
+    });
+  </script>
 </body>
 </html>
