@@ -519,6 +519,7 @@ html, body {
   cursor: pointer;
   padding: 2px 6px;
 }
+
 /* ===== Кнопки-сокращения статусов ===== */
 .rl-codes {
   display: flex;
