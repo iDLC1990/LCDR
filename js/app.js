@@ -201,7 +201,7 @@ function renderContent() {
 
 function openPage(id) {
   if (!PAGES[id]) return;
-  if (!state.openTabs.includes(id)) state.openTabs.push(id);
+  state.openTabs = [id];
   state.active = id;
   render();
 }
