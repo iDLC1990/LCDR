@@ -1,5 +1,5 @@
 /* Ручне / масове введення та друк (SN, PN, Brand) з оригіналу.
-   Блок стоїть над таблицею на сторінках Final station I та II, згортається кліком по заголовку.
+   Блок стоїть над таблицею на сторінках Final station I та II, згортається кліком по смузі над полями.
    Формат друку (100×78 або 130×76) береться з перемикача на сторінці (localStorage final1Mode / final2Mode).
    Мову задає сайт (select у верхній панелі).
    Підключення: <script src="js/manual.js"></script> ПІСЛЯ js/final1.js і js/final2.js. */
@@ -17,24 +17,24 @@
 
   /* ===== Переклади (10 мов сайту) ===== */
   const I18N = {
-    en: { title: "✍️ Manual / bulk entry and print (paste from Google Sheets)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Print", printBrand: "🖨️ With Brand", alertFill: "Please fill in at least Serial Number or Part Number!", alertNoData: "No data found to print!" },
-    uk: { title: "✍️ Ручне / Масове введення та друк (вставка з Google Таблиць)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Друк", printBrand: "🖨️ З Brand", alertFill: "Будь ласка, заповніть хоча б Serial Number або Part Number!", alertNoData: "Не знайдено даних для друку!" },
-    ru: { title: "✍️ Ручной / массовый ввод и печать (вставка из Google Таблиц)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Печать", printBrand: "🖨️ С Brand", alertFill: "Пожалуйста, заполните хотя бы Serial Number или Part Number!", alertNoData: "Не найдено данных для печати!" },
-    pl: { title: "✍️ Ręczne / masowe wprowadzanie i druk (wklejanie z Arkuszy Google)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Drukuj", printBrand: "🖨️ Z Brand", alertFill: "Wypełnij co najmniej Serial Number lub Part Number!", alertNoData: "Nie znaleziono danych do druku!" },
-    de: { title: "✍️ Manuelle / Massen-Eingabe und Druck (Einfügen aus Google Tabellen)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Drucken", printBrand: "🖨️ Mit Brand", alertFill: "Bitte mindestens Serial Number oder Part Number ausfüllen!", alertNoData: "Keine Daten zum Drucken gefunden!" },
-    fr: { title: "✍️ Saisie manuelle / en masse et impression (coller depuis Google Sheets)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Imprimer", printBrand: "🖨️ Avec Brand", alertFill: "Veuillez remplir au moins Serial Number ou Part Number !", alertNoData: "Aucune donnée à imprimer !" },
-    es: { title: "✍️ Entrada manual / masiva e impresión (pegar desde Google Sheets)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Imprimir", printBrand: "🖨️ Con Brand", alertFill: "¡Complete al menos Serial Number o Part Number!", alertNoData: "¡No se encontraron datos para imprimir!" },
-    it: { title: "✍️ Inserimento manuale / multiplo e stampa (incolla da Google Fogli)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Stampa", printBrand: "🖨️ Con Brand", alertFill: "Compila almeno Serial Number o Part Number!", alertNoData: "Nessun dato da stampare!" },
-    pt: { title: "✍️ Entrada manual / em massa e impressão (colar do Google Planilhas)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Imprimir", printBrand: "🖨️ Com Brand", alertFill: "Preencha pelo menos Serial Number ou Part Number!", alertNoData: "Nenhum dado encontrado para imprimir!" },
-    tr: { title: "✍️ Manuel / toplu giriş ve yazdırma (Google E-Tablolar'dan yapıştırın)", sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Yazdır", printBrand: "🖨️ Brand ile", alertFill: "En az Serial Number veya Part Number doldurun!", alertNoData: "Yazdırılacak veri bulunamadı!" }
+    en: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Print", printBrand: "🖨️ With Brand", alertFill: "Please fill in at least Serial Number or Part Number!", alertNoData: "No data found to print!" },
+    uk: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Друк", printBrand: "🖨️ З Brand", alertFill: "Будь ласка, заповніть хоча б Serial Number або Part Number!", alertNoData: "Не знайдено даних для друку!" },
+    ru: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Печать", printBrand: "🖨️ С Brand", alertFill: "Пожалуйста, заполните хотя бы Serial Number или Part Number!", alertNoData: "Не найдено данных для печати!" },
+    pl: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Drukuj", printBrand: "🖨️ Z Brand", alertFill: "Wypełnij co najmniej Serial Number lub Part Number!", alertNoData: "Nie znaleziono danych do druku!" },
+    de: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Drucken", printBrand: "🖨️ Mit Brand", alertFill: "Bitte mindestens Serial Number oder Part Number ausfüllen!", alertNoData: "Keine Daten zum Drucken gefunden!" },
+    fr: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Imprimer", printBrand: "🖨️ Avec Brand", alertFill: "Veuillez remplir au moins Serial Number ou Part Number !", alertNoData: "Aucune donnée à imprimer !" },
+    es: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Imprimir", printBrand: "🖨️ Con Brand", alertFill: "¡Complete al menos Serial Number o Part Number!", alertNoData: "¡No se encontraron datos para imprimir!" },
+    it: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Stampa", printBrand: "🖨️ Con Brand", alertFill: "Compila almeno Serial Number o Part Number!", alertNoData: "Nessun dato da stampare!" },
+    pt: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Imprimir", printBrand: "🖨️ Com Brand", alertFill: "Preencha pelo menos Serial Number ou Part Number!", alertNoData: "Nenhum dado encontrado para imprimir!" },
+    tr: { sn: "Serial Number (SN)", pn: "Part Number (PN)", brand: "Brand", print: "🖨️ Yazdır", printBrand: "🖨️ Brand ile", alertFill: "En az Serial Number veya Part Number doldurun!", alertNoData: "Yazdırılacak veri bulunamadı!" }
   };
 
   const CSS = `
 .mn-card { max-width: 1200px; width: 100%; margin: 0 auto 16px; box-sizing: border-box; }
-.mn-title { font-size: 15px; font-weight: 600; color: #E5E7EB; margin-bottom: 12px; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; }
-.mn-title:hover { color: #4d94ff; }
+.mn-head { height: 12px; margin: -6px 0 10px 0; border-radius: 6px; background: #1f2937; cursor: pointer; user-select: none; }
+.mn-head:hover { background: #374151; }
 .mn-card.mn-collapsed .mn-body { display: none; }
-.mn-card.mn-collapsed .mn-title { margin-bottom: 0; }
+.mn-card.mn-collapsed .mn-head { margin-bottom: -6px; }
 .mn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
 .mn-grid .form-group { min-width: 0; }
 .mn-grid textarea { width: 100%; resize: vertical; min-height: 72px; font-size: 13px; line-height: 1.4; box-sizing: border-box; }
@@ -74,7 +74,7 @@ html,body{margin:0;padding:0;background:#fff}
 
   const MARKUP = `
 <div class="manual-input-card mn-card">
-  <div class="mn-title"><span data-mn-t="title"></span></div>
+  <div class="mn-head"></div>
   <div class="mn-body">
     <div class="mn-grid">
       <div class="form-group">
@@ -321,7 +321,7 @@ html,body{margin:0;padding:0;background:#fff}
     const card = holder.firstElementChild;
     root.insertBefore(card, root.firstChild);
 
-    card.querySelector('.mn-title').addEventListener('click', () => toggle(card, page.id));
+    card.querySelector('.mn-head').addEventListener('click', () => toggle(card, page.id));
     card.querySelector('.mn-print').addEventListener('click', () => printManual(card, false, page.modeKey));
     card.querySelector('.mn-print-brand').addEventListener('click', () => printManual(card, true, page.modeKey));
     card.querySelector('.mn-sn').addEventListener('paste', onSnPaste);
