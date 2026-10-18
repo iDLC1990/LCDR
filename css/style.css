@@ -451,12 +451,12 @@ html, body {
 #statsPage,
 #final1Page,
 #final2Page,
-#repairLogPage {
+#secretPage {
   background: transparent !important;
 }
 
-/* ===== Repair Log ===== */
-#repairLogPage {
+/* ===== Secret: Repair Log (открывается по Alt+Q) ===== */
+#secretPage {
   padding: 16px;
 }
 .rl-wrap h2 {
