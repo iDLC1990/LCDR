@@ -29,71 +29,61 @@
       from: 'From', to: 'To', workers: 'Workers', all: 'all', selectAll: 'Select all', clearAll: 'Clear all',
       update: 'Update', updating: 'Loading...', noData: 'No data for the selected workers',
       total: 'Total (Sum / OK / NDF)', days: 'Days', scrapTitle: '📊 Scrap / Waiting statistics',
-      scrapNoData: 'No data', serial: 'Serial', status: 'Status', finalna: 'FINAL', hStatus: 'H Status',
-      newNp: 'New / NP', info: 'Info / Description', sortTitle: 'Click to sort', totalRow: 'Total'
+      scrapNoData: 'No data', totalRow: 'Total'
     },
     uk: {
       from: 'Від', to: 'До', workers: 'Працівники', all: 'всі', selectAll: 'Вибрати всіх', clearAll: 'Зняти всіх',
       update: 'Оновити', updating: 'Завантаження...', noData: 'Немає даних для вибраних працівників',
       total: 'Разом (Сума / OK / NDF)', days: 'Днів', scrapTitle: '📊 Статистика Scrap / Waiting',
-      scrapNoData: 'Немає даних', serial: 'Serial', status: 'Статус', finalna: 'ФІНАЛЬНА', hStatus: 'H Статус',
-      newNp: 'New / NP', info: 'Інфо / Опис', sortTitle: 'Натисніть, щоб відсортувати', totalRow: 'Разом'
+      scrapNoData: 'Немає даних', totalRow: 'Разом'
     },
     ru: {
       from: 'С', to: 'По', workers: 'Сотрудники', all: 'все', selectAll: 'Выбрать всех', clearAll: 'Снять всех',
       update: 'Обновить', updating: 'Загрузка...', noData: 'Нет данных для выбранных сотрудников',
       total: 'Итого (Сумма / OK / NDF)', days: 'Дней', scrapTitle: '📊 Статистика Scrap / Waiting',
-      scrapNoData: 'Нет данных', serial: 'Serial', status: 'Статус', finalna: 'ФИНАЛЬНАЯ', hStatus: 'H Статус',
-      newNp: 'New / NP', info: 'Инфо / Описание', sortTitle: 'Нажмите для сортировки', totalRow: 'Итого'
+      scrapNoData: 'Нет данных', totalRow: 'Итого'
     },
     pl: {
       from: 'Od', to: 'Do', workers: 'Pracownicy', all: 'wszyscy', selectAll: 'Zaznacz wszystkich', clearAll: 'Odznacz wszystkich',
       update: 'Aktualizuj', updating: 'Ładowanie...', noData: 'Brak danych dla wybranych pracowników',
       total: 'Razem (Sum / OK / NDF)', days: 'Dni', scrapTitle: '📊 Scrap / Waiting Statistics',
-      scrapNoData: 'Brak danych', serial: 'Serial', status: 'Status', finalna: 'FINALNA', hStatus: 'H Status',
-      newNp: 'New / NP', info: 'Info / Description', sortTitle: 'Kliknij, aby posortować', totalRow: 'Razem / Total'
+      scrapNoData: 'Brak danych', totalRow: 'Razem / Total'
     },
     de: {
       from: 'Von', to: 'Bis', workers: 'Mitarbeiter', all: 'alle', selectAll: 'Alle auswählen', clearAll: 'Alle abwählen',
       update: 'Aktualisieren', updating: 'Lade...', noData: 'Keine Daten für die gewählten Mitarbeiter',
       total: 'Gesamt (Summe / OK / NDF)', days: 'Tage', scrapTitle: '📊 Scrap-/Waiting-Statistik',
-      scrapNoData: 'Keine Daten', serial: 'Serial', status: 'Status', finalna: 'FINAL', hStatus: 'H-Status',
-      newNp: 'New / NP', info: 'Info / Beschreibung', sortTitle: 'Zum Sortieren klicken', totalRow: 'Gesamt'
+      scrapNoData: 'Keine Daten', totalRow: 'Gesamt'
     },
     fr: {
       from: 'Du', to: 'Au', workers: 'Employés', all: 'tous', selectAll: 'Tout sélectionner', clearAll: 'Tout désélectionner',
       update: 'Actualiser', updating: 'Chargement...', noData: 'Aucune donnée pour les employés sélectionnés',
       total: 'Total (Somme / OK / NDF)', days: 'Jours', scrapTitle: '📊 Statistiques Scrap / Waiting',
-      scrapNoData: 'Aucune donnée', serial: 'Serial', status: 'Statut', finalna: 'FINALE', hStatus: 'Statut H',
-      newNp: 'New / NP', info: 'Info / Description', sortTitle: 'Cliquer pour trier', totalRow: 'Total'
+      scrapNoData: 'Aucune donnée', totalRow: 'Total'
     },
     es: {
       from: 'Desde', to: 'Hasta', workers: 'Empleados', all: 'todos', selectAll: 'Seleccionar todos', clearAll: 'Desmarcar todos',
       update: 'Actualizar', updating: 'Cargando...', noData: 'No hay datos de los empleados seleccionados',
       total: 'Total (Suma / OK / NDF)', days: 'Días', scrapTitle: '📊 Estadística Scrap / Waiting',
-      scrapNoData: 'Sin datos', serial: 'Serial', status: 'Estado', finalna: 'FINAL', hStatus: 'Estado H',
-      newNp: 'New / NP', info: 'Info / Descripción', sortTitle: 'Clic para ordenar', totalRow: 'Total'
+      scrapNoData: 'Sin datos', totalRow: 'Total'
     },
     it: {
       from: 'Da', to: 'A', workers: 'Dipendenti', all: 'tutti', selectAll: 'Seleziona tutti', clearAll: 'Deseleziona tutti',
       update: 'Aggiorna', updating: 'Caricamento...', noData: 'Nessun dato per i dipendenti selezionati',
       total: 'Totale (Somma / OK / NDF)', days: 'Giorni', scrapTitle: '📊 Statistiche Scrap / Waiting',
-      scrapNoData: 'Nessun dato', serial: 'Serial', status: 'Stato', finalna: 'FINALE', hStatus: 'Stato H',
-      newNp: 'New / NP', info: 'Info / Descrizione', sortTitle: 'Clicca per ordinare', totalRow: 'Totale'
+      scrapNoData: 'Nessun dato', totalRow: 'Totale'
     },
     pt: {
       from: 'De', to: 'Até', workers: 'Funcionários', all: 'todos', selectAll: 'Selecionar todos', clearAll: 'Desmarcar todos',
       update: 'Atualizar', updating: 'Carregando...', noData: 'Sem dados para os funcionários selecionados',
       total: 'Total (Soma / OK / NDF)', days: 'Dias', scrapTitle: '📊 Estatística Scrap / Waiting',
-      scrapNoData: 'Sem dados', serial: 'Serial', status: 'Status', finalna: 'FINAL', hStatus: 'Status H',
-      newNp: 'New / NP', info: 'Info / Descrição', sortTitle: 'Clique para ordenar', totalRow: 'Total'
+      scrapNoData: 'Sem dados', totalRow: 'Total'
     },
     tr: {
       from: 'Başlangıç', to: 'Bitiş', workers: 'Çalışanlar', all: 'tümü', selectAll: 'Tümünü seç', clearAll: 'Tümünü kaldır',
       update: 'Güncelle', updating: 'Yükleniyor...', noData: 'Seçilen çalışanlar için veri yok',
       total: 'Toplam (Toplam / OK / NDF)', days: 'Gün', scrapTitle: '📊 Scrap / Waiting istatistikleri',
-      scrapNoData: 'Veri yok', serial: 'Serial', status: 'Durum', finalna: 'FİNAL', hStatus: 'H Durum',
-      newNp: 'New / NP', info: 'Bilgi / Açıklama', sortTitle: 'Sıralamak için tıklayın', totalRow: 'Toplam'
+      scrapNoData: 'Veri yok', totalRow: 'Toplam'
     }
   };
 
@@ -162,9 +152,7 @@
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 #statsPage td.name-cell { text-align: left; color: #fff; font-weight: 600; }
-#statsPage tr.person-row { cursor: pointer; }
 #statsPage tr.person-row:hover td { background: rgba(255,255,255,0.03); }
-#statsPage tr.person-row:hover td.name-cell { color: #4d94ff; }
 #statsPage .sum-col { color: #4d94ff; font-weight: 700; }
 #statsPage tfoot td { background: #111827; font-weight: 700; color: #4d94ff; }
 #statsPage .st-split { display: inline-flex; gap: 6px; align-items: center; justify-content: center; }
@@ -173,18 +161,6 @@
 #statsPage .st-okc { color: #4d94ff; }
 #statsPage .st-ndfc { color: #f472b6; }
 #statsPage .st-msg { color: #9CA3AF; text-align: center; padding: 20px; margin: 0; }
-
-/* ----- Детали работника ----- */
-#statsPage .detail-row td { padding: 12px; background: #0a0a0a; white-space: normal; }
-#statsPage .detail-table { border: 1px solid #1f2937; border-radius: 8px; overflow: hidden; }
-#statsPage .detail-table th { font-size: 11px; }
-#statsPage .detail-table th.sortable { cursor: pointer; }
-#statsPage .detail-table th.sortable:hover { color: #fff; }
-#statsPage .detail-table td { text-align: left; font-size: 13px; white-space: normal; }
-#statsPage .st-ndf { color: #f472b6; font-weight: 600; }
-#statsPage .st-scrap { color: #f87171; font-weight: 600; }
-#statsPage .st-waiting { color: #fbbf24; font-weight: 600; }
-#statsPage .st-ok { color: #E5E7EB; }
 
 /* ----- Scrap / Waiting ----- */
 #statsPage .scrap { color: #f87171; font-weight: 700; }
@@ -298,9 +274,7 @@
         date: row[0] || '',
         serial: row[2] || '',
         status: (row[4] || '').toUpperCase(),
-        finalna: row[6] || '',
         person: row[5] || '',
-        statusH: row[7] || '',
         matrixStatus: row[9] || '',
         description: row[10] || ''
       }));
@@ -461,7 +435,7 @@
         diagTotals[d] += v;
         return `<td>${v || '-'}</td>`;
       }).join('');
-      return `<tr class="person-row" data-person="${esc(person)}">
+      return `<tr class="person-row">
         <td class="name-cell">${esc(person)}</td>${cells}
         <td class="sum-col">${splitCell(rowTotal, p.okCount, p.ndfCount)}</td>
         <td>${p.days.size}</td>
@@ -492,64 +466,6 @@
           </tfoot>
         </table>
       </div>`;
-  }
-
-  function toggleDetails(row, person) {
-    const next = row.nextElementSibling;
-    if (next && next.classList.contains('detail-row')) {
-      next.remove();
-      return;
-    }
-    const detailRow = document.createElement('tr');
-    detailRow.className = 'detail-row';
-    const td = document.createElement('td');
-    td.colSpan = 100;
-    detailRow.appendChild(td);
-    row.after(detailRow);
-    renderDetailContent(td, person, 'asc');
-  }
-
-  function renderDetailContent(td, person, order) {
-    const details = lastFilteredData
-      .filter(d => d.person === person)
-      .sort((a, b) => {
-        const c = (a.serial || '').localeCompare(b.serial || '', undefined, { numeric: true, sensitivity: 'base' });
-        return order === 'asc' ? c : -c;
-      });
-
-    const arrow = order === 'asc' ? ' ▲' : ' ▼';
-    const nextOrder = order === 'asc' ? 'desc' : 'asc';
-
-    const rows = details.map(d => {
-      const s = (d.status || '').toUpperCase();
-      let cls = 'st-ok';
-      if (s.includes('SCRAP')) cls = 'st-scrap';
-      else if (s.includes('WAITING')) cls = 'st-waiting';
-      else if (s.includes('NDF')) cls = 'st-ndf';
-      return `<tr>
-        <td class="${cls}">${esc(d.serial)}</td>
-        <td class="${cls}">${esc(d.status)}</td>
-        <td class="${cls}" style="font-weight:700;">${esc(d.finalna)}</td>
-        <td class="${cls}">${esc(d.statusH)}</td>
-        <td class="${cls}">${esc(d.matrixStatus)}</td>
-        <td class="${cls}">${esc(d.description)}</td>
-      </tr>`;
-    }).join('');
-
-    td.innerHTML = `
-      <table class="detail-table">
-        <thead>
-          <tr>
-            <th class="sortable" data-person="${esc(person)}" data-order="${nextOrder}" title="${esc(t('sortTitle'))}">${esc(t('serial'))}${arrow}</th>
-            <th>${esc(t('status'))}</th>
-            <th>${esc(t('finalna'))}</th>
-            <th>${esc(t('hStatus'))}</th>
-            <th>${esc(t('newNp'))}</th>
-            <th>${esc(t('info'))}</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>`;
   }
 
   function renderScrapWaitingTable(stats) {
@@ -620,17 +536,6 @@
     $('st-all').addEventListener('click', () => selectAllPeople(true));
     $('st-none').addEventListener('click', () => selectAllPeople(false));
     $('st-update').addEventListener('click', update);
-
-    // Делегирование: строки работников, сортировка деталей
-    $('st-stats').addEventListener('click', (e) => {
-      const th = e.target.closest('th.sortable');
-      if (th) {
-        renderDetailContent(th.closest('td'), th.dataset.person, th.dataset.order);
-        return;
-      }
-      const tr = e.target.closest('tr.person-row');
-      if (tr) toggleDetails(tr, tr.dataset.person);
-    });
 
     initialized = true;
     applyText();
