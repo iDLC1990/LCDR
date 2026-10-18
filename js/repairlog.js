@@ -31,6 +31,12 @@
   let allRows = [];
   let searchTimer = null;
 
+  // Кнопки-сокращения: код + подсказка с расшифровкой
+  const codeButtons = Object.entries(STATUS_MAP)
+    .map(([code, name]) =>
+      `<button type="button" class="rl-code" data-code="${code}" title="${name}">${code}</button>`)
+    .join("");
+
   page.innerHTML = `
     <div class="rl-wrap">
       <h2>Repair Log</h2>
@@ -39,6 +45,10 @@
         <input id="rlStatus" placeholder="Статус (OK, VV, H...)" autocomplete="off" required>
         <button type="submit">+ Добавить</button>
       </form>
+      <div class="rl-codes" id="rlCodes">
+        ${codeButtons}
+        <button type="button" class="rl-code rl-clear" data-action="clear" title="Очистить статус">✕</button>
+      </div>
       <input id="rlSearch" placeholder="Поиск по SN (по всей базе)" autocomplete="off">
       <table class="rl-table">
         <thead>
@@ -52,6 +62,7 @@
   const snInput = page.querySelector("#rlSn");
   const statusInput = page.querySelector("#rlStatus");
   const searchInput = page.querySelector("#rlSearch");
+  const codesBox = page.querySelector("#rlCodes");
   const body = page.querySelector("#rlBody");
 
   function pad(n) { return String(n).padStart(2, "0"); }
@@ -115,6 +126,20 @@
     if (error) throw error;
     return data.length ? data[0].log_no + 1 : 1;
   }
+
+  // Нажатие кнопки дописывает код в поле статуса
+  codesBox.addEventListener("click", (e) => {
+    const btn = e.target.closest(".rl-code");
+    if (!btn) return;
+
+    if (btn.dataset.action === "clear") {
+      statusInput.value = "";
+    } else {
+      const cur = statusInput.value.trim();
+      statusInput.value = cur ? cur + " " + btn.dataset.code : btn.dataset.code;
+    }
+    statusInput.focus();
+  });
 
   searchInput.addEventListener("input", () => {
     clearTimeout(searchTimer);
