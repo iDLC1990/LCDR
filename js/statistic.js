@@ -142,14 +142,12 @@
   border-radius: 10px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
 }
 #statsPage .st-head {
-  display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;
+  cursor: pointer; user-select: none;
   padding: 12px 18px; background: #111827; color: #fff; font-weight: 700; font-size: 15px;
   border-bottom: 1px solid #1f2937;
 }
 #statsPage .st-head:hover { color: #4d94ff; }
-#statsPage .st-arrow { font-size: 12px; color: #9CA3AF; transition: transform 0.2s; }
 #statsPage .st-card.collapsed .st-head { border-bottom: none; }
-#statsPage .st-card.collapsed .st-arrow { transform: rotate(180deg); }
 #statsPage .st-card.collapsed .st-body { display: none; }
 
 #statsPage .st-table-wrap { overflow-x: auto; }
@@ -221,10 +219,7 @@
 </div>
 
 <div class="st-card" id="st-stats">
-  <div class="st-head" id="st-head">
-    <span data-st="mainTitle"></span>
-    <span class="st-arrow">▲</span>
-  </div>
+  <div class="st-head" id="st-head" data-st="mainTitle"></div>
   <div class="st-body" id="st-body"></div>
 </div>
 
