@@ -29,61 +29,61 @@
       from: 'From', to: 'To', workers: 'Workers', all: 'all', selectAll: 'Select all', clearAll: 'Clear all',
       update: 'Update', updating: 'Loading...', noData: 'No data for the selected workers',
       total: 'Total (Sum / OK / NDF)', days: 'Days', scrapTitle: '📊 Scrap / Waiting statistics',
-      scrapNoData: 'No data', totalRow: 'Total'
+      scrapNoData: 'No data', totalRow: 'Total', mainTitle: 'Statistics'
     },
     uk: {
       from: 'Від', to: 'До', workers: 'Працівники', all: 'всі', selectAll: 'Вибрати всіх', clearAll: 'Зняти всіх',
       update: 'Оновити', updating: 'Завантаження...', noData: 'Немає даних для вибраних працівників',
       total: 'Разом (Сума / OK / NDF)', days: 'Днів', scrapTitle: '📊 Статистика Scrap / Waiting',
-      scrapNoData: 'Немає даних', totalRow: 'Разом'
+      scrapNoData: 'Немає даних', totalRow: 'Разом', mainTitle: 'Статистика'
     },
     ru: {
       from: 'С', to: 'По', workers: 'Сотрудники', all: 'все', selectAll: 'Выбрать всех', clearAll: 'Снять всех',
       update: 'Обновить', updating: 'Загрузка...', noData: 'Нет данных для выбранных сотрудников',
       total: 'Итого (Сумма / OK / NDF)', days: 'Дней', scrapTitle: '📊 Статистика Scrap / Waiting',
-      scrapNoData: 'Нет данных', totalRow: 'Итого'
+      scrapNoData: 'Нет данных', totalRow: 'Итого', mainTitle: 'Статистика'
     },
     pl: {
       from: 'Od', to: 'Do', workers: 'Pracownicy', all: 'wszyscy', selectAll: 'Zaznacz wszystkich', clearAll: 'Odznacz wszystkich',
       update: 'Aktualizuj', updating: 'Ładowanie...', noData: 'Brak danych dla wybranych pracowników',
       total: 'Razem (Sum / OK / NDF)', days: 'Dni', scrapTitle: '📊 Scrap / Waiting Statistics',
-      scrapNoData: 'Brak danych', totalRow: 'Razem / Total'
+      scrapNoData: 'Brak danych', totalRow: 'Razem / Total', mainTitle: 'Statystyka'
     },
     de: {
       from: 'Von', to: 'Bis', workers: 'Mitarbeiter', all: 'alle', selectAll: 'Alle auswählen', clearAll: 'Alle abwählen',
       update: 'Aktualisieren', updating: 'Lade...', noData: 'Keine Daten für die gewählten Mitarbeiter',
       total: 'Gesamt (Summe / OK / NDF)', days: 'Tage', scrapTitle: '📊 Scrap-/Waiting-Statistik',
-      scrapNoData: 'Keine Daten', totalRow: 'Gesamt'
+      scrapNoData: 'Keine Daten', totalRow: 'Gesamt', mainTitle: 'Statistik'
     },
     fr: {
       from: 'Du', to: 'Au', workers: 'Employés', all: 'tous', selectAll: 'Tout sélectionner', clearAll: 'Tout désélectionner',
       update: 'Actualiser', updating: 'Chargement...', noData: 'Aucune donnée pour les employés sélectionnés',
       total: 'Total (Somme / OK / NDF)', days: 'Jours', scrapTitle: '📊 Statistiques Scrap / Waiting',
-      scrapNoData: 'Aucune donnée', totalRow: 'Total'
+      scrapNoData: 'Aucune donnée', totalRow: 'Total', mainTitle: 'Statistiques'
     },
     es: {
       from: 'Desde', to: 'Hasta', workers: 'Empleados', all: 'todos', selectAll: 'Seleccionar todos', clearAll: 'Desmarcar todos',
       update: 'Actualizar', updating: 'Cargando...', noData: 'No hay datos de los empleados seleccionados',
       total: 'Total (Suma / OK / NDF)', days: 'Días', scrapTitle: '📊 Estadística Scrap / Waiting',
-      scrapNoData: 'Sin datos', totalRow: 'Total'
+      scrapNoData: 'Sin datos', totalRow: 'Total', mainTitle: 'Estadística'
     },
     it: {
       from: 'Da', to: 'A', workers: 'Dipendenti', all: 'tutti', selectAll: 'Seleziona tutti', clearAll: 'Deseleziona tutti',
       update: 'Aggiorna', updating: 'Caricamento...', noData: 'Nessun dato per i dipendenti selezionati',
       total: 'Totale (Somma / OK / NDF)', days: 'Giorni', scrapTitle: '📊 Statistiche Scrap / Waiting',
-      scrapNoData: 'Nessun dato', totalRow: 'Totale'
+      scrapNoData: 'Nessun dato', totalRow: 'Totale', mainTitle: 'Statistiche'
     },
     pt: {
       from: 'De', to: 'Até', workers: 'Funcionários', all: 'todos', selectAll: 'Selecionar todos', clearAll: 'Desmarcar todos',
       update: 'Atualizar', updating: 'Carregando...', noData: 'Sem dados para os funcionários selecionados',
       total: 'Total (Soma / OK / NDF)', days: 'Dias', scrapTitle: '📊 Estatística Scrap / Waiting',
-      scrapNoData: 'Sem dados', totalRow: 'Total'
+      scrapNoData: 'Sem dados', totalRow: 'Total', mainTitle: 'Estatísticas'
     },
     tr: {
       from: 'Başlangıç', to: 'Bitiş', workers: 'Çalışanlar', all: 'tümü', selectAll: 'Tümünü seç', clearAll: 'Tümünü kaldır',
       update: 'Güncelle', updating: 'Yükleniyor...', noData: 'Seçilen çalışanlar için veri yok',
       total: 'Toplam (Toplam / OK / NDF)', days: 'Gün', scrapTitle: '📊 Scrap / Waiting istatistikleri',
-      scrapNoData: 'Veri yok', totalRow: 'Toplam'
+      scrapNoData: 'Veri yok', totalRow: 'Toplam', mainTitle: 'İstatistikler'
     }
   };
 
@@ -141,6 +141,17 @@
   width: 95%; max-width: 1200px; margin: 0 auto 20px; background: #0e0e0e; border: 1px solid #1f2937;
   border-radius: 10px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
 }
+#statsPage .st-head {
+  display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;
+  padding: 12px 18px; background: #111827; color: #fff; font-weight: 700; font-size: 15px;
+  border-bottom: 1px solid #1f2937;
+}
+#statsPage .st-head:hover { color: #4d94ff; }
+#statsPage .st-arrow { font-size: 12px; color: #9CA3AF; transition: transform 0.2s; }
+#statsPage .st-card.collapsed .st-head { border-bottom: none; }
+#statsPage .st-card.collapsed .st-arrow { transform: rotate(180deg); }
+#statsPage .st-card.collapsed .st-body { display: none; }
+
 #statsPage .st-table-wrap { overflow-x: auto; }
 #statsPage table { width: 100%; border-collapse: collapse; background: #0e0e0e; }
 #statsPage th, #statsPage td {
@@ -209,7 +220,13 @@
   </div>
 </div>
 
-<div class="st-card" id="st-stats"></div>
+<div class="st-card" id="st-stats">
+  <div class="st-head" id="st-head">
+    <span data-st="mainTitle"></span>
+    <span class="st-arrow">▲</span>
+  </div>
+  <div class="st-body" id="st-body"></div>
+</div>
 
 <details class="st-details" id="st-scrap-details">
   <summary data-st="scrapTitle"></summary>
@@ -224,6 +241,7 @@
   let started = false;
   let loaded = false;
   let busy = false;
+  let mainCollapsed = false;
   let lastFilteredData = [];
   let selectedPeople = new Set();
   let allPeople = [];
@@ -407,7 +425,7 @@
   }
 
   function renderTable(stats) {
-    const container = $('st-stats');
+    const body = $('st-body');
     const diagonals = Array.from(new Set(
       Object.values(stats).flatMap(p => Object.keys(p.diagonals).map(Number))
     )).sort((a, b) => b - a);
@@ -417,7 +435,7 @@
     );
 
     if (people.length === 0) {
-      container.innerHTML = `<p class="st-msg">${esc(t('noData'))}</p>`;
+      body.innerHTML = `<p class="st-msg">${esc(t('noData'))}</p>`;
       return;
     }
 
@@ -444,7 +462,7 @@
 
     const footCells = diagonals.map(d => `<td>${diagTotals[d] || '-'}</td>`).join('');
 
-    container.innerHTML = `
+    body.innerHTML = `
       <div class="st-table-wrap">
         <table>
           <thead>
@@ -500,6 +518,11 @@
       </div>`;
   }
 
+  // Сворачивание основной таблицы: состояние помнится между сменами языка и фильтров
+  function applyMainCollapsed() {
+    $('st-stats').classList.toggle('collapsed', mainCollapsed);
+  }
+
   function applyText() {
     document.querySelectorAll('#statsPage [data-st]').forEach(el => {
       el.textContent = t(el.dataset.st);
@@ -537,8 +560,14 @@
     $('st-none').addEventListener('click', () => selectAllPeople(false));
     $('st-update').addEventListener('click', update);
 
+    $('st-head').addEventListener('click', () => {
+      mainCollapsed = !mainCollapsed;
+      applyMainCollapsed();
+    });
+
     initialized = true;
     applyText();
+    applyMainCollapsed();
   }
 
   // Язык задаёт сайт (app.js): window.setStatisticLang('uk' | 'ru' | 'pl' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'pt' | 'tr')
