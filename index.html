@@ -95,11 +95,9 @@
   <script src="js/statistic.js"></script>
   <script src="js/collapse.js"></script>
 
-  <!-- Показ скрытой вкладки по Alt++ -->
   <script>
     document.addEventListener('keydown', (e) => {
-      const isPlus = e.key === '+' || e.key === '=' || e.code === 'NumpadAdd';
-      if (e.altKey && isPlus) {
+      if (e.altKey && (e.key === 'q' || e.key === 'Q' || e.code === 'KeyQ')) {
         e.preventDefault();
         const tab = document.getElementById('secretTab');
         tab.style.display = tab.style.display === 'none' ? '' : 'none';
