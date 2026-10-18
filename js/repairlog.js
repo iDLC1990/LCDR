@@ -84,15 +84,14 @@
         <td>${esc(r.repair_date)}</td>
         <td>${esc(r.repair_time)}</td>
         <td>${esc(r.status)}</td>
-        <td><button class="rl-edit" data-id="${r.log_no}">✎</button></td>
+        <td><button class="rl-edit" data-id="${r.id}">✎</button></td>
       </tr>`).join("");
   }
 
-  // Без поиска: только записи за сегодня.
-  // С поиском: по всей таблице, по SN.
+  // Без поиска: записи за сегодня. С поиском: по всей таблице, по SN.
   async function load() {
     const q = searchInput.value.trim().toUpperCase();
-    let query = db.from(TABLE).select("*").order("log_no", { ascending: false });
+    let query = db.from(TABLE).select("*").order("id", { ascending: false });
 
     if (q) {
       query = query.ilike("panel_sn", `%${q}%`).limit(500);
@@ -104,6 +103,17 @@
     if (error) { alert("Ошибка загрузки: " + error.message); return; }
     allRows = data;
     render();
+  }
+
+  // Следующий номер за день: 1, 2, 3... и снова с 1 на следующий день
+  async function nextDailyNo(date) {
+    const { data, error } = await db.from(TABLE)
+      .select("log_no")
+      .eq("repair_date", date)
+      .order("log_no", { ascending: false })
+      .limit(1);
+    if (error) throw error;
+    return data.length ? data[0].log_no + 1 : 1;
   }
 
   searchInput.addEventListener("input", () => {
@@ -118,13 +128,22 @@
     if (!sn || !status) return;
 
     const now = new Date();
-    const { error } = await db.from(TABLE).insert({
-      panel_sn: sn,
-      repair_date: localDate(now),
-      repair_time: localTime(now),
-      status
-    });
-    if (error) { alert("Ошибка сохранения: " + error.message); return; }
+    const today = localDate(now);
+
+    try {
+      const logNo = await nextDailyNo(today);
+      const { error } = await db.from(TABLE).insert({
+        log_no: logNo,
+        panel_sn: sn,
+        repair_date: today,
+        repair_time: localTime(now),
+        status
+      });
+      if (error) throw error;
+    } catch (err) {
+      alert("Ошибка сохранения: " + err.message);
+      return;
+    }
 
     snInput.value = "";
     statusInput.value = "";
@@ -135,7 +154,7 @@
   body.addEventListener("click", async (e) => {
     const btn = e.target.closest(".rl-edit");
     if (!btn) return;
-    const row = allRows.find(r => String(r.log_no) === btn.dataset.id);
+    const row = allRows.find(r => String(r.id) === btn.dataset.id);
     if (!row) return;
 
     const input = prompt("Новый статус:", row.status);
@@ -143,7 +162,7 @@
 
     const { error } = await db.from(TABLE)
       .update({ status: expandStatus(input), updated_at: new Date().toISOString() })
-      .eq("log_no", row.log_no);
+      .eq("id", row.id);
     if (error) { alert("Ошибка: " + error.message); return; }
     load();
   });
@@ -160,7 +179,7 @@
     });
   });
 
-  // Любой другой пункт меню закрывает Repair Log (в фазе capture, до app.js)
+  // Любой другой пункт меню закрывает Repair Log
   document.addEventListener("click", (e) => {
     const el = e.target.closest("[data-page]");
     if (el && el.dataset.page !== "secret") {
