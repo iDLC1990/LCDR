@@ -37,7 +37,7 @@
             <a href="#" class="nav-item sub" data-page="label">
               <span class="label" data-i18n="panelLabel">Panel Label</span>
             </a>
-            <!-- Скрытая вкладка: появляется по Alt++ -->
+            <!-- Скрытая вкладка: появляется по Alt+Q -->
             <a href="#" class="nav-item sub" id="secretTab" data-page="secret" style="display:none">
               <span class="label">Secret</span>
             </a>
@@ -62,6 +62,10 @@
         <a href="#" class="nav-item" data-page="parts">
           <span class="label" data-i18n="repairBase">LCD Repair Center Base</span>
         </a>
+
+        <a href="#" class="nav-item" data-page="repairlog">
+          <span class="label">Repair Log</span>
+        </a>
       </nav>
     </aside>
 
@@ -77,13 +81,16 @@
       <section class="label-page" id="final1Page" style="display:none"></section>
       <section class="label-page" id="final2Page" style="display:none"></section>
       <section class="label-page" id="secretPage" style="display:none"></section>
+      <section class="label-page" id="repairLogPage" style="display:none"></section>
     </main>
 
   </div>
 
-  <!-- Библиотека для штрихкодов (нужна Label и PN Base) -->
+  <!-- Библиотеки: Supabase и штрихкоды -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+  <!-- Модули сайта -->
   <script src="js/app.js"></script>
   <script src="js/final1.js"></script>
   <script src="js/final2.js"></script>
@@ -94,7 +101,9 @@
   <script src="js/livedata.js"></script>
   <script src="js/statistic.js"></script>
   <script src="js/collapse.js"></script>
+  <script src="js/repairlog.js"></script>
 
+  <!-- Показ скрытой вкладки по Alt+Q -->
   <script>
     document.addEventListener('keydown', (e) => {
       if (e.altKey && (e.key === 'q' || e.key === 'Q' || e.code === 'KeyQ')) {
