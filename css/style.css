@@ -419,3 +419,35 @@ html, body {
 .tabs {
   display: none !important;
 }
+/* ===== Единый фон сайта ===== */
+:root {
+  /* Фоновая картинка: файл background.jpg лежит в корне репозитория */
+  --site-bg-image: url('../Background.jpg');
+  /* Затемнение поверх картинки: чем больше последнее число, тем темнее */
+  --site-overlay: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45));
+  /* Полупрозрачность верхней панели, меню и вкладок */
+  --site-panel: rgba(0, 0, 0, 0.4);
+}
+
+html, body {
+  background: var(--site-overlay), var(--site-bg-image) center center / cover no-repeat fixed !important;
+}
+
+.topbar,
+.sidebar,
+.tabs {
+  background: var(--site-panel) !important;
+}
+
+.main,
+.content,
+.label-page,
+#labelPage,
+#pnbasePage,
+#specialPage,
+#livePage,
+#statsPage,
+#final1Page,
+#final2Page {
+  background: transparent !important;
+}
