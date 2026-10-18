@@ -31,7 +31,6 @@
   let allRows = [];
   let searchTimer = null;
 
-  // Кнопки-сокращения: код + подсказка с расшифровкой (title)
   const codeButtons = Object.entries(STATUS_MAP)
     .map(([code, name]) =>
       `<button type="button" class="rl-code" data-code="${code}" title="${name}">${code}</button>`)
@@ -43,19 +42,21 @@
       <form id="rlForm" class="rl-form">
         <input id="rlSn" placeholder="Panel SN" autocomplete="off" required>
         <input id="rlStatus" placeholder="Статус (OK, VV, H...)" autocomplete="off" required>
-        <button type="submit">+ Добавить</button>
+        <button type="submit" class="rl-add">+ Добавить</button>
       </form>
       <div class="rl-codes" id="rlCodes">
         ${codeButtons}
         <button type="button" class="rl-code rl-clear" data-action="clear" title="Очистить статус">✕</button>
       </div>
       <input id="rlSearch" placeholder="Поиск по SN (по всей базе)" autocomplete="off">
-      <table class="rl-table">
-        <thead>
-          <tr><th>№</th><th>Panel SN</th><th>Дата</th><th>Время</th><th>Статус</th><th></th></tr>
-        </thead>
-        <tbody id="rlBody"></tbody>
-      </table>
+      <div class="rl-table-wrap">
+        <table class="rl-table">
+          <thead>
+            <tr><th>№</th><th>Panel SN</th><th>Дата</th><th>Время</th><th>Статус</th><th></th></tr>
+          </thead>
+          <tbody id="rlBody"></tbody>
+        </table>
+      </div>
     </div>`;
 
   const form = page.querySelector("#rlForm");
@@ -79,7 +80,7 @@
     for (const w of String(status).split(" ")) {
       if (STATUS_COLORS[w]) return STATUS_COLORS[w];
     }
-    return "";
+    return "transparent";
   }
 
   function esc(s) {
@@ -88,14 +89,18 @@
   }
 
   function render() {
+    if (!allRows.length) {
+      body.innerHTML = `<tr><td colspan="6" class="rl-empty">Нет записей</td></tr>`;
+      return;
+    }
     body.innerHTML = allRows.map(r => `
-      <tr style="background:${colorFor(r.status)}">
+      <tr style="--row-color:${colorFor(r.status)}">
         <td>${r.log_no}</td>
-        <td>${esc(r.panel_sn)}</td>
+        <td class="rl-sn">${esc(r.panel_sn)}</td>
         <td>${esc(r.repair_date)}</td>
         <td>${esc(r.repair_time)}</td>
         <td>${esc(r.status)}</td>
-        <td><button class="rl-edit" data-id="${r.id}">✎</button></td>
+        <td><button class="rl-edit" data-id="${r.id}" title="Изменить статус">✎</button></td>
       </tr>`).join("");
   }
 
@@ -127,7 +132,6 @@
     return data.length ? data[0].log_no + 1 : 1;
   }
 
-  // Нажатие кнопки дописывает код в поле статуса
   codesBox.addEventListener("click", (e) => {
     const btn = e.target.closest(".rl-code");
     if (!btn) return;
