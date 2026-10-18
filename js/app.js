@@ -44,12 +44,13 @@ const I18N = {
 };
 
 // Страницы сайта. key — ключ названия в I18N
+// live — показывает текущую дату (например, 18.10.2026), обновляется сама
 const PAGES = {
   final1:  { key: "final1" },
   final2:  { key: "final2" },
   special: { key: "special" },
   label:   { key: "panelLabel" },
-  live:    { key: "statDay" },
+  live:    { key: "statDay", dateTitle: true },
   stats:   { key: "stats" },
   parts:   { key: "repairBase" }
 };
@@ -101,32 +102,49 @@ function t(key, vars = {}) {
   return s;
 }
 
+// Сегодняшняя дата в формате ДД.ММ.ГГГГ, например 18.10.2026
+function todayDisplay() {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}.${mm}.${d.getFullYear()}`;
+}
+
+let lastShownDate = todayDisplay();
+
 function pageTitle(id) {
-  return t(PAGES[id].key);
+  const page = PAGES[id];
+  if (page.dateTitle) return todayDisplay();
+  return t(page.key);
 }
 
 // Переводит статичные надписи меню и верхней панели
 function applySiteText() {
   document.documentElement.lang = siteLang;
   document.querySelectorAll("[data-i18n]").forEach(el => {
-    el.textContent = t(el.dataset.i18n);
+    // Пункт «Statistic per day» показывает текущую дату вместо текста
+    if (el.dataset.i18n === "statDay") {
+      el.textContent = todayDisplay();
+    } else {
+      el.textContent = t(el.dataset.i18n);
+    }
   });
   menuToggle.setAttribute("aria-label", t("menu"));
   langSelect.title = t("language");
   langSelect.value = siteLang;
 }
 
-// Смена языка всего сайта. Модули Label и PN Base получают язык от сайта
+// Смена языка всего сайта. Модули получают язык от сайта
 function setSiteLang(lang) {
   if (!I18N[lang]) lang = DEFAULT_LANG;
   siteLang = lang;
   try { localStorage.setItem("siteLang", lang); } catch (e) {}
 
   applySiteText();
-  if (window.setLabelLang)  window.setLabelLang(LABEL_LANGS.includes(lang) ? lang : "en");
-  if (window.setPnBaseLang) window.setPnBaseLang(PNBASE_LANGS.includes(lang) ? lang : "en");
-  if (window.setSpecialLang) window.setSpecialLang(siteLang);
-  if (window.setLiveLang) window.setLiveLang(siteLang);
+  if (window.setLabelLang)     window.setLabelLang(LABEL_LANGS.includes(lang) ? lang : "en");
+  if (window.setPnBaseLang)    window.setPnBaseLang(PNBASE_LANGS.includes(lang) ? lang : "en");
+  if (window.setSpecialLang)   window.setSpecialLang(siteLang);
+  if (window.setLiveLang)      window.setLiveLang(siteLang);
   if (window.setStatisticLang) window.setStatisticLang(siteLang);
   render();
 }
@@ -199,6 +217,7 @@ function renderContent() {
 
 /* ---------- Действия ---------- */
 
+// Открывается одна страница, предыдущая закрывается
 function openPage(id) {
   if (!PAGES[id]) return;
   state.openTabs = [id];
@@ -260,3 +279,13 @@ render();
 
 // Модули Label и PN Base создаются после app.js, поэтому язык передаём после загрузки страницы
 window.addEventListener("load", () => setSiteLang(siteLang));
+
+// Проверка смены дня: если наступила полночь, дата в меню и на вкладке обновляется сама
+setInterval(() => {
+  const now = todayDisplay();
+  if (now !== lastShownDate) {
+    lastShownDate = now;
+    applySiteText();
+    render();
+  }
+}, 30000);
