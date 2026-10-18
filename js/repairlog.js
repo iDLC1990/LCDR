@@ -1,7 +1,7 @@
 // js/repairlog.js
 (function () {
   const SUPABASE_URL = "https://wtqvaeongxncufvpvvge.supabase.co";
- const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U";
   const TABLE = "repair_log";
 
   const STATUS_MAP = {
@@ -16,7 +16,7 @@
     AAA: "AUTO PATERN", PP: "PUSH MURA", MMM: "Maciej M. W. Wisniewski", "2": "SPRAWDZENIE"
   };
 
-  // Цвет строки по первому подходящему слову статуса (как было в таблице)
+  // Цвет строки по первому подходящему слову статуса
   const STATUS_COLORS = {
     SCRAP: "#FF9999", WAITING: "#FFFF99", OK: "#99FF99",
     LC: "#FFCC99", ABNORMAL: "#FFCC99", CELL: "#FFB266",
@@ -24,7 +24,7 @@
     SPRAWDZENIE: "#D1E8FF"
   };
 
-  const page = document.getElementById("repairLogPage");
+  const page = document.getElementById("secretPage");
   if (!page || !window.supabase) return;
 
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -136,8 +136,8 @@
 
   searchInput.addEventListener("input", render);
 
-  // Открытие страницы из меню
-  document.querySelectorAll('[data-page="repairlog"]').forEach(el => {
+  // Открытие страницы по пункту Secret (появляется по Alt+Q)
+  document.querySelectorAll('[data-page="secret"]').forEach(el => {
     el.addEventListener("click", (e) => {
       e.preventDefault();
       document.querySelectorAll(".label-page").forEach(s => s.style.display = "none");
