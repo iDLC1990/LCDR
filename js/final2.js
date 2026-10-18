@@ -1,6 +1,7 @@
-/* Final inspection station I: список SN из Google Таблицы (вкладка FI 1), печать этикеток.
-   Підключення: <script src="js/final1.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
-   Контейнер: <section id="final1Page">. Мову задає сайт через window.setFinal1Lang(код). */
+/* Final inspection station II: список SN из Google Таблицы (вкладка FI 2), печать этикеток.
+   Підключення: <script src="js/final2.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
+   Контейнер: <section id="final2Page">. Мову задає сайт через window.setFinal2Lang(код). */
+(function () {
   const CFG = {
     name: 'final2',
     gid: '193025884',               // вкладка таблицы: FI 2
