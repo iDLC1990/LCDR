@@ -1,223 +1,551 @@
-// js/repairlog.js
-(function () {
-  const SUPABASE_URL = "https://wtqvaeongxncufvpvvge.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U";
-  const TABLE = "repair_log";
+/* ===== Переменные (цвета и размеры легко менять здесь) ===== */
+:root {
+  --top-bg: #000000;
+  --side-bg: #000000;
+  --side-hover: #181515;
+  --tabs-bg: #000000;
+  --tab-bg: #0e55657a;
+  --content-bg: #000000;
+  --text-light: #ffffff;
+  --text-muted: #4d94ff;
+  --text-dark: #ededed;
+  --border-color: #374151;
+  --accent-color: #2563EB;
+  --sidebar-width: clamp(15rem, 20vw, 21rem);
+  --topbar-height: 2.75rem;
+  --tabs-height: 2.1rem;
+  --preview-vh: 36;   /* высота превью этикетки в % от высоты окна */
+}
 
-  const STATUS_MAP = {
-    S: "SCRAP", FFD: "FOREIGN MATERIAL UNDER DIFF PLATE",
-    VVV: "V GRAY BLOCK", W: "WAITING", OK: "OK", LL: "LC LEAK", A: "ABNORMAL",
-    H: "H-LINE", V: "V-LINE", VV: "V-BLOCK", HH: "H-BLOCK", CC: "CELL BROKEN",
-    N: "NO DISPLAY", D: "DIRTY DIFF", P: "POL UP", "1": "FILM", SS: "SUP-PIN MURA",
-    B: "BOT POL", C: "CROSS LINE", L: "LED NG", F: "FLICKERING IMAGE",
-    R: "REFLECTOR MURA", NN: "PCB NG",
-    FFF: "FOREIGN MATERIAL", CCC: "CLOUDING MURA",
-    LLL: "LIGHT LIKAGE", FF: "FOREIGN MATERIAL UNDER POL", BB: "DIRTY BOT POL",
-    AAA: "AUTO PATERN", PP: "PUSH MURA", MMM: "Maciej M. W. Wisniewski", "2": "SPRAWDZENIE"
-  };
+/* Базовый размер текста подстраивается под ширину окна */
+html {
+  font-size: clamp(11px, 0.3vw + 8px, 14px);
+}
 
-  const STATUS_COLORS = {
-    SCRAP: "#FF9999", WAITING: "#FFFF99", OK: "#99FF99",
-    LC: "#FFCC99", ABNORMAL: "#FFCC99", CELL: "#FFB266",
-    NO: "#FFB266", "H-LINE": "#FFCCCC", "V-LINE": "#FFCCCC",
-    SPRAWDZENIE: "#D1E8FF"
-  };
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  const page = document.getElementById("secretPage");
-  const tab = document.getElementById("secretTab");
-  if (!page || !tab || !window.supabase) return;
+html, body {
+  height: 100%;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 0.9rem;
+  background: var(--content-bg);
+  overflow: hidden;
+}
 
-  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  let allRows = [];
-  let searchTimer = null;
+/* ===== Общая сетка ===== */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-rows: var(--topbar-height) minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  transition: grid-template-columns 0.2s ease;
+}
+.app.collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+.app.collapsed .sidebar {
+  visibility: hidden;
+}
 
-  // Кнопки-сокращения: код + подсказка с расшифровкой
-  const codeButtons = Object.entries(STATUS_MAP)
-    .map(([code, name]) =>
-      `<button type="button" class="rl-code" data-code="${code}" title="${name}">${code}</button>`)
-    .join("");
+/* ===== Верхняя панель ===== */
+.topbar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-right: 0.6rem;
+  min-width: 0;
+  background: var(--top-bg);
+  color: var(--text-light);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.brand {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.menu-toggle {
+  margin-left: 0.8rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.5), rgba(37, 99, 235, 0.5));
+  color: var(--text-light);
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+}
+.menu-toggle:hover {
+  filter: brightness(1.2);
+}
+.page-title {
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lang-select {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #0e1822;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.lang-select option {
+  background: #0e1822;
+  color: #ffffff;
+}
 
-  page.innerHTML = `
-    <div class="rl-wrap">
-      <h2>Repair Log</h2>
-      <form id="rlForm" class="rl-form">
-        <input id="rlSn" placeholder="Panel SN" autocomplete="off" required>
-        <input id="rlStatus" placeholder="Статус (OK, VV, H...)" autocomplete="off" required>
-        <button type="submit">+ Добавить</button>
-      </form>
-      <div class="rl-codes" id="rlCodes">
-        ${codeButtons}
-        <button type="button" class="rl-code rl-clear" data-action="clear" title="Очистить статус">✕</button>
-      </div>
-      <input id="rlSearch" placeholder="Поиск по SN (по всей базе)" autocomplete="off">
-      <table class="rl-table">
-        <thead>
-          <tr><th>№</th><th>Panel SN</th><th>Дата</th><th>Время</th><th>Статус</th><th></th></tr>
-        </thead>
-        <tbody id="rlBody"></tbody>
-      </table>
-    </div>`;
+/* ===== Боковое меню ===== */
+.sidebar {
+  grid-column: 1;
+  grid-row: 2;
+  background: var(--side-bg);
+  color: var(--text-light);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0.4rem 0;
+}
 
-  const form = page.querySelector("#rlForm");
-  const snInput = page.querySelector("#rlSn");
-  const statusInput = page.querySelector("#rlStatus");
-  const searchInput = page.querySelector("#rlSearch");
-  const codesBox = page.querySelector("#rlCodes");
-  const body = page.querySelector("#rlBody");
+/* Стеклянные кнопки. Родительские пункты (Друк, LCD Repair Center и т.д.) */
+.sidebar .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: calc(100% - 1rem);
+  min-height: 2.5rem;
+  height: auto;
+  margin: 0.35rem 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 70%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 3px 10px rgba(0, 0, 0, 0.5);
+  color: var(--text-light);
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.3;
+  text-align: left;
+  text-decoration: none;
+  white-space: normal;
+  overflow: visible;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.sidebar .nav-item:hover {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.55), rgba(59, 130, 246, 0.3) 70%, rgba(255, 255, 255, 0.05));
+  border-color: rgba(192, 132, 252, 0.7);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.sidebar .nav-item.active {
+  background: linear-gradient(90deg, #6d28d9, #2563eb 60%, #a855f7);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
 
-  function pad(n) { return String(n).padStart(2, "0"); }
-  function localDate(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
-  function localTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+/* Подпункты: чуть меньше и с отступом */
+.sidebar .nav-item.sub {
+  width: calc(100% - 2rem);
+  min-height: 2.2rem;
+  margin: 0.25rem 0.5rem 0.25rem 1.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 10px;
+}
 
-  function expandStatus(input) {
-    return input.trim().split(/\s+/)
-      .map(p => { const u = p.toUpperCase(); return STATUS_MAP[u] || u; })
-      .join(" ");
+/* Текст занимает всё свободное место и переносится на вторую строку */
+.sidebar .nav-item .label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+.sidebar .nav-item .arrow {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.sidebar .nav-parent.open .arrow {
+  transform: rotate(180deg);
+}
+
+.submenu {
+  display: none;
+}
+.submenu.open {
+  display: block;
+}
+
+/* ===== Основная часть ===== */
+.main {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ===== Вкладки ===== */
+.tabs {
+  display: flex;
+  align-items: flex-end;
+  height: var(--tabs-height);
+  padding-top: 0.25rem;
+  background: var(--tabs-bg);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  height: 1.85rem;
+  padding: 0 0.75rem;
+  margin-right: 2px;
+  border-radius: 6px 6px 0 0;
+  background: var(--tab-bg);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.tab:hover {
+  color: var(--text-light);
+}
+.tab.active {
+  background: #222325cc;
+  color: var(--text-dark);
+  box-shadow: inset 0 -2px 0 #7c3aed;
+}
+.tab .close {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  padding: 0 0.15rem;
+}
+.tab .close:hover {
+  opacity: 1;
+}
+
+/* ===== Рабочая область ===== */
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+.empty {
+  text-align: center;
+  color: #9a9a9a;
+}
+.empty .empty-icon {
+  font-size: 2.8rem;
+  margin-bottom: 0.6rem;
+  opacity: 0.6;
+}
+.empty p {
+  font-size: 0.95rem;
+}
+
+/* ===== Общие элементы для Label и PN Base ===== */
+.label-page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+  background: var(--side-bg);
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.form-group label {
+  font-size: 0.75rem;
+  color: #0062ff;
+}
+.form-input {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #9CA3AF;
+  border-radius: 5px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+  font-size: 0.85rem;
+}
+.manual-input-card {
+  background: #0e0e0e;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.btn {
+  padding: 0.45rem 0.8rem;
+  border: 0;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.35);
+}
+.btn:hover {
+  filter: brightness(1.15);
+}
+.btn-brand {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+.btn-secondary {
+  background: #6B7280;
+  box-shadow: none;
+}
+#sandboxSection .sb-el .form-group label {
+  color: #9CA3AF;
+}
+
+/* ===== Label: адаптация под размер окна ===== */
+
+/* Превью этикетки: высота ограничена окном, пропорция 82:33 */
+#labelPage #sandboxSection #sbPreview {
+  width: min(100%, max(14rem, calc(var(--preview-vh) * 1vh * 2.485)));
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Карточки элементов перестраиваются по ширине */
+#labelPage #sandboxSection .sb-cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 0.6rem;
+}
+#labelPage #sandboxSection .sb-el {
+  padding: 0.5rem;
+}
+#labelPage #sandboxSection .sb-num {
+  width: 4.6rem;
+  min-width: 0;
+  padding: 0.3rem 0.25rem;
+  font-size: 0.8rem;
+}
+#labelPage #sandboxSection .sb-row {
+  gap: 0.5rem;
+}
+#labelPage #sandboxSection .sb-hint {
+  font-size: 0.8rem;
+}
+
+/* Ручное растягивание отключено: оно вызывало горизонтальную прокрутку */
+#labelPage .sb-grip {
+  display: none !important;
+}
+#labelPage #sandboxSection {
+  width: auto !important;
+  margin-left: 0 !important;
+}
+
+/* ===== PN Base: ограничение ширины и размеров ===== */
+#pnbasePage #pnbaseSection {
+  max-width: 64rem;
+  margin: 0 auto;
+}
+#pnbasePage #pnbaseSection .form-input {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+}
+#pnbasePage #pnbaseSection .manual-input-title {
+  font-size: 1rem;
+}
+#pnbasePage #pnbaseSection .pb-row {
+  gap: 0.6rem;
+}
+#pnbasePage #pnbaseSection .data-table td,
+#pnbasePage #pnbaseSection .data-table th {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+/* ===== Телефон ===== */
+@media (max-width: 700px) {
+  .app,
+  .app.collapsed {
+    grid-template-columns: minmax(0, 1fr);
   }
-
-  function colorFor(status) {
-    for (const w of String(status).split(" ")) {
-      if (STATUS_COLORS[w]) return STATUS_COLORS[w];
-    }
-    return "";
+  .sidebar {
+    position: fixed;
+    top: var(--topbar-height);
+    bottom: 0;
+    left: 0;
+    width: 15rem;
+    z-index: 10;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
   }
-
-  function esc(s) {
-    return String(s ?? "").replace(/[&<>"']/g, c =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  .app:not(.collapsed) .sidebar {
+    transform: translateX(0);
+    visibility: visible;
   }
-
-  function render() {
-    body.innerHTML = allRows.map(r => `
-      <tr style="background:${colorFor(r.status)}">
-        <td>${r.log_no}</td>
-        <td>${esc(r.panel_sn)}</td>
-        <td>${esc(r.repair_date)}</td>
-        <td>${esc(r.repair_time)}</td>
-        <td>${esc(r.status)}</td>
-        <td><button class="rl-edit" data-id="${r.id}">✎</button></td>
-      </tr>`).join("");
+  .brand {
+    width: auto;
+    padding: 0 0.6rem;
   }
-
-  // Без поиска: записи за сегодня. С поиском: по всей таблице, по SN.
-  async function load() {
-    const q = searchInput.value.trim().toUpperCase();
-    let query = db.from(TABLE).select("*").order("id", { ascending: false });
-
-    if (q) {
-      query = query.ilike("panel_sn", `%${q}%`).limit(500);
-    } else {
-      query = query.eq("repair_date", localDate(new Date())).limit(1000);
-    }
-
-    const { data, error } = await query;
-    if (error) { alert("Ошибка загрузки: " + error.message); return; }
-    allRows = data;
-    render();
+  #labelPage #sandboxSection .sb-cards {
+    grid-template-columns: minmax(0, 1fr);
   }
+}
 
-  // Следующий номер за день: 1, 2, 3... и снова с 1 на следующий день
-  async function nextDailyNo(date) {
-    const { data, error } = await db.from(TABLE)
-      .select("log_no")
-      .eq("repair_date", date)
-      .order("log_no", { ascending: false })
-      .limit(1);
-    if (error) throw error;
-    return data.length ? data[0].log_no + 1 : 1;
-  }
+/* Вкладки скрыты: страница открывается сразу из меню */
+.tabs {
+  display: none !important;
+}
 
-  // Нажатие кнопки дописывает код в поле статуса
-  codesBox.addEventListener("click", (e) => {
-    const btn = e.target.closest(".rl-code");
-    if (!btn) return;
+/* ===== Единый фон сайта ===== */
+:root {
+  /* Фоновая картинка: файл Background.jpg лежит в корне репозитория */
+  --site-bg-image: url('../Background.jpg');
+  /* Затемнение поверх картинки: чем больше последнее число, тем темнее */
+  --site-overlay: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45));
+  /* Полупрозрачность верхней панели, меню и вкладок */
+  --site-panel: rgba(0, 0, 0, 0.4);
+}
 
-    if (btn.dataset.action === "clear") {
-      statusInput.value = "";
-    } else {
-      const cur = statusInput.value.trim();
-      statusInput.value = cur ? cur + " " + btn.dataset.code : btn.dataset.code;
-    }
-    statusInput.focus();
-  });
+html, body {
+  background: var(--site-overlay), var(--site-bg-image) center center / cover no-repeat fixed !important;
+}
 
-  searchInput.addEventListener("input", () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(load, 300);
-  });
+.topbar,
+.sidebar,
+.tabs {
+  background: var(--site-panel) !important;
+}
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const sn = snInput.value.trim().toUpperCase();
-    const status = expandStatus(statusInput.value);
-    if (!sn || !status) return;
+.main,
+.content,
+.label-page,
+#labelPage,
+#pnbasePage,
+#specialPage,
+#livePage,
+#statsPage,
+#final1Page,
+#final2Page,
+#secretPage {
+  background: transparent !important;
+}
 
-    const now = new Date();
-    const today = localDate(now);
+/* ===== Secret: Repair Log (открывается по Alt+Q) ===== */
+#secretPage {
+  padding: 16px;
+}
+.rl-wrap h2 {
+  margin: 0 0 12px;
+  color: var(--text-light);
+}
+.rl-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.rl-form input,
+#rlSearch {
+  padding: 8px;
+  min-width: 200px;
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+}
+#rlSearch {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 12px;
+}
+.rl-form button {
+  padding: 8px 14px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.rl-form button:hover {
+  filter: brightness(1.15);
+}
+.rl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.rl-table th,
+.rl-table td {
+  border: 1px solid #444;
+  padding: 6px 8px;
+}
+.rl-table th {
+  background: #222;
+  color: #fff;
+  text-align: left;
+}
+.rl-table tbody tr {
+  background: #fff;
+  color: #000;
+}
+.rl-edit {
+  background: none;
+  border: 1px solid #666;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
 
-    try {
-      const logNo = await nextDailyNo(today);
-      const { error } = await db.from(TABLE).insert({
-        log_no: logNo,
-        panel_sn: sn,
-        repair_date: today,
-        repair_time: localTime(now),
-        status
-      });
-      if (error) throw error;
-    } catch (err) {
-      alert("Ошибка сохранения: " + err.message);
-      return;
-    }
-
-    snInput.value = "";
-    statusInput.value = "";
-    snInput.focus();
-    load();
-  });
-
-  body.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".rl-edit");
-    if (!btn) return;
-    const row = allRows.find(r => String(r.id) === btn.dataset.id);
-    if (!row) return;
-
-    const input = prompt("Новый статус:", row.status);
-    if (input === null || !input.trim()) return;
-
-    const { error } = await db.from(TABLE)
-      .update({ status: expandStatus(input), updated_at: new Date().toISOString() })
-      .eq("id", row.id);
-    if (error) { alert("Ошибка: " + error.message); return; }
-    load();
-  });
-
-  // Открытие Repair Log: только по пункту Secret
-  document.querySelectorAll('[data-page="secret"]').forEach(el => {
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      document.querySelectorAll(".label-page").forEach(s => s.style.display = "none");
-      document.getElementById("content").style.display = "none";
-      page.style.display = "";
-      document.getElementById("pageTitle").textContent = "Repair Log";
-      load();
-    });
-  });
-
-  // Любой другой пункт меню закрывает Repair Log
-  document.addEventListener("click", (e) => {
-    const el = e.target.closest("[data-page]");
-    if (el && el.dataset.page !== "secret") {
-      page.style.display = "none";
-    }
-  }, true);
-
-  // Скрытие вкладки по Alt+Q закрывает и страницу
-  document.addEventListener("keydown", (e) => {
-    if (e.altKey && (e.key === "q" || e.key === "Q" || e.code === "KeyQ")) {
-      setTimeout(() => {
-        if (tab.style.display === "none") page.style.display = "none";
-      }, 0);
-    }
-  });
-})();
+/* ===== Кнопки-сокращения статусов ===== */
+.rl-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.rl-code {
+  min-width: 2.6rem;
+  padding: 6px 8px;
+  background: #1f2937;
+  color: #fff;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.rl-code:hover {
+  background: #7c3aed;
+  border-color: #a855f7;
+}
+.rl-code.rl-clear {
+  background: #7f1d1d;
+  border-color: #b91c1c;
+}
+.rl-code.rl-clear:hover {
+  background: #b91c1c;
+}
