@@ -1,68 +1,65 @@
-/* Сворачивание карточек на страницах Label и PN Base.
+/* Сворачивание карточек на страницах Panel Label, Special Label и PN Base.
+   Клик по заголовку карточки сворачивает/разворачивает её, стрелок нет.
    Подключение: <script src="js/collapse.js"></script> ПОСЛЕ js/pnbase.js. */
 (function () {
   const PAGE_LIST = [
-    { id: "labelPage",  name: "label",  onExpand: () => { if (window.sbShow) window.sbShow(); } },
-    { id: "pnbasePage", name: "pnbase", onExpand: null }
+    { id: "labelPage",   name: "label",   onExpand: () => { if (window.sbShow) window.sbShow(); } },
+    { id: "pnbasePage",  name: "pnbase",  onExpand: null },
+    { id: "specialPage", name: "special", onExpand: null }
   ];
 
   const style = document.createElement("style");
   style.textContent = `
-.card-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  width: 2rem;
-  height: 1.6rem;
-  margin-bottom: 0.4rem;
-  border: 1px solid #374151;
-  border-radius: 6px;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.45), rgba(37, 99, 235, 0.45));
-  color: #ffffff;
-  font-size: 0.75rem;
+.card-head {
   cursor: pointer;
+  user-select: none;
 }
-.card-toggle:hover {
-  filter: brightness(1.2);
+.card-head:hover .manual-input-title { color: #2563EB; }
+.card-head.untitled {
+  height: 14px;
+  margin: -6px -6px 6px -6px;
+  border-radius: 6px 6px 0 0;
+  background: #1f2937;
 }
-.card-body {
-  display: block;
-}`;
+.card-head.untitled:hover { background: #374151; }
+.card-head .manual-input-title { margin-bottom: 0; }
+.card-body { display: block; }
+.card-collapsed .card-body { display: none; }
+.card-collapsed .card-head { margin-bottom: 0; }
+`;
   document.head.appendChild(style);
 
   function makeCollapsible(card, storageKey, onExpand) {
     if (card.dataset.collapsible) return;
     card.dataset.collapsible = "1";
 
-    // Переносим всё содержимое карточки в обёртку, чтобы её можно было скрыть
+    // Заголовок карточки (если есть) переносим в шапку, остальное — в тело
+    const title = card.querySelector(":scope > .manual-input-title");
+    const head = document.createElement("div");
+    head.className = "card-head" + (title ? "" : " untitled");
+    if (title) head.appendChild(title);
+
     const body = document.createElement("div");
     body.className = "card-body";
     while (card.firstChild) body.appendChild(card.firstChild);
 
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "card-toggle";
-
-    card.appendChild(btn);
+    card.appendChild(head);
     card.appendChild(body);
 
-    function show(collapsed) {
-      body.style.display = collapsed ? "none" : "block";
-      btn.textContent = collapsed ? "▼" : "▲";
-    }
-
-    // Восстанавливаем сохранённое состояние
     let collapsed = false;
     try { collapsed = localStorage.getItem(storageKey) === "1"; } catch (e) {}
-    show(collapsed);
+    apply(collapsed);
 
-    btn.addEventListener("click", () => {
+    head.addEventListener("click", () => {
       collapsed = !collapsed;
-      show(collapsed);
+      apply(collapsed);
       try { localStorage.setItem(storageKey, collapsed ? "1" : "0"); } catch (e) {}
-      if (!collapsed && onExpand) onExpand();   // превью этикетки нужно перерисовать после показа
+      if (!collapsed && onExpand) onExpand(); // превью этикетки нужно перерисовать после показа
     });
+
+    function apply(c) {
+      card.classList.toggle("card-collapsed", c);
+    }
   }
 
   function init() {
@@ -75,6 +72,5 @@
     });
   }
 
-  // Запускаем после того, как Label и PN Base построили свои блоки
   window.addEventListener("load", init);
 })();
