@@ -611,6 +611,29 @@ html, body {
 .rl-table tbody tr:hover {
   background: linear-gradient(90deg, rgba(168, 85, 247, 0.18), transparent 70%);
 }
+
+/* Ширины колонок: серийный номер, дата и время занимают ровно свой текст,
+   статус забирает всё остальное */
+.rl-table th.col-sn,
+.rl-table td.col-sn,
+.rl-table th.col-date,
+.rl-table td.col-date,
+.rl-table th.col-time,
+.rl-table td.col-time {
+  width: 1%;
+  white-space: nowrap;
+}
+.rl-table th.col-sn,
+.rl-table td.col-sn {
+  padding-right: 1.6rem;
+}
+.rl-table th.col-status,
+.rl-table td.col-status {
+  width: auto;
+  white-space: normal;
+  min-width: 14rem;
+}
+
 .rl-table .rl-sn {
   font-family: Consolas, monospace;
   color: #ffffff;
@@ -619,20 +642,6 @@ html, body {
   text-align: center;
   color: #9ca3af;
   padding: 1.2rem !important;
-}
-
-.rl-edit {
-  padding: 0.15rem 0.5rem;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-light);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-.rl-edit:hover {
-  background: rgba(168, 85, 247, 0.4);
-  border-color: rgba(192, 132, 252, 0.7);
 }
 
 /* Телефон: форма и поиск на всю ширину */
