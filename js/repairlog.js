@@ -233,11 +233,6 @@
       return;
     }
 
-    // Автопечать, если статус содержит отдельное слово OK (модуль autoprint.js)
-    if (status.split(" ").includes("OK") && window.autoPrintOk) {
-      window.autoPrintOk(sn);
-    }
-
     snInput.value = "";
     statusInput.value = "";
     snInput.focus();
