@@ -15,134 +15,134 @@
   /* ===== Переклади (10 мов, як на сайті) ===== */
   const I18N = {
     en: {
-      dateLabel: 'DATE', titleHint: 'Click on the date to copy SN. Double-click to show the table full screen',
+      titleHint: 'Click on the date to copy SN. Double-click to show the table full screen',
       searchPh: 'Enter SN / part number (Enter)', bulkPh: 'Paste SN numbers, one per line. Ctrl+Enter = search',
       modeSingle: 'Single', modeBulk: 'Bulk', bulkRun: 'SEARCH',
-      overviewSub: 'FI Station Overview', diagTitle: 'FI Station Diagonals',
+      diagTitle: 'FI Station Diagonals',
       sum: 'SUM', total: 'TOTAL', name: 'NAME',
-      copyHint: 'Click to copy SN', copyOk: '✓ Copied: {n}', copyNone: 'No data', copyErr: 'Copy error',
+      copyNone: 'No data', copyOk: '✓ Copied: {n}', copyErr: 'Copy error',
       pnLoading: 'Loading data (pn)...', pnEmpty: 'No data in the pn sheet!', pnCopyHint: 'Click to copy the whole row',
       noInfo: 'No info!', notFound: 'NOT FOUND', notFoundCount: 'NOT FOUND — [{n}]',
       close: 'CLOSE', modalNoData: 'No data for this employee today.',
       hSerial: 'Serial', hType: 'Type', hStatus: 'Status', hOc: 'OC', hComment: 'Comment',
-      hDate: 'Date', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Repairer', hTime: 'Time', unknown: 'UNKNOWN'
+      hDate: 'Date', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Repairer', unknown: 'UNKNOWN'
     },
     uk: {
-      dateLabel: 'ДАТА', titleHint: 'Натисніть на дату, щоб скопіювати SN. Подвійний клік — таблиця на весь екран',
+      titleHint: 'Натисніть на дату, щоб скопіювати SN. Подвійний клік — таблиця на весь екран',
       searchPh: 'Введіть SN / PN деталі (Enter)', bulkPh: 'Вставте SN, кожен з нового рядка. Ctrl+Enter = пошук',
       modeSingle: 'Один', modeBulk: 'Список', bulkRun: 'ПОШУК',
-      overviewSub: 'Огляд станцій FI', diagTitle: 'Діагоналі станцій FI',
+      diagTitle: 'Діагоналі станцій FI',
       sum: 'СУМА', total: 'РАЗОМ', name: 'ПРАЦІВНИК',
-      copyHint: 'Натисніть, щоб скопіювати SN', copyOk: '✓ Скопійовано: {n}', copyNone: 'Немає даних', copyErr: 'Помилка копіювання',
+      copyNone: 'Немає даних', copyOk: '✓ Скопійовано: {n}', copyErr: 'Помилка копіювання',
       pnLoading: 'Завантаження даних (pn)...', pnEmpty: 'На аркуші pn немає даних!', pnCopyHint: 'Натисніть, щоб скопіювати весь рядок',
       noInfo: 'Немає інформації!', notFound: 'НЕ ЗНАЙДЕНО', notFoundCount: 'НЕ ЗНАЙДЕНО — [{n}]',
       close: 'ЗАКРИТИ', modalNoData: 'На сьогодні даних по цьому працівнику немає.',
       hSerial: 'Serial', hType: 'Тип', hStatus: 'Статус', hOc: 'OC', hComment: 'Коментар',
-      hDate: 'Дата', hFinal: 'Фінальна', hInfo: 'Інфо', hRepairer: 'Ремонтник', hTime: 'Час', unknown: 'НЕВІДОМО'
+      hDate: 'Дата', hFinal: 'Фінальна', hInfo: 'Інфо', hRepairer: 'Ремонтник', unknown: 'НЕВІДОМО'
     },
     ru: {
-      dateLabel: 'ДАТА', titleHint: 'Нажмите на дату, чтобы скопировать SN. Двойной клик — таблица на весь экран',
+      titleHint: 'Нажмите на дату, чтобы скопировать SN. Двойной клик — таблица на весь экран',
       searchPh: 'Введите SN / PN детали (Enter)', bulkPh: 'Вставьте SN, каждый с новой строки. Ctrl+Enter = поиск',
       modeSingle: 'Один', modeBulk: 'Список', bulkRun: 'ПОИСК',
-      overviewSub: 'Обзор станций FI', diagTitle: 'Диагонали станций FI',
+      diagTitle: 'Диагонали станций FI',
       sum: 'СУММА', total: 'ИТОГО', name: 'СОТРУДНИК',
-      copyHint: 'Нажмите, чтобы скопировать SN', copyOk: '✓ Скопировано: {n}', copyNone: 'Нет данных', copyErr: 'Ошибка копирования',
+      copyNone: 'Нет данных', copyOk: '✓ Скопировано: {n}', copyErr: 'Ошибка копирования',
       pnLoading: 'Загрузка данных (pn)...', pnEmpty: 'На листе pn нет данных!', pnCopyHint: 'Нажмите, чтобы скопировать всю строку',
       noInfo: 'Нет информации!', notFound: 'НЕ НАЙДЕНО', notFoundCount: 'НЕ НАЙДЕНО — [{n}]',
       close: 'ЗАКРЫТЬ', modalNoData: 'На сегодня данных по этому сотруднику нет.',
       hSerial: 'Serial', hType: 'Тип', hStatus: 'Статус', hOc: 'OC', hComment: 'Комментарий',
-      hDate: 'Дата', hFinal: 'Финальная', hInfo: 'Инфо', hRepairer: 'Ремонтник', hTime: 'Время', unknown: 'НЕИЗВЕСТНО'
+      hDate: 'Дата', hFinal: 'Финальная', hInfo: 'Инфо', hRepairer: 'Ремонтник', unknown: 'НЕИЗВЕСТНО'
     },
     pl: {
-      dateLabel: 'DATA', titleHint: 'Kliknij datę, aby skopiować SN. Podwójne kliknięcie — pełny ekran',
+      titleHint: 'Kliknij datę, aby skopiować SN. Podwójne kliknięcie — pełny ekran',
       searchPh: 'Podaj SN / PN części (Enter)', bulkPh: 'Wklej numery SN, każdy w nowej linii. Ctrl+Enter = szukaj',
       modeSingle: 'Pojedynczy', modeBulk: 'Zbiorczy', bulkRun: 'SZUKAJ',
-      overviewSub: 'Przegląd stanowisk FI', diagTitle: 'Przekątne stanowisk FI',
+      diagTitle: 'Przekątne stanowisk FI',
       sum: 'SUMA', total: 'RAZEM', name: 'PRACOWNIK',
-      copyHint: 'Kliknij, aby skopiować SN', copyOk: '✓ Skopiowano: {n}', copyNone: 'Brak danych', copyErr: 'Błąd kopiowania',
+      copyNone: 'Brak danych', copyOk: '✓ Skopiowano: {n}', copyErr: 'Błąd kopiowania',
       pnLoading: 'Pobieranie danych (pn)...', pnEmpty: 'Brak danych na arkuszu pn!', pnCopyHint: 'Kliknij, aby skopiować cały wiersz',
       noInfo: 'Brak info!', notFound: 'NIE ZNALEZIONO', notFoundCount: 'NIE ZNALEZIONO — [{n}]',
       close: 'ZAMKNIJ', modalNoData: 'Brak danych dla wybranego pracownika na dzisiaj.',
       hSerial: 'Serial', hType: 'Typ', hStatus: 'Status', hOc: 'OC', hComment: 'Komentarz',
-      hDate: 'Data', hFinal: 'Finalna', hInfo: 'Info', hRepairer: 'Naprawiający', hTime: 'Godzina', unknown: 'NIEZNANY'
+      hDate: 'Data', hFinal: 'Finalna', hInfo: 'Info', hRepairer: 'Naprawiający', unknown: 'NIEZNANY'
     },
     de: {
-      dateLabel: 'DATUM', titleHint: 'Auf das Datum klicken, um SN zu kopieren. Doppelklick = Vollbild',
+      titleHint: 'Auf das Datum klicken, um SN zu kopieren. Doppelklick = Vollbild',
       searchPh: 'SN / Teilenummer eingeben (Enter)', bulkPh: 'SN-Nummern einfügen, eine pro Zeile. Strg+Enter = suchen',
       modeSingle: 'Einzeln', modeBulk: 'Liste', bulkRun: 'SUCHEN',
-      overviewSub: 'FI-Stationsübersicht', diagTitle: 'FI-Stationsdiagonalen',
+      diagTitle: 'FI-Stationsdiagonalen',
       sum: 'SUMME', total: 'GESAMT', name: 'NAME',
-      copyHint: 'Klicken, um SN zu kopieren', copyOk: '✓ Kopiert: {n}', copyNone: 'Keine Daten', copyErr: 'Kopierfehler',
+      copyNone: 'Keine Daten', copyOk: '✓ Kopiert: {n}', copyErr: 'Kopierfehler',
       pnLoading: 'Daten werden geladen (pn)...', pnEmpty: 'Keine Daten im Blatt pn!', pnCopyHint: 'Klicken, um die ganze Zeile zu kopieren',
       noInfo: 'Keine Info!', notFound: 'NICHT GEFUNDEN', notFoundCount: 'NICHT GEFUNDEN — [{n}]',
       close: 'SCHLIESSEN', modalNoData: 'Heute keine Daten für diesen Mitarbeiter.',
       hSerial: 'Serial', hType: 'Typ', hStatus: 'Status', hOc: 'OC', hComment: 'Kommentar',
-      hDate: 'Datum', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparateur', hTime: 'Uhrzeit', unknown: 'UNBEKANNT'
+      hDate: 'Datum', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparateur', unknown: 'UNBEKANNT'
     },
     fr: {
-      dateLabel: 'DATE', titleHint: 'Cliquez sur la date pour copier le SN. Double-clic = plein écran',
+      titleHint: 'Cliquez sur la date pour copier le SN. Double-clic = plein écran',
       searchPh: 'Saisissez SN / référence (Entrée)', bulkPh: 'Collez les SN, un par ligne. Ctrl+Entrée = rechercher',
       modeSingle: 'Unitaire', modeBulk: 'Liste', bulkRun: 'RECHERCHER',
-      overviewSub: 'Aperçu des stations FI', diagTitle: 'Diagonales des stations FI',
+      diagTitle: 'Diagonales des stations FI',
       sum: 'SOMME', total: 'TOTAL', name: 'NOM',
-      copyHint: 'Cliquez pour copier le SN', copyOk: '✓ Copié : {n}', copyNone: 'Aucune donnée', copyErr: 'Erreur de copie',
+      copyNone: 'Aucune donnée', copyOk: '✓ Copié : {n}', copyErr: 'Erreur de copie',
       pnLoading: 'Chargement des données (pn)...', pnEmpty: 'Aucune donnée dans la feuille pn !', pnCopyHint: 'Cliquez pour copier toute la ligne',
       noInfo: 'Aucune info !', notFound: 'INTROUVABLE', notFoundCount: 'INTROUVABLE — [{n}]',
       close: 'FERMER', modalNoData: "Aucune donnée pour cet employé aujourd'hui.",
       hSerial: 'Serial', hType: 'Type', hStatus: 'Statut', hOc: 'OC', hComment: 'Commentaire',
-      hDate: 'Date', hFinal: 'Finale', hInfo: 'Info', hRepairer: 'Réparateur', hTime: 'Heure', unknown: 'INCONNU'
+      hDate: 'Date', hFinal: 'Finale', hInfo: 'Info', hRepairer: 'Réparateur', unknown: 'INCONNU'
     },
     es: {
-      dateLabel: 'FECHA', titleHint: 'Haga clic en la fecha para copiar el SN. Doble clic = pantalla completa',
+      titleHint: 'Haga clic en la fecha para copiar el SN. Doble clic = pantalla completa',
       searchPh: 'Introduzca SN / referencia (Intro)', bulkPh: 'Pegue los SN, uno por línea. Ctrl+Intro = buscar',
       modeSingle: 'Individual', modeBulk: 'Lista', bulkRun: 'BUSCAR',
-      overviewSub: 'Resumen de estaciones FI', diagTitle: 'Diagonales de estaciones FI',
+      diagTitle: 'Diagonales de estaciones FI',
       sum: 'SUMA', total: 'TOTAL', name: 'NOMBRE',
-      copyHint: 'Haga clic para copiar el SN', copyOk: '✓ Copiados: {n}', copyNone: 'Sin datos', copyErr: 'Error al copiar',
+      copyNone: 'Sin datos', copyOk: '✓ Copiados: {n}', copyErr: 'Error al copiar',
       pnLoading: 'Cargando datos (pn)...', pnEmpty: '¡No hay datos en la hoja pn!', pnCopyHint: 'Haga clic para copiar toda la fila',
       noInfo: '¡Sin información!', notFound: 'NO ENCONTRADO', notFoundCount: 'NO ENCONTRADO — [{n}]',
       close: 'CERRAR', modalNoData: 'No hay datos de este empleado para hoy.',
       hSerial: 'Serial', hType: 'Tipo', hStatus: 'Estado', hOc: 'OC', hComment: 'Comentario',
-      hDate: 'Fecha', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparador', hTime: 'Hora', unknown: 'DESCONOCIDO'
+      hDate: 'Fecha', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparador', unknown: 'DESCONOCIDO'
     },
     it: {
-      dateLabel: 'DATA', titleHint: "Clicca sulla data per copiare l'SN. Doppio clic = schermo intero",
+      titleHint: "Clicca sulla data per copiare l'SN. Doppio clic = schermo intero",
       searchPh: 'Inserisci SN / codice parte (Invio)', bulkPh: 'Incolla gli SN, uno per riga. Ctrl+Invio = cerca',
       modeSingle: 'Singolo', modeBulk: 'Elenco', bulkRun: 'CERCA',
-      overviewSub: 'Panoramica stazioni FI', diagTitle: 'Diagonali stazioni FI',
+      diagTitle: 'Diagonali stazioni FI',
       sum: 'SOMMA', total: 'TOTALE', name: 'NOME',
-      copyHint: "Clicca per copiare l'SN", copyOk: '✓ Copiati: {n}', copyNone: 'Nessun dato', copyErr: 'Errore di copia',
+      copyNone: 'Nessun dato', copyOk: '✓ Copiati: {n}', copyErr: 'Errore di copia',
       pnLoading: 'Caricamento dati (pn)...', pnEmpty: 'Nessun dato nel foglio pn!', pnCopyHint: "Clicca per copiare l'intera riga",
       noInfo: 'Nessuna info!', notFound: 'NON TROVATO', notFoundCount: 'NON TROVATO — [{n}]',
       close: 'CHIUDI', modalNoData: 'Nessun dato per questo dipendente oggi.',
       hSerial: 'Serial', hType: 'Tipo', hStatus: 'Stato', hOc: 'OC', hComment: 'Commento',
-      hDate: 'Data', hFinal: 'Finale', hInfo: 'Info', hRepairer: 'Riparatore', hTime: 'Ora', unknown: 'SCONOSCIUTO'
+      hDate: 'Data', hFinal: 'Finale', hInfo: 'Info', hRepairer: 'Riparatore', unknown: 'SCONOSCIUTO'
     },
     pt: {
-      dateLabel: 'DATA', titleHint: 'Clique na data para copiar o SN. Duplo clique = tela cheia',
+      titleHint: 'Clique na data para copiar o SN. Duplo clique = tela cheia',
       searchPh: 'Digite SN / referência (Enter)', bulkPh: 'Cole os SN, um por linha. Ctrl+Enter = pesquisar',
       modeSingle: 'Individual', modeBulk: 'Lista', bulkRun: 'PESQUISAR',
-      overviewSub: 'Visão geral das estações FI', diagTitle: 'Diagonais das estações FI',
+      diagTitle: 'Diagonais das estações FI',
       sum: 'SOMA', total: 'TOTAL', name: 'NOME',
-      copyHint: 'Clique para copiar o SN', copyOk: '✓ Copiados: {n}', copyNone: 'Sem dados', copyErr: 'Erro ao copiar',
+      copyNone: 'Sem dados', copyOk: '✓ Copiados: {n}', copyErr: 'Erro ao copiar',
       pnLoading: 'Carregando dados (pn)...', pnEmpty: 'Sem dados na planilha pn!', pnCopyHint: 'Clique para copiar a linha inteira',
       noInfo: 'Sem informações!', notFound: 'NÃO ENCONTRADO', notFoundCount: 'NÃO ENCONTRADO — [{n}]',
       close: 'FECHAR', modalNoData: 'Não há dados deste funcionário para hoje.',
       hSerial: 'Serial', hType: 'Tipo', hStatus: 'Status', hOc: 'OC', hComment: 'Comentário',
-      hDate: 'Data', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparador', hTime: 'Hora', unknown: 'DESCONHECIDO'
+      hDate: 'Data', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparador', unknown: 'DESCONHECIDO'
     },
     tr: {
-      dateLabel: 'TARİH', titleHint: 'SN kopyalamak için tarihe tıklayın. Çift tıklama = tam ekran',
+      titleHint: 'SN kopyalamak için tarihe tıklayın. Çift tıklama = tam ekran',
       searchPh: 'SN / parça numarası girin (Enter)', bulkPh: 'SN numaralarını yapıştırın, her satıra bir tane. Ctrl+Enter = ara',
       modeSingle: 'Tekli', modeBulk: 'Toplu', bulkRun: 'ARA',
-      overviewSub: 'FI İstasyon özeti', diagTitle: 'FI İstasyon köşegenleri',
+      diagTitle: 'FI İstasyon köşegenleri',
       sum: 'TOPLAM', total: 'TOPLAM', name: 'AD',
-      copyHint: 'SN’yi kopyalamak için tıklayın', copyOk: '✓ Kopyalandı: {n}', copyNone: 'Veri yok', copyErr: 'Kopyalama hatası',
+      copyNone: 'Veri yok', copyOk: '✓ Kopyalandı: {n}', copyErr: 'Kopyalama hatası',
       pnLoading: 'Veriler yükleniyor (pn)...', pnEmpty: 'pn sayfasında veri yok!', pnCopyHint: 'Tüm satırı kopyalamak için tıklayın',
       noInfo: 'Bilgi yok!', notFound: 'BULUNAMADI', notFoundCount: 'BULUNAMADI — [{n}]',
       close: 'KAPAT', modalNoData: 'Bugün bu çalışan için veri yok.',
       hSerial: 'Serial', hType: 'Tip', hStatus: 'Durum', hOc: 'OC', hComment: 'Yorum',
-      hDate: 'Tarih', hFinal: 'Final', hInfo: 'Bilgi', hRepairer: 'Onarımcı', hTime: 'Saat', unknown: 'BİLİNMİYOR'
+      hDate: 'Tarih', hFinal: 'Final', hInfo: 'Bilgi', hRepairer: 'Onarımcı', unknown: 'BİLİNMİYOR'
     }
   };
 
@@ -166,10 +166,8 @@
   padding: 12px 18px; background: #111827; color: #fff;
   font-size: 15px; font-weight: 700; border-bottom: 1px solid #1f2937;
 }
-#livePage .lv-block-title .sub { color: #9CA3AF; font-size: 12px; font-weight: 500; }
 #livePage #table-title { cursor: pointer; user-select: none; color: #4d94ff; font-size: 15px; font-weight: 700; }
 #livePage #table-title:hover { color: #fff; }
-#livePage #date-info { color: #4d94ff; font-size: 12px; font-weight: 600; white-space: nowrap; }
 
 #livePage .lv-toggle {
   background: #374151; color: #F3F4F6; border: none; border-radius: 6px;
@@ -283,8 +281,7 @@
   <button type="button" id="overview-toggle" class="lv-toggle">▲</button>
   <div class="lv-card" id="overview-block">
     <div class="lv-block-title" id="overview-title">
-      <span id="table-title" data-lv-title="copyHint">--.--.----</span>
-      <span id="date-info">--</span>
+      <span id="table-title" data-lv-title="titleHint">--.--.----</span>
     </div>
     <div class="lv-table-wrap">
       <table id="combined-table">
@@ -347,10 +344,6 @@
     document.querySelectorAll('#livePage [data-lv]').forEach(el => { el.textContent = t(el.dataset.lv); });
     document.querySelectorAll('#livePage [data-lv-ph]').forEach(el => { el.placeholder = t(el.dataset.lvPh); });
     document.querySelectorAll('#livePage [data-lv-title]').forEach(el => { el.title = t(el.dataset.lvTitle); });
-  }
-
-  function setDateInfo() {
-    $('date-info').textContent = `${t('dateLabel')}: ${lastDateStr || '--'}`;
   }
 
   function isVisible() {
@@ -510,7 +503,7 @@
       .forEach(([name, data]) => {
         const row = document.createElement('tr');
         row.innerHTML =
-          `<td class="ld-name" data-name="${escHtml(name)}">${escHtml(name)}</td>` +
+          `<td class="ld-name ${getUserCustomClass(name)}" data-name="${escHtml(name)}">${escHtml(name)}</td>` +
           `<td>${data.NDF}</td><td>${data.OK}</td><td>${data.WAITING}</td><td>${data['SCRAP TTL']}</td>` +
           `<td class="sum-col">${data.total}</td>`;
         tbody.appendChild(row);
@@ -542,7 +535,7 @@
 
     Object.entries(diagStats).sort().forEach(([name, diags]) => {
       const row = document.createElement('tr');
-      row.innerHTML = `<td style="cursor:default; text-align:left; color:#fff; font-weight:600;">${escHtml(name)}</td>` +
+      row.innerHTML = `<td class="${getUserCustomClass(name)}" style="cursor:default; text-align:left; color:#fff; font-weight:600;">${escHtml(name)}</td>` +
         allDiagonals.map(d => `<td>${diags[d] || 0}</td>`).join('') +
         `<td class="sum-col">${Object.values(diags).reduce((a, b) => a + b, 0)}</td>`;
       tbody.appendChild(row);
@@ -552,7 +545,6 @@
   async function updateStats() {
     if (await fetchAndCacheData()) {
       lastDateStr = getLastDate(combinedDataCache).toISOString().split('T')[0];
-      setDateInfo();
       lastFiltered = combinedDataCache.filter(r => (r.date || '').split(' ')[0] === lastDateStr);
       displayCombinedStats(lastFiltered);
       displayDiagonalStats(lastFiltered);
@@ -675,7 +667,7 @@
     sortedNames.forEach(name => {
       resHtml += `
       <details class="bulk-group">
-        <summary>${escHtml(name)} — [${groups[name].length}]</summary>
+        <summary><span class="${getUserCustomClass(name)}">${escHtml(name)}</span> — [${groups[name].length}]</summary>
         <table>
           <thead><tr>
             <th>${escHtml(t('hSerial'))}</th><th>${escHtml(t('hDate'))}</th><th>${escHtml(t('hStatus'))}</th>
@@ -828,7 +820,6 @@
   // Перерисовка всего модуля при смене языка сайта
   function refreshLanguage() {
     applyText();
-    setDateInfo();
     refreshTitleDate();
     if (lastFiltered.length) {
       displayCombinedStats(lastFiltered);
@@ -885,7 +876,6 @@
     }, 5000);
 
     applyText();
-    setDateInfo();
     refreshTitleDate();
     setInterval(refreshTitleDate, 60000);
     initialized = true;
