@@ -1,7 +1,7 @@
 // js/repairlog.js
 (function () {
   const SUPABASE_URL = "https://wtqvaeongxncufvpvvge.supabase.co";
-  const SUPABASE_ANON_KEY = "ВСТАВЬТЕ_ANON_KEY";
+ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U";
   const TABLE = "repair_log";
 
   const STATUS_MAP = {
