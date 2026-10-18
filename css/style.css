@@ -415,13 +415,15 @@ html, body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
 /* Вкладки скрыты: страница открывается сразу из меню */
 .tabs {
   display: none !important;
 }
+
 /* ===== Единый фон сайта ===== */
 :root {
-  /* Фоновая картинка: файл background.jpg лежит в корне репозитория */
+  /* Фоновая картинка: файл Background.jpg лежит в корне репозитория */
   --site-bg-image: url('../Background.jpg');
   /* Затемнение поверх картинки: чем больше последнее число, тем темнее */
   --site-overlay: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45));
@@ -448,6 +450,72 @@ html, body {
 #livePage,
 #statsPage,
 #final1Page,
-#final2Page {
+#final2Page,
+#repairLogPage {
   background: transparent !important;
+}
+
+/* ===== Repair Log ===== */
+#repairLogPage {
+  padding: 16px;
+}
+.rl-wrap h2 {
+  margin: 0 0 12px;
+  color: var(--text-light);
+}
+.rl-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.rl-form input,
+#rlSearch {
+  padding: 8px;
+  min-width: 200px;
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+}
+#rlSearch {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 12px;
+}
+.rl-form button {
+  padding: 8px 14px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.rl-form button:hover {
+  filter: brightness(1.15);
+}
+.rl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.rl-table th,
+.rl-table td {
+  border: 1px solid #444;
+  padding: 6px 8px;
+}
+.rl-table th {
+  background: #222;
+  color: #fff;
+  text-align: left;
+}
+.rl-table tbody tr {
+  background: #fff;
+  color: #000;
+}
+.rl-edit {
+  background: none;
+  border: 1px solid #666;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 6px;
 }
