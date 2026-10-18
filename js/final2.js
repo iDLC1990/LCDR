@@ -1,14 +1,13 @@
 /* Final inspection station I: список SN из Google Таблицы (вкладка FI 1), печать этикеток.
    Підключення: <script src="js/final1.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
    Контейнер: <section id="final1Page">. Мову задає сайт через window.setFinal1Lang(код). */
-(function () {
   const CFG = {
-    name: 'final1',
-    gid: '0',                       // вкладка таблицы: FI 1
-    pageId: 'final1Page',
-    setLang: 'setFinal1Lang',
-    show: 'final1Show',
-    modeKey: 'final1Mode'
+    name: 'final2',
+    gid: '193025884',               // вкладка таблицы: FI 2
+    pageId: 'final2Page',
+    setLang: 'setFinal2Lang',
+    show: 'final2Show',
+    modeKey: 'final2Mode'
   };
 
   const SHEET_ID = '10W03bvKlVFlIUcxsHkzP_v_13gtnYRBmnrrO0ujB1bU';
