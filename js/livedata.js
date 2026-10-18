@@ -278,7 +278,6 @@
 </div>
 
 <div class="lv-wrap" id="overview-wrap">
-  <button type="button" id="overview-toggle" class="lv-toggle">▲</button>
   <div class="lv-card" id="overview-block">
     <div class="lv-block-title" id="overview-title">
       <span id="table-title" data-lv-title="titleHint">--.--.----</span>
@@ -297,7 +296,6 @@
 </div>
 
 <div class="lv-wrap" id="diag-wrap">
-  <button type="button" id="diag-toggle" class="lv-toggle">▲</button>
   <div class="lv-card" id="diag-block">
     <div class="lv-block-title"><span data-lv="diagTitle"></span></div>
     <div class="lv-table-wrap">
