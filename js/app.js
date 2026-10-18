@@ -295,3 +295,11 @@ setInterval(() => {
     render();
   }
 }, 30000);
+document.addEventListener('keydown', (e) => {
+  const isPlus = e.key === '+' || e.key === '=' || e.code === 'NumpadAdd';
+  if (e.altKey && isPlus) {
+    e.preventDefault();
+    const tab = document.getElementById('secretTab');
+    tab.style.display = tab.style.display === 'none' ? '' : 'none';
+  }
+});
