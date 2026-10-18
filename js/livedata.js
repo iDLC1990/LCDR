@@ -15,7 +15,7 @@
   /* ===== Переклади (10 мов, як на сайті) ===== */
   const I18N = {
     en: {
-      dateLabel: 'DATE', titleHint: 'Click to show the table full screen',
+      dateLabel: 'DATE', titleHint: 'Click on the date to copy SN. Double-click to show the table full screen',
       searchPh: 'Enter SN / part number (Enter)', bulkPh: 'Paste SN numbers, one per line. Ctrl+Enter = search',
       modeSingle: 'Single', modeBulk: 'Bulk', bulkRun: 'SEARCH',
       overviewSub: 'FI Station Overview', diagTitle: 'FI Station Diagonals',
@@ -28,7 +28,7 @@
       hDate: 'Date', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Repairer', hTime: 'Time', unknown: 'UNKNOWN'
     },
     uk: {
-      dateLabel: 'ДАТА', titleHint: 'Натисніть, щоб показати таблицю на весь екран',
+      dateLabel: 'ДАТА', titleHint: 'Натисніть на дату, щоб скопіювати SN. Подвійний клік — таблиця на весь екран',
       searchPh: 'Введіть SN / PN деталі (Enter)', bulkPh: 'Вставте SN, кожен з нового рядка. Ctrl+Enter = пошук',
       modeSingle: 'Один', modeBulk: 'Список', bulkRun: 'ПОШУК',
       overviewSub: 'Огляд станцій FI', diagTitle: 'Діагоналі станцій FI',
@@ -41,7 +41,7 @@
       hDate: 'Дата', hFinal: 'Фінальна', hInfo: 'Інфо', hRepairer: 'Ремонтник', hTime: 'Час', unknown: 'НЕВІДОМО'
     },
     ru: {
-      dateLabel: 'ДАТА', titleHint: 'Нажмите, чтобы показать таблицу на весь экран',
+      dateLabel: 'ДАТА', titleHint: 'Нажмите на дату, чтобы скопировать SN. Двойной клик — таблица на весь экран',
       searchPh: 'Введите SN / PN детали (Enter)', bulkPh: 'Вставьте SN, каждый с новой строки. Ctrl+Enter = поиск',
       modeSingle: 'Один', modeBulk: 'Список', bulkRun: 'ПОИСК',
       overviewSub: 'Обзор станций FI', diagTitle: 'Диагонали станций FI',
@@ -54,7 +54,7 @@
       hDate: 'Дата', hFinal: 'Финальная', hInfo: 'Инфо', hRepairer: 'Ремонтник', hTime: 'Время', unknown: 'НЕИЗВЕСТНО'
     },
     pl: {
-      dateLabel: 'DATA', titleHint: 'Kliknij, aby pokazać tabelę na pełnym ekranie',
+      dateLabel: 'DATA', titleHint: 'Kliknij datę, aby skopiować SN. Podwójne kliknięcie — pełny ekran',
       searchPh: 'Podaj SN / PN części (Enter)', bulkPh: 'Wklej numery SN, każdy w nowej linii. Ctrl+Enter = szukaj',
       modeSingle: 'Pojedynczy', modeBulk: 'Zbiorczy', bulkRun: 'SZUKAJ',
       overviewSub: 'Przegląd stanowisk FI', diagTitle: 'Przekątne stanowisk FI',
@@ -67,7 +67,7 @@
       hDate: 'Data', hFinal: 'Finalna', hInfo: 'Info', hRepairer: 'Naprawiający', hTime: 'Godzina', unknown: 'NIEZNANY'
     },
     de: {
-      dateLabel: 'DATUM', titleHint: 'Klicken, um die Tabelle im Vollbild anzuzeigen',
+      dateLabel: 'DATUM', titleHint: 'Auf das Datum klicken, um SN zu kopieren. Doppelklick = Vollbild',
       searchPh: 'SN / Teilenummer eingeben (Enter)', bulkPh: 'SN-Nummern einfügen, eine pro Zeile. Strg+Enter = suchen',
       modeSingle: 'Einzeln', modeBulk: 'Liste', bulkRun: 'SUCHEN',
       overviewSub: 'FI-Stationsübersicht', diagTitle: 'FI-Stationsdiagonalen',
@@ -80,7 +80,7 @@
       hDate: 'Datum', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparateur', hTime: 'Uhrzeit', unknown: 'UNBEKANNT'
     },
     fr: {
-      dateLabel: 'DATE', titleHint: 'Cliquez pour afficher le tableau en plein écran',
+      dateLabel: 'DATE', titleHint: 'Cliquez sur la date pour copier le SN. Double-clic = plein écran',
       searchPh: 'Saisissez SN / référence (Entrée)', bulkPh: 'Collez les SN, un par ligne. Ctrl+Entrée = rechercher',
       modeSingle: 'Unitaire', modeBulk: 'Liste', bulkRun: 'RECHERCHER',
       overviewSub: 'Aperçu des stations FI', diagTitle: 'Diagonales des stations FI',
@@ -93,7 +93,7 @@
       hDate: 'Date', hFinal: 'Finale', hInfo: 'Info', hRepairer: 'Réparateur', hTime: 'Heure', unknown: 'INCONNU'
     },
     es: {
-      dateLabel: 'FECHA', titleHint: 'Haga clic para mostrar la tabla en pantalla completa',
+      dateLabel: 'FECHA', titleHint: 'Haga clic en la fecha para copiar el SN. Doble clic = pantalla completa',
       searchPh: 'Introduzca SN / referencia (Intro)', bulkPh: 'Pegue los SN, uno por línea. Ctrl+Intro = buscar',
       modeSingle: 'Individual', modeBulk: 'Lista', bulkRun: 'BUSCAR',
       overviewSub: 'Resumen de estaciones FI', diagTitle: 'Diagonales de estaciones FI',
@@ -106,7 +106,7 @@
       hDate: 'Fecha', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparador', hTime: 'Hora', unknown: 'DESCONOCIDO'
     },
     it: {
-      dateLabel: 'DATA', titleHint: 'Clicca per mostrare la tabella a schermo intero',
+      dateLabel: 'DATA', titleHint: "Clicca sulla data per copiare l'SN. Doppio clic = schermo intero",
       searchPh: 'Inserisci SN / codice parte (Invio)', bulkPh: 'Incolla gli SN, uno per riga. Ctrl+Invio = cerca',
       modeSingle: 'Singolo', modeBulk: 'Elenco', bulkRun: 'CERCA',
       overviewSub: 'Panoramica stazioni FI', diagTitle: 'Diagonali stazioni FI',
@@ -119,7 +119,7 @@
       hDate: 'Data', hFinal: 'Finale', hInfo: 'Info', hRepairer: 'Riparatore', hTime: 'Ora', unknown: 'SCONOSCIUTO'
     },
     pt: {
-      dateLabel: 'DATA', titleHint: 'Clique para mostrar a tabela em tela cheia',
+      dateLabel: 'DATA', titleHint: 'Clique na data para copiar o SN. Duplo clique = tela cheia',
       searchPh: 'Digite SN / referência (Enter)', bulkPh: 'Cole os SN, um por linha. Ctrl+Enter = pesquisar',
       modeSingle: 'Individual', modeBulk: 'Lista', bulkRun: 'PESQUISAR',
       overviewSub: 'Visão geral das estações FI', diagTitle: 'Diagonais das estações FI',
@@ -132,7 +132,7 @@
       hDate: 'Data', hFinal: 'Final', hInfo: 'Info', hRepairer: 'Reparador', hTime: 'Hora', unknown: 'DESCONHECIDO'
     },
     tr: {
-      dateLabel: 'TARİH', titleHint: 'Tabloyu tam ekranda göstermek için tıklayın',
+      dateLabel: 'TARİH', titleHint: 'SN kopyalamak için tarihe tıklayın. Çift tıklama = tam ekran',
       searchPh: 'SN / parça numarası girin (Enter)', bulkPh: 'SN numaralarını yapıştırın, her satıra bir tane. Ctrl+Enter = ara',
       modeSingle: 'Tekli', modeBulk: 'Toplu', bulkRun: 'ARA',
       overviewSub: 'FI İstasyon özeti', diagTitle: 'FI İstasyon köşegenleri',
@@ -149,34 +149,27 @@
   const CSS = `
 #livePage {
   position: relative; display: block; box-sizing: border-box;
-  min-height: 100%; padding: 0 0 30px; overflow: auto;
+  min-height: 100%; padding: 24px 0 30px; overflow: auto;
   background: #000; color: #fff;
   font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 14px;
 }
 
-/* ----- Шапка ----- */
-#livePage .lv-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 18px 28px; border-bottom: 1px solid #1f2937; background: #000;
-}
-#livePage .lv-title { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.3px; cursor: pointer; user-select: none; }
-#livePage .lv-title:hover { color: #4d94ff; }
-#livePage .lv-date { font-size: 14px; font-weight: 600; color: #4d94ff; }
-
 /* ----- Блоки ----- */
-#livePage .lv-wrap { width: 95%; max-width: 1200px; margin: 24px auto; transition: all 0.3s ease; }
+#livePage .lv-wrap { width: 95%; max-width: 1200px; margin: 0 auto 24px; transition: all 0.3s ease; }
+#livePage .lv-wrap:first-child { margin-top: 0; }
 #livePage .lv-card {
   background: #0e0e0e; border: 1px solid #1f2937; border-radius: 10px;
   overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
 }
 #livePage .lv-block-title {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
   padding: 12px 18px; background: #111827; color: #fff;
   font-size: 15px; font-weight: 700; border-bottom: 1px solid #1f2937;
 }
 #livePage .lv-block-title .sub { color: #9CA3AF; font-size: 12px; font-weight: 500; }
-#livePage #table-title { cursor: pointer; user-select: none; color: #4d94ff; }
+#livePage #table-title { cursor: pointer; user-select: none; color: #4d94ff; font-size: 15px; font-weight: 700; }
 #livePage #table-title:hover { color: #fff; }
+#livePage #date-info { color: #4d94ff; font-size: 12px; font-weight: 600; white-space: nowrap; }
 
 #livePage .lv-toggle {
   background: #374151; color: #F3F4F6; border: none; border-radius: 6px;
@@ -267,17 +260,10 @@
 
 @media (max-width: 1080px) {
   #livePage .lv-wrap { width: 100%; }
-  #livePage .lv-header { padding: 12px 16px; }
-  #livePage .lv-title { font-size: 15px; }
 }
 `;
 
   const MARKUP = `
-<div class="lv-header">
-  <h1 class="lv-title" id="main-title" data-lv-title="titleHint">LCDR LIVE DATA 2026</h1>
-  <div class="lv-date" id="date-info">--</div>
-</div>
-
 <div class="lv-wrap" id="search-wrap">
   <div class="lv-search-row">
     <input type="text" id="search" data-lv-ph="searchPh" autocomplete="off">
@@ -296,9 +282,9 @@
 <div class="lv-wrap" id="overview-wrap">
   <button type="button" id="overview-toggle" class="lv-toggle">▲</button>
   <div class="lv-card" id="overview-block">
-    <div class="lv-block-title">
+    <div class="lv-block-title" id="overview-title">
       <span id="table-title" data-lv-title="copyHint">--.--.----</span>
-      <span class="sub" data-lv="overviewSub"></span>
+      <span id="date-info">--</span>
     </div>
     <div class="lv-table-wrap">
       <table id="combined-table">
@@ -348,6 +334,7 @@
   let helperSheetTitle = null;
   let titleBusy = false;
   let titleTimer = null;
+  let clickTimer = null;
 
   function t(key, vars) {
     const dict = I18N[lvLang] || I18N.en;
@@ -608,6 +595,17 @@
     }, 1500);
   }
 
+  // Одинарный клик по дате — копирование, двойной — полный экран
+  function onTitleClick() {
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(copySecret, 220);
+  }
+
+  function onTitleDblClick() {
+    clearTimeout(clickTimer);
+    toggleFullscreen();
+  }
+
   // Переключатель поиска: Single / Bulk
   function setMode(mode) {
     bulkMode = mode === 'bulk';
@@ -858,7 +856,11 @@
     $('modal-close').onclick = closeModal;
     $('modal').onclick = (e) => { if (e.target === $('modal')) closeModal(); };
 
-    $('table-title').onclick = copySecret;
+    $('table-title').addEventListener('click', onTitleClick);
+    $('table-title').addEventListener('dblclick', onTitleDblClick);
+    $('overview-title').addEventListener('dblclick', (e) => {
+      if (e.target.id !== 'table-title') toggleFullscreen();
+    });
 
     $('combined-table').querySelector('tbody').addEventListener('click', (e) => {
       const td = e.target.closest('.ld-name');
@@ -875,8 +877,6 @@
     $('search').addEventListener('keydown', onSearchKey);
     $('bulk-input').addEventListener('keydown', onBulkKey);
     $('bulk-run').onclick = runBulkSearch;
-
-    $('main-title').onclick = toggleFullscreen;
 
     document.addEventListener('keydown', onGlobalKey, true);
 
