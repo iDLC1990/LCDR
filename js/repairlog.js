@@ -23,29 +23,29 @@
     SPRAWDZENIE: "#D1E8FF"
   };
 
-  // Тексты интерфейса на четырёх языках сайта
+  // Тексты интерфейса. Для языков без своего перевода берётся английский
   const T = {
     en: {
       title: "Repair Log", sn: "Serial number", date: "Date", time: "Time", status: "Status",
-      add: "+ Add", snPh: "Serial number", statusPh: "Status (OK, VV, H...)",
+      add: "+ Add", statusPh: "Status (OK, VV, H...)",
       search: "Search by serial number (all records)", empty: "No records",
       clear: "Clear status", errLoad: "Load error: ", errSave: "Save error: "
     },
     ru: {
       title: "Журнал ремонта", sn: "Серийный номер", date: "Дата", time: "Время", status: "Статус",
-      add: "+ Добавить", snPh: "Серийный номер", statusPh: "Статус (OK, VV, H...)",
+      add: "+ Добавить", statusPh: "Статус (OK, VV, H...)",
       search: "Поиск по серийному номеру (вся база)", empty: "Нет записей",
       clear: "Очистить статус", errLoad: "Ошибка загрузки: ", errSave: "Ошибка сохранения: "
     },
     uk: {
       title: "Журнал ремонту", sn: "Серійний номер", date: "Дата", time: "Час", status: "Статус",
-      add: "+ Додати", snPh: "Серійний номер", statusPh: "Статус (OK, VV, H...)",
+      add: "+ Додати", statusPh: "Статус (OK, VV, H...)",
       search: "Пошук за серійним номером (уся база)", empty: "Немає записів",
       clear: "Очистити статус", errLoad: "Помилка завантаження: ", errSave: "Помилка збереження: "
     },
     pl: {
       title: "Dziennik napraw", sn: "Numer seryjny", date: "Data", time: "Czas", status: "Status",
-      add: "+ Dodaj", snPh: "Numer seryjny", statusPh: "Status (OK, VV, H...)",
+      add: "+ Dodaj", statusPh: "Status (OK, VV, H...)",
       search: "Szukaj po numerze seryjnym (cała baza)", empty: "Brak wpisów",
       clear: "Wyczyść status", errLoad: "Błąd ładowania: ", errSave: "Błąd zapisu: "
     }
@@ -59,10 +59,11 @@
   let allRows = [];
   let searchTimer = null;
 
-  // Язык сайта: из выпадающего списка в верхней панели, иначе из атрибута lang
+  // Язык передаёт сайт (app.js) через window.setSecretLang
+  let siteLangCode = document.documentElement.lang || "en";
+
   function currentLang() {
-    const sel = document.querySelector(".topbar select");
-    const raw = ((sel && sel.value) || document.documentElement.lang || "en").toLowerCase();
+    const raw = String(siteLangCode || "en").toLowerCase();
     if (raw.startsWith("ru")) return "ru";
     if (raw.startsWith("uk")) return "uk";
     if (raw.startsWith("pl")) return "pl";
@@ -239,37 +240,25 @@
     load();
   });
 
-  // Смена языка на сайте: переписываем подписи
-  document.addEventListener("change", (e) => {
-    if (e.target.closest && e.target.closest(".topbar select")) applyLang();
-  }, true);
+  // Вызывается сайтом при открытии страницы Repair Log
+  window.secretShow = function () {
+    applyLang();
+    load();
+  };
 
-  // Открытие Repair Log: только по пункту Secret
-  document.querySelectorAll('[data-page="secret"]').forEach(el => {
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      document.querySelectorAll(".label-page").forEach(s => s.style.display = "none");
-      document.getElementById("content").style.display = "none";
-      page.style.display = "";
-      document.getElementById("pageTitle").textContent = tr().title;
-      applyLang();
-      load();
-    });
-  });
+  // Вызывается сайтом при смене языка
+  window.setSecretLang = function (l) {
+    siteLangCode = l;
+    applyLang();
+  };
 
-  // Любой другой пункт меню закрывает Repair Log
-  document.addEventListener("click", (e) => {
-    const el = e.target.closest("[data-page]");
-    if (el && el.dataset.page !== "secret") {
-      page.style.display = "none";
-    }
-  }, true);
-
-  // Скрытие вкладки по Alt+Q закрывает и страницу
+  // Alt+Q скрывает пункт Secret. Если страница открыта, закрываем её тоже
   document.addEventListener("keydown", (e) => {
     if (e.altKey && (e.key === "q" || e.key === "Q" || e.code === "KeyQ")) {
       setTimeout(() => {
-        if (tab.style.display === "none") page.style.display = "none";
+        if (tab.style.display === "none" && window.siteClosePage) {
+          window.siteClosePage("secret");
+        }
       }, 0);
     }
   });
