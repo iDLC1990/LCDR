@@ -519,3 +519,32 @@ html, body {
   cursor: pointer;
   padding: 2px 6px;
 }
+/* ===== Кнопки-сокращения статусов ===== */
+.rl-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.rl-code {
+  min-width: 2.6rem;
+  padding: 6px 8px;
+  background: #1f2937;
+  color: #fff;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.rl-code:hover {
+  background: #7c3aed;
+  border-color: #a855f7;
+}
+.rl-code.rl-clear {
+  background: #7f1d1d;
+  border-color: #b91c1c;
+}
+.rl-code.rl-clear:hover {
+  background: #b91c1c;
+}
