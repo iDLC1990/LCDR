@@ -62,7 +62,8 @@ const STATIC_PAGES = {
   label: "labelPage",
   parts: "pnbasePage",
   special: "specialPage",
-  live: "livePage"
+  live: "livePage",
+  stats: "statsPage"
 };
 
 // При загрузке сайта вкладок нет — пользователь открывает их сам из меню
@@ -126,6 +127,7 @@ function setSiteLang(lang) {
   if (window.setPnBaseLang) window.setPnBaseLang(PNBASE_LANGS.includes(lang) ? lang : "en");
   if (window.setSpecialLang) window.setSpecialLang(siteLang);
   if (window.setLiveLang) window.setLiveLang(siteLang);
+  if (window.setStatisticLang) window.setStatisticLang(siteLang);
   render();
 }
 
@@ -167,6 +169,7 @@ function renderContent() {
     document.getElementById(staticId).style.display = "block";
     if (state.active === "label" && window.sbShow) window.sbShow();
     if (state.active === "live" && window.liveShow) window.liveShow();
+    if (state.active === "stats" && window.statsShow) window.statsShow();
     return;
   }
 
