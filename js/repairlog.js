@@ -16,7 +16,6 @@
     AAA: "AUTO PATERN", PP: "PUSH MURA", MMM: "Maciej M. W. Wisniewski", "2": "SPRAWDZENIE"
   };
 
-  // Цвет строки по первому подходящему слову статуса
   const STATUS_COLORS = {
     SCRAP: "#FF9999", WAITING: "#FFFF99", OK: "#99FF99",
     LC: "#FFCC99", ABNORMAL: "#FFCC99", CELL: "#FFB266",
@@ -25,10 +24,12 @@
   };
 
   const page = document.getElementById("secretPage");
-  if (!page || !window.supabase) return;
+  const tab = document.getElementById("secretTab");
+  if (!page || !tab || !window.supabase) return;
 
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let allRows = [];
+  let searchTimer = null;
 
   page.innerHTML = `
     <div class="rl-wrap">
@@ -38,7 +39,7 @@
         <input id="rlStatus" placeholder="Статус (OK, VV, H...)" autocomplete="off" required>
         <button type="submit">+ Добавить</button>
       </form>
-      <input id="rlSearch" placeholder="Поиск по SN" autocomplete="off">
+      <input id="rlSearch" placeholder="Поиск по SN (по всей базе)" autocomplete="off">
       <table class="rl-table">
         <thead>
           <tr><th>№</th><th>Panel SN</th><th>Дата</th><th>Время</th><th>Статус</th><th></th></tr>
@@ -76,9 +77,7 @@
   }
 
   function render() {
-    const q = searchInput.value.trim().toUpperCase();
-    const rows = allRows.filter(r => !q || r.panel_sn.includes(q));
-    body.innerHTML = rows.map(r => `
+    body.innerHTML = allRows.map(r => `
       <tr style="background:${colorFor(r.status)}">
         <td>${r.log_no}</td>
         <td>${esc(r.panel_sn)}</td>
@@ -89,13 +88,28 @@
       </tr>`).join("");
   }
 
+  // Без поиска: только записи за сегодня.
+  // С поиском: по всей таблице, по SN.
   async function load() {
-    const { data, error } = await db.from(TABLE)
-      .select("*").order("log_no", { ascending: false }).limit(1000);
+    const q = searchInput.value.trim().toUpperCase();
+    let query = db.from(TABLE).select("*").order("log_no", { ascending: false });
+
+    if (q) {
+      query = query.ilike("panel_sn", `%${q}%`).limit(500);
+    } else {
+      query = query.eq("repair_date", localDate(new Date())).limit(1000);
+    }
+
+    const { data, error } = await query;
     if (error) { alert("Ошибка загрузки: " + error.message); return; }
     allRows = data;
     render();
   }
+
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(load, 300);
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -134,9 +148,7 @@
     load();
   });
 
-  searchInput.addEventListener("input", render);
-
-  // Открытие страницы по пункту Secret (появляется по Alt+Q)
+  // Открытие Repair Log: только по пункту Secret
   document.querySelectorAll('[data-page="secret"]').forEach(el => {
     el.addEventListener("click", (e) => {
       e.preventDefault();
@@ -146,5 +158,22 @@
       document.getElementById("pageTitle").textContent = "Repair Log";
       load();
     });
+  });
+
+  // Любой другой пункт меню закрывает Repair Log (в фазе capture, до app.js)
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-page]");
+    if (el && el.dataset.page !== "secret") {
+      page.style.display = "none";
+    }
+  }, true);
+
+  // Скрытие вкладки по Alt+Q закрывает и страницу
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey && (e.key === "q" || e.key === "Q" || e.code === "KeyQ")) {
+      setTimeout(() => {
+        if (tab.style.display === "none") page.style.display = "none";
+      }, 0);
+    }
   });
 })();
