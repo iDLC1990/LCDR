@@ -64,7 +64,9 @@ const STATIC_PAGES = {
   parts: "pnbasePage",
   special: "specialPage",
   live: "livePage",
-  stats: "statsPage"
+  stats: "statsPage",
+  final1: "final1Page",
+  final2: "final2Page"
 };
 
 // При загрузке сайта вкладок нет — пользователь открывает их сам из меню
@@ -146,6 +148,8 @@ function setSiteLang(lang) {
   if (window.setSpecialLang)   window.setSpecialLang(siteLang);
   if (window.setLiveLang)      window.setLiveLang(siteLang);
   if (window.setStatisticLang) window.setStatisticLang(siteLang);
+  if (window.setFinal1Lang) window.setFinal1Lang(siteLang);
+  if (window.setFinal2Lang) window.setFinal2Lang(siteLang);
   render();
 }
 
@@ -188,6 +192,8 @@ function renderContent() {
     if (state.active === "label" && window.sbShow) window.sbShow();
     if (state.active === "live" && window.liveShow) window.liveShow();
     if (state.active === "stats" && window.statsShow) window.statsShow();
+    if (state.active === "final1" && window.final1Show) window.final1Show();
+    if (state.active === "final2" && window.final2Show) window.final2Show();
     return;
   }
 
