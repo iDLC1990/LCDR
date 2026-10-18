@@ -604,7 +604,7 @@ html, body {
   /* Цвет статуса: тонкая полоска слева и лёгкая подсветка строки */
   box-shadow: inset 3px 0 0 var(--row-color, transparent);
   background: linear-gradient(90deg,
-    color-mix(in srgb, var(--row-color, transparent) 23%, transparent),
+    color-mix(in srgb, var(--row-color, transparent) 20%, transparent),
     transparent 70%);
   transition: background 0.2s;
 }
