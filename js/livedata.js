@@ -220,6 +220,8 @@
 #livePage .latest-record td { background: rgba(37,99,235,0.2); font-weight: 700; color: #fff; }
 
 #livePage .lv-table-wrap { overflow-x: auto; }
+#livePage .lv-block-title { cursor: pointer; user-select: none; }
+#livePage .lv-card.collapsed .lv-table-wrap { display: none; }
 
 /* ----- Групи пакетного пошуку ----- */
 #livePage details.bulk-group { margin-bottom: 10px; border: 1px solid #1f2937; border-radius: 8px; overflow: hidden; }
@@ -449,11 +451,8 @@
     return dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : new Date();
   }
 
-  function toggleBlock(blockId, btnId) {
-    const b = $(blockId);
-    const hidden = window.getComputedStyle(b).display === 'none';
-    b.style.display = hidden ? 'block' : 'none';
-    if (btnId) $(btnId).textContent = hidden ? '▲' : '▼';
+    function toggleBlock(blockId) {
+    $(blockId).classList.toggle('collapsed');
   }
 
   function closeModal() {
@@ -856,8 +855,10 @@
       if (td && td.dataset.name) openModal(td.dataset.name);
     });
 
-    $('overview-toggle').onclick = () => toggleBlock('overview-block', 'overview-toggle');
-    $('diag-toggle').onclick = () => toggleBlock('diag-block', 'diag-toggle');
+    $('overview-title').addEventListener('click', (e) => {
+    if (e.target.id !== 'table-title') toggleBlock('overview-block');
+    });
+    $('diag-block').querySelector('.lv-block-title').addEventListener('click', () => toggleBlock('diag-block'));
 
     $('mode-switch').addEventListener('click', (e) => {
       const b = e.target.closest('button');
