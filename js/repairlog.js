@@ -174,6 +174,9 @@
 }
 #secretPage .rl-table tbody tr:hover { filter: brightness(1.15); }
 
+/* Двойной клик по серийному номеру: курсор-копирование */
+#secretPage .rl-table td.rl-sn { cursor: copy; }
+
 @media (max-width: 900px) {
   #secretPage .rl-top { grid-template-columns: minmax(0, 1fr); }
   #secretPage .rl-codes { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -285,6 +288,18 @@
     return "transparent";
   }
 
+  // Запасной способ копирования, если буфер обмена недоступен
+  function fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
   // Подписи интерфейса под текущий язык сайта
   function applyLang() {
     const t = tr();
@@ -354,6 +369,19 @@
       statusInput.value = cur ? cur + " " + btn.dataset.code : btn.dataset.code;
     }
     statusInput.focus();
+  });
+
+  // Двойной клик по серийному номеру: копирование в буфер обмена, без уведомлений
+  body.addEventListener("dblclick", (e) => {
+    const td = e.target.closest("td.rl-sn");
+    if (!td) return;
+    const sn = td.textContent.trim();
+    if (!sn) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(sn).catch(() => fallbackCopy(sn));
+    } else {
+      fallbackCopy(sn);
+    }
   });
 
   searchInput.addEventListener("input", () => {
