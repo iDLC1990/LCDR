@@ -15,7 +15,7 @@
   const SB_URL = 'https://wtqvaeongxncufvpvvge.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U';
   const TABLE = 'televisions', COL_PN = 'tpv_pn', COL_SN = 'panel_sn', COL_BRAND = 'brand';
-  const RETRY_MS = 3000, POLL_MS = 2000, MAX_ROWS = 10;
+  const RETRY_MS = 3000, POLL_MS = 500, MAX_ROWS = 10;
   const NS = 'http://www.w3.org/2000/svg';
   const P = CFG.name;
   const PAGE = `#${CFG.pageId}`;
