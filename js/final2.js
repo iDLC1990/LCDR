@@ -1,4 +1,5 @@
 /* Final inspection station II: список SN из Google Таблицы (вкладка FI 2), печать этикеток.
+   Строки, у которых последний статус в журнале ремонта (repair_log) равен OK, подсвечиваются зелёным.
    Підключення: <script src="js/final2.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
    Контейнер: <section id="final2Page">. Мову задає сайт через window.setFinal2Lang(код). */
 (function () {
@@ -15,6 +16,7 @@
   const SB_URL = 'https://wtqvaeongxncufvpvvge.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U';
   const TABLE = 'televisions', COL_PN = 'tpv_pn', COL_SN = 'panel_sn', COL_BRAND = 'brand';
+  const LOG_TABLE = 'repair_log';
   const RETRY_MS = 3000, POLL_MS = 500, MAX_ROWS = 10;
   const NS = 'http://www.w3.org/2000/svg';
   const P = CFG.name;
@@ -55,6 +57,9 @@ ${PAGE} .f-spin{display:inline-block;width:12px;height:12px;border:2px solid #37
 @keyframes fSpin{to{transform:rotate(360deg)}}
 .f-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111827;color:#F9FAFB;border:1px solid #374151;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s}
 .f-toast.show{opacity:1}
+${PAGE} tr.f-ok td{background:rgba(34,197,94,.12)}
+${PAGE} tr.f-ok td:first-child{box-shadow:inset 3px 0 0 #22c55e}
+${PAGE} .f-okbadge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:4px;background:#16a34a;color:#fff;font-size:11px;font-weight:700}
 `;
 
   // Стили печати (этикетки печатаются в отдельном окне)
@@ -158,7 +163,7 @@ html,body{margin:0;padding:0;background:#fff}
     el._t = setTimeout(() => el.classList.remove('show'), 1800);
   }
 
-  /* ---------- Данные: таблица Google (CSV) и PN из базы ---------- */
+  /* ---------- Данные: таблица Google (CSV), PN из базы и статусы из журнала ---------- */
 
   function parseCSV(str) {
     const arr = [];
@@ -209,6 +214,26 @@ html,body{margin:0;padding:0;background:#fff}
     return nf;
   }
 
+  // Статусы последнего ремонта по SN из журнала. Возвращает { SN: 'OK' | ... }
+  async function loadRepairStatuses(sns) {
+    const map = {};
+    if (!sns.length) return map;
+    try {
+      const { data, error } = await sb()
+        .from(LOG_TABLE)
+        .select('panel_sn, status, id')
+        .in('panel_sn', sns)
+        .order('id', { ascending: false });
+      if (error || !data) return map;
+      // Первая запись по каждому SN — самая свежая
+      data.forEach(r => {
+        const key = String(r.panel_sn || '').trim().toUpperCase();
+        if (!(key in map)) map[key] = String(r.status || '').trim().toUpperCase();
+      });
+    } catch (e) {}
+    return map;
+  }
+
   async function loadProducts() {
     if (loading || !isVisible()) return;
     loading = true;
@@ -232,6 +257,10 @@ html,body{margin:0;padding:0;background:#fff}
         const d = await getPn(sn);
         items.push({ sn, pn: d.pn, brand: d.brand });
       }
+
+      const repairMap = await loadRepairStatuses(last);
+      items.forEach(it => { it.repair = repairMap[it.sn.toUpperCase()] || ''; });
+
       products = items;
       if (!hasTableSelection()) render();
     } catch (e) {
@@ -259,10 +288,10 @@ html,body{margin:0;padding:0;background:#fff}
       body.innerHTML = `<tr><td colspan="6" class="f-msg">${esc(t(loaded ? 'noRecords' : 'loading'))}</td></tr>`;
     } else {
       body.innerHTML = products.map((p, i) => `
-        <tr>
+        <tr class="${p.repair === 'OK' ? 'f-ok' : ''}">
           <td><input type="checkbox" class="f-row" data-sn="${esc(p.sn)}" ${selected.has(p.sn) ? 'checked' : ''}></td>
           <td><strong>${i + 1}</strong></td>
-          <td data-col="sn">${esc(p.sn)}</td>
+          <td data-col="sn">${esc(p.sn)}${p.repair === 'OK' ? ' <span class="f-okbadge">OK</span>' : ''}</td>
           <td data-col="pn">${p.pn ? esc(p.pn) : '<span class="f-spin"></span>'}</td>
           <td data-col="brand"><span class="f-brand">${esc(p.brand)}</span></td>
           <td><div class="f-acts">
