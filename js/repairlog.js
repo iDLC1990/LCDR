@@ -59,6 +59,20 @@
     }
   };
 
+  // Стили раскладки: форма + поиск в одну строку, сокращения сеткой 12 в ряд
+  const LAYOUT_CSS = `
+#secretPage .rl-top { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+#secretPage .rl-top .rl-form { margin-bottom: 0; flex: 0 1 auto; flex-wrap: nowrap; }
+#secretPage .rl-top #rlSearch { flex: 1 1 14rem; min-width: 12rem; width: auto; max-width: none; margin: 0; }
+#secretPage .rl-codes { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; margin-bottom: 0.9rem; }
+#secretPage .rl-codes .rl-code { width: 100%; min-width: 0; height: 2rem; padding: 0; display: flex; align-items: center; justify-content: center; }
+@media (max-width: 900px) {
+  #secretPage .rl-codes { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #secretPage .rl-top .rl-form { flex-wrap: wrap; width: 100%; }
+  #secretPage .rl-top #rlSearch { width: 100%; }
+}
+`;
+
   const page = document.getElementById("secretPage");
   const tab = document.getElementById("secretTab");
   if (!page || !tab || !window.supabase) return;
@@ -80,24 +94,32 @@
 
   function tr() { return T[currentLang()]; }
 
-  const codeButtons = Object.entries(STATUS_MAP)
-    .map(([code, name]) =>
-      `<button type="button" class="rl-code" data-code="${code}" title="${name}">${code}</button>`)
+  // Сокращения в алфавитном порядке
+  const codeButtons = Object.keys(STATUS_MAP)
+    .sort((a, b) => a.localeCompare(b, "en", { numeric: false, sensitivity: "base" }))
+    .map(code =>
+      `<button type="button" class="rl-code" data-code="${code}" title="${STATUS_MAP[code]}">${code}</button>`)
     .join("");
+
+  const styleEl = document.createElement("style");
+  styleEl.textContent = LAYOUT_CSS;
+  document.head.appendChild(styleEl);
 
   page.innerHTML = `
     <div class="rl-wrap">
       <h2 id="rlTitle"></h2>
-      <form id="rlForm" class="rl-form">
-        <input id="rlSn" autocomplete="off" required>
-        <input id="rlStatus" autocomplete="off" required>
-        <button type="submit" class="rl-add" id="rlAdd"></button>
-      </form>
+      <div class="rl-top">
+        <form id="rlForm" class="rl-form">
+          <input id="rlSn" autocomplete="off" required>
+          <input id="rlStatus" autocomplete="off" required>
+          <button type="submit" class="rl-add" id="rlAdd"></button>
+        </form>
+        <input id="rlSearch" autocomplete="off">
+      </div>
       <div class="rl-codes" id="rlCodes">
         ${codeButtons}
         <button type="button" class="rl-code rl-clear" data-action="clear" id="rlClear">✕</button>
       </div>
-      <input id="rlSearch" autocomplete="off">
       <div class="rl-table-wrap">
         <table class="rl-table">
           <thead>
