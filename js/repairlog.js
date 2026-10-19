@@ -139,7 +139,7 @@
   background: linear-gradient(90deg,
     color-mix(in srgb, #22c55e 23%, transparent) 0%,
     color-mix(in srgb, #22c55e 8%, transparent) 55%,
-    transparent 100%);
+    transparent 70%);
   border-color: color-mix(in srgb, #22c55e 50%, transparent);
   box-shadow: inset 4px 0 0 #22c55e;
   color: #fff;
