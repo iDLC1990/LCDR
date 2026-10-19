@@ -1,6 +1,6 @@
 /* Final inspection station I: список SN из Google Таблицы (вкладка FI 1), печать этикеток.
    Alt+P — печать с брендом в выбранном формате (первая строка или выделенные).
-   Двойной клик по серийному номеру — копирование в буфер обмена.
+   Двойной клик по серийному номеру — копирование в буфер обмена (без уведомления).
    Подключення: <script src="js/final1.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
    Контейнер: <section id="final1Page">. Мову задає сайт через window.setFinal1Lang(код). */
 (function () {
@@ -162,14 +162,14 @@ html,body{margin:0;padding:0;background:#fff}
   }
 
   // Запасной способ копирования, если буфер обмена недоступен
-  function fallbackCopy(text, done) {
+  function fallbackCopy(text) {
     const ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
     ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); done(); } catch (e) {}
+    try { document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
   }
 
@@ -437,17 +437,16 @@ html,body{margin:0;padding:0;background:#fff}
       else printStd([p], true);
     });
 
-    // Двойной клик по серийному номеру: копирование в буфер обмена
+    // Двойной клик по серийному номеру: копирование в буфер обмена, без уведомления
     body.addEventListener('dblclick', (e) => {
       const td = e.target.closest('td[data-col="sn"]');
       if (!td) return;
       const sn = td.textContent.trim();
       if (!sn) return;
-      const done = () => toast(`✅ ${sn}`);
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(sn).then(done).catch(() => fallbackCopy(sn, done));
+        navigator.clipboard.writeText(sn).catch(() => fallbackCopy(sn));
       } else {
-        fallbackCopy(sn, done);
+        fallbackCopy(sn);
       }
     });
 
