@@ -1,5 +1,6 @@
 /* Final inspection station I: список SN из Google Таблицы (вкладка FI 1), печать этикеток.
-   Підключення: <script src="js/final1.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
+   Alt+P — печать с брендом в выбранном формате (первая строка или выделенные).
+   Подключення: <script src="js/final1.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
    Контейнер: <section id="final1Page">. Мову задає сайт через window.setFinal1Lang(код). */
 (function () {
   const CFG = {
@@ -460,7 +461,19 @@ html,body{margin:0;padding:0;background:#fff}
     });
 
     document.addEventListener('keydown', (e) => {
-      if (!(e.ctrlKey || e.metaKey) || !isVisible()) return;
+      if (!isVisible()) return;
+
+      // Alt+P: печать с брендом в выбранном формате (100×78 или 130×76)
+      if (e.altKey && (e.key === 'p' || e.key === 'P' || e.code === 'KeyP')) {
+        e.preventDefault();
+        if (!products.length) return;
+        if (!selected.size && !products[0].pn) { toast(t('toastPn')); return; }
+        if (selected.size) printBatch(true);
+        else printList([products[0]], true);
+        return;
+      }
+
+      if (!(e.ctrlKey || e.metaKey)) return;
       const k = e.key.toLowerCase();
 
       if (k === 'c' && colSel.cells.length) {
