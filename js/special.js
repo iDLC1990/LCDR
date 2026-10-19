@@ -282,19 +282,45 @@
       </div></body></html>`);
     }
 
+    // Рамка з 11 рядків: етикетка 76 x 130 мм (ширина x довжина подачі).
+    // Текст повернутий на 90°, кожен рядок іде по всій довжині етикетки,
+    // між рядками пропуск у пів рядка, щоб було куди різати ножицями.
     function printRepeatText() {
       const text = $('spRepeat').value.trim().toUpperCase();
       if (!text) return alert(t('alertText'));
+
+      // Фізичний розмір етикетки (мм): ширина x довжина по подачі
+      const LABEL_W = 76;
+      const LABEL_H = 130;
+      const LINES = 11;
+
+      // Рядок + пропуск у пів рядка: LINES рядків і (LINES-1) пропусків
+      const UNIT = LABEL_W / (LINES + (LINES - 1) * 0.5);
+      const GAP = UNIT * 0.5;
+      const FONT = UNIT * 0.9;
+      // Базова лінія тексту, щоб літери стояли рівно по центру рядка
+      const BASE_Y = UNIT / 2 + 0.716 * FONT / 2;
+
       let lines = '';
-      for (let i = 0; i < 11; i++) lines += `<div class="ln">${esc(text)}</div>`;
+      for (let i = 0; i < LINES; i++) {
+        // Центр рядка на етикетці
+        const cx = i * (UNIT + GAP) + UNIT / 2;
+        const cy = LABEL_H / 2;
+        // Блок рядка створюється горизонтально (LABEL_H x UNIT), потім повертається на -90°
+        const left = cx - LABEL_H / 2;
+        const top = cy - UNIT / 2;
+        lines += `<svg class="ln" style="left:${left.toFixed(3)}mm;top:${top.toFixed(3)}mm"
+          width="${LABEL_H}mm" height="${UNIT.toFixed(3)}mm" viewBox="0 0 ${LABEL_H} ${UNIT.toFixed(3)}">
+          <text x="0" y="${BASE_Y.toFixed(3)}" font-family="Arial, Helvetica, sans-serif" font-weight="700"
+            font-size="${FONT.toFixed(3)}" textLength="${LABEL_H}" lengthAdjust="spacingAndGlyphs">${esc(text)}</text>
+        </svg>`;
+      }
 
       printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-        @page { size: 100mm 78mm; margin: 0; }
+        @page { size: ${LABEL_W}mm ${LABEL_H}mm; margin: 0; }
         html, body { margin: 0; padding: 0; background: #fff; }
-        .lbl { width: 100mm; height: 77.6mm; padding: 2mm; display: flex; flex-direction: column;
-               justify-content: space-between; overflow: hidden; background: #fff; }
-        .ln { font-family: Arial, Helvetica, sans-serif; font-size: 16pt; text-align: center;
-              text-transform: uppercase; color: #000; line-height: 1; }
+        .lbl { position: relative; width: ${LABEL_W}mm; height: ${LABEL_H}mm; overflow: hidden; background: #fff; }
+        .ln { position: absolute; transform: rotate(-90deg); overflow: visible; }
       </style></head><body><div class="lbl">${lines}</div></body></html>`);
     }
 
