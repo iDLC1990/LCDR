@@ -371,7 +371,7 @@
     statusInput.focus();
   });
 
-  // Двойной клик по серийному номеру: копирование в буфер обмена, без уведомлений
+  // Двойной клик по серийному номеру: копирование в буфер обмена, без уведомления
   body.addEventListener("dblclick", (e) => {
     const td = e.target.closest("td.rl-sn");
     if (!td) return;
@@ -387,6 +387,14 @@
   searchInput.addEventListener("input", () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(load, 300);
+  });
+
+  // Клик в другое место: текст из поиска очищается, таблица возвращается к записям за сегодня
+  searchInput.addEventListener("blur", () => {
+    if (!searchInput.value) return;
+    clearTimeout(searchTimer);
+    searchInput.value = "";
+    load();
   });
 
   form.addEventListener("submit", async (e) => {
