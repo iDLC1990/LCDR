@@ -4,20 +4,53 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U";
   const TABLE = "repair_log";
 
+  // Сокращения -> статус. Данные из таблицы, исправленной вручную
   const STATUS_MAP = {
-    S: "SCRAP", FFD: "FOREIGN MATERIAL UNDER DIFF PLATE",
-    VVV: "V GRAY BLOCK", W: "WAITING", OK: "OK", LL: "LC LEAK", A: "ABNORMAL",
-    H: "H-LINE", V: "V-LINE", VV: "V-BLOCK", HH: "H-BLOCK", CC: "CELL BROKEN",
-    N: "NO DISPLAY", D: "DIRTY DIFF", P: "POL UP", "1": "FILM", SS: "SUP-PIN MURA",
-    B: "BOT POL", C: "CROSS LINE", L: "LED NG", F: "FLICKERING IMAGE",
-    R: "REFLECTOR MURA", NN: "PCB NG",
-    FFF: "FOREIGN MATERIAL", CCC: "CLOUDING MURA",
-    LLL: "LIGHT LIKAGE", FF: "FOREIGN MATERIAL UNDER POL", BB: "DIRTY BOT POL",
-    AAA: "AUTO PATERN", PP: "PUSH MURA", MMM: "Maciej M. W. Wisniewski", "2": "SPRAWDZENIE"
+    "1": "FILM",
+    "2": "SPRAWDZENIE",
+    "11": "FILM WAVING",
+    A: "ABNORMAL",
+    AA: "AUTO PATERN",
+    B: "BOT POL",
+    BB: "DIRTY BOT POL",
+    BBB: "FOREIGN MATERIAL UNDER POL",
+    C: "CROSS LINE",
+    CC: "CELL BROKEN",
+    CCC: "CLOUDING MURA",
+    D: "DIRTY DIFFUSER PLATE",
+    DD: "DIFFUSER PLATE CRACK",
+    F: "FOREIGN MATERIAL",
+    FF: "FOREIGN MATERIAL UNDER DIFF PLATE",
+    FFF: "FLICKERING IMAGE",
+    H: "H-LINE",
+    HH: "H-BLOCK",
+    L: "LED NG",
+    LL: "LC LEAK",
+    LLL: "LIGHT LIKAGE",
+    MMM: "SPRAWDZENIE Maciej M. W. Wisniewski",
+    N: "NO DISPLAY",
+    NN: "PCB NG",
+    OK: "OK",
+    P: "POL UP",
+    POL: "POL BURN",
+    PP: "PUSH MURA",
+    PPP: "PIXEL OUT OF SPECIFICATION",
+    R: "REFLECTOR MURA",
+    SCR: "SCRAP",
+    SS: "SUP-PIN MURA",
+    U: "USZCZELKA",
+    V: "V-LINE",
+    VV: "V-BLOCK",
+    VVV: "V GRAY BLOCK",
+    W: "WADA OC",
+    WTG: "WAITING"
   };
 
+  // Цвет строки по слову статуса. OK — зелёный, WAITING — жёлтый, SCRAP — красный
   const STATUS_COLORS = {
-    SCRAP: "#FF9999", WAITING: "#FFFF99", OK: "#99FF99",
+    OK: "#22c55e",
+    WAITING: "#facc15",
+    SCRAP: "#ef4444",
     LC: "#FFCC99", ABNORMAL: "#FFCC99", CELL: "#FFB266",
     NO: "#FFB266", "H-LINE": "#FFCCCC", "V-LINE": "#FFCCCC",
     SPRAWDZENIE: "#D1E8FF"
@@ -59,7 +92,7 @@
     }
   };
 
-  // Раскладка: слева форма и поиск, справа сетка сокращений 12 в ряд одного размера
+  // Раскладка, градиенты строк и кнопок сокращений
   const LAYOUT_CSS = `
 #secretPage .rl-top {
   display: grid;
@@ -73,6 +106,7 @@
 #secretPage .rl-top .rl-form input { min-width: 0; flex: 1 1 0; }
 #secretPage .rl-top .rl-form .rl-add { flex: 0 0 auto; white-space: nowrap; }
 #secretPage .rl-top #rlSearch { width: 100%; max-width: none; margin: 0; }
+
 #secretPage .rl-codes {
   display: grid;
   grid-template-columns: repeat(12, 3rem);
@@ -89,7 +123,57 @@
   justify-content: center;
   white-space: nowrap;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  font-family: Consolas, monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: filter 0.2s, box-shadow 0.2s;
 }
+#secretPage .rl-codes .rl-code:hover { filter: brightness(1.2); }
+
+/* Цветные кнопки: тот же градиент и полоска слева, что у строк таблицы */
+#secretPage .rl-codes .rl-code.st-ok {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, #22c55e 45%, transparent) 0%,
+    color-mix(in srgb, #22c55e 12%, transparent) 55%,
+    transparent 100%);
+  border-color: color-mix(in srgb, #22c55e 70%, transparent);
+  box-shadow: inset 4px 0 0 #22c55e;
+  color: #fff;
+}
+#secretPage .rl-codes .rl-code.st-waiting {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, #facc15 45%, transparent) 0%,
+    color-mix(in srgb, #facc15 12%, transparent) 55%,
+    transparent 100%);
+  border-color: color-mix(in srgb, #facc15 70%, transparent);
+  box-shadow: inset 4px 0 0 #facc15;
+  color: #fff;
+}
+#secretPage .rl-codes .rl-code.st-scrap {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, #ef4444 45%, transparent) 0%,
+    color-mix(in srgb, #ef4444 12%, transparent) 55%,
+    transparent 100%);
+  border-color: color-mix(in srgb, #ef4444 70%, transparent);
+  box-shadow: inset 4px 0 0 #ef4444;
+  color: #fff;
+}
+
+/* Строки таблицы: градиент от цвета статуса и полоска слева */
+#secretPage .rl-table tbody tr {
+  box-shadow: inset 4px 0 0 var(--row-color, transparent);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--row-color, transparent) 45%, transparent) 0%,
+    color-mix(in srgb, var(--row-color, transparent) 12%, transparent) 55%,
+    transparent 100%);
+  transition: filter 0.2s;
+}
+#secretPage .rl-table tbody tr:hover { filter: brightness(1.15); }
+
 @media (max-width: 900px) {
   #secretPage .rl-top { grid-template-columns: minmax(0, 1fr); }
   #secretPage .rl-codes { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -120,11 +204,25 @@
 
   function tr() { return T[currentLang()]; }
 
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // Цвет кнопки определяется по слову статуса: OK, WAITING или SCRAP
+  function buttonClass(status) {
+    const words = String(status).toUpperCase().split(/\s+/);
+    if (words.includes("OK")) return " st-ok";
+    if (words.includes("WAITING")) return " st-waiting";
+    if (words.includes("SCRAP")) return " st-scrap";
+    return "";
+  }
+
   // Сокращения в алфавитном порядке
   const codeButtons = Object.keys(STATUS_MAP)
     .sort((a, b) => a.localeCompare(b, "en", { numeric: false, sensitivity: "base" }))
     .map(code =>
-      `<button type="button" class="rl-code" data-code="${code}" title="${STATUS_MAP[code]}">${code}</button>`)
+      `<button type="button" class="rl-code${buttonClass(STATUS_MAP[code])}" data-code="${code}" title="${esc(STATUS_MAP[code])}">${code}</button>`)
     .join("");
 
   const styleEl = document.createElement("style");
@@ -185,11 +283,6 @@
       if (STATUS_COLORS[w]) return STATUS_COLORS[w];
     }
     return "transparent";
-  }
-
-  function esc(s) {
-    return String(s ?? "").replace(/[&<>"']/g, c =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
   // Подписи интерфейса под текущий язык сайта
