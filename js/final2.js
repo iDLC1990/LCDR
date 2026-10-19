@@ -293,7 +293,7 @@ html,body{margin:0;padding:0;background:#fff}
     updateBar();
   }
 
-  /* ---------- Выделение колонки (Ctrl + перетягивание) и копирование Ctrl+C ---------- */
+  /* ---------- Выделение колонки (Ctrl + перетягивание) ---------- */
 
   function rowIdx(td) {
     return Array.from($(`${P}Body`).rows).indexOf(td.parentElement);
@@ -484,9 +484,15 @@ html,body{margin:0;padding:0;background:#fff}
     document.addEventListener('keydown', (e) => {
       if (!isVisible()) return;
 
-      // Alt+P: печать с брендом в выбранном формате (100×78 или 130×76)
-      if (e.altKey && (e.key === 'p' || e.key === 'P' || e.code === 'KeyP')) {
+      // Клавиши определяем по физической позиции (e.code), а не по букве:
+      // при украинской или русской раскладке e.key для Ctrl+P даёт «з», «п» и т.д.
+      const isP = e.code === 'KeyP' || (e.key && e.key.toLowerCase() === 'p');
+      const isC = e.code === 'KeyC';
+
+      // Alt+P: печать с брендом в выбранном формате
+      if (e.altKey && !e.ctrlKey && !e.metaKey && isP) {
         e.preventDefault();
+        if (e.repeat) return;
         if (!products.length) return;
         if (!selected.size && !products[0].pn) { toast(t('toastPn')); return; }
         if (selected.size) printBatch(true);
@@ -494,16 +500,21 @@ html,body{margin:0;padding:0;background:#fff}
         return;
       }
 
-      if (!(e.ctrlKey || e.metaKey)) return;
-      const k = e.key.toLowerCase();
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
 
-      if (k === 'c' && colSel.cells.length) {
+      // Ctrl+C: копирование выделенной колонки
+      if (isC && colSel.cells.length) {
         const text = colSel.cells.map(td => td.textContent.trim()).join('\n');
         if (navigator.clipboard) {
           navigator.clipboard.writeText(text).then(() => toast(t('toastCopied', { n: colSel.cells.length })));
         }
-      } else if (k === 'p') {
+        return;
+      }
+
+      // Ctrl+P: печать без бренда. Стандартное окно печати браузера не открывается
+      if (isP) {
         e.preventDefault();
+        if (e.repeat) return;
         if (!products.length) return;
         if (!selected.size && !products[0].pn) { toast(t('toastPn')); return; }
         if (selected.size) printBatch(false);
