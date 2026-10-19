@@ -1,7 +1,8 @@
 /* Final inspection station II: список SN из Google Таблицы (вкладка FI 2), печать этикеток.
    Функция window.printFinal2BySn(sn) печатает этикетку по SN в формате, выбранном на этой вкладке
    (100×78 или 130×76). Её вызывает журнал ремонта (repairlog.js) при статусе OK.
-   Підключення: <script src="js/final2.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
+   Alt+P — печать с брендом в выбранном формате (первая строка или выделенные).
+   Подключення: <script src="js/final2.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
    Контейнер: <section id="final2Page">. Мову задає сайт через window.setFinal2Lang(код). */
 (function () {
   const CFG = {
@@ -481,7 +482,19 @@ html,body{margin:0;padding:0;background:#fff}
     });
 
     document.addEventListener('keydown', (e) => {
-      if (!(e.ctrlKey || e.metaKey) || !isVisible()) return;
+      if (!isVisible()) return;
+
+      // Alt+P: печать с брендом в выбранном формате (100×78 или 130×76)
+      if (e.altKey && (e.key === 'p' || e.key === 'P' || e.code === 'KeyP')) {
+        e.preventDefault();
+        if (!products.length) return;
+        if (!selected.size && !products[0].pn) { toast(t('toastPn')); return; }
+        if (selected.size) printBatch(true);
+        else printList([products[0]], true);
+        return;
+      }
+
+      if (!(e.ctrlKey || e.metaKey)) return;
       const k = e.key.toLowerCase();
 
       if (k === 'c' && colSel.cells.length) {
