@@ -2,6 +2,7 @@
    Функция window.printFinal2BySn(sn) печатает этикетку по SN в формате, выбранном на этой вкладке
    (100×78 или 130×76). Её вызывает журнал ремонта (repairlog.js) при статусе OK.
    Alt+P — печать с брендом в выбранном формате (первая строка или выделенные).
+   Двойной клик по серийному номеру — копирование в буфер обмена.
    Подключення: <script src="js/final2.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
    Контейнер: <section id="final2Page">. Мову задає сайт через window.setFinal2Lang(код). */
 (function () {
@@ -50,6 +51,7 @@ ${PAGE} table{width:100%;border-collapse:collapse}
 ${PAGE} th,${PAGE} td{padding:10px 12px;text-align:center;border-bottom:1px solid #1f2937;color:#E5E7EB;font-size:14px;white-space:nowrap}
 ${PAGE} th{background:#111827;color:#9CA3AF;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 ${PAGE} td[data-col="sn"],${PAGE} td[data-col="pn"]{font-family:Consolas,'Courier New',monospace;font-weight:600}
+${PAGE} td[data-col="sn"]{cursor:copy}
 ${PAGE} td.f-sel{background:rgba(37,99,235,.35)!important}
 ${PAGE} .f-brand{background:#374151;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600}
 ${PAGE} .f-acts{display:flex;gap:8px;justify-content:flex-end;align-items:center}
@@ -159,6 +161,18 @@ html,body{margin:0;padding:0;background:#fff}
     el.classList.add('show');
     clearTimeout(el._t);
     el._t = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  // Запасной способ копирования, если буфер обмена недоступен
+  function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(ta);
   }
 
   /* ---------- Данные: таблица Google (CSV) и PN из базы ---------- */
@@ -442,6 +456,20 @@ html,body{margin:0;padding:0;background:#fff}
       if (b.dataset.act === 'new') printNew([p], false);
       else if (b.dataset.act === 'two') printStd([p], false);
       else printStd([p], true);
+    });
+
+    // Двойной клик по серийному номеру: копирование в буфер обмена
+    body.addEventListener('dblclick', (e) => {
+      const td = e.target.closest('td[data-col="sn"]');
+      if (!td) return;
+      const sn = td.textContent.trim();
+      if (!sn) return;
+      const done = () => toast(`✅ ${sn}`);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(sn).then(done).catch(() => fallbackCopy(sn, done));
+      } else {
+        fallbackCopy(sn, done);
+      }
     });
 
     body.addEventListener('change', (e) => {
