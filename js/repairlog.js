@@ -29,25 +29,33 @@
       title: "Repair Log", sn: "Serial number", date: "Date", time: "Time", status: "Status",
       add: "+ Add", statusPh: "Status (OK, VV, H...)",
       search: "Search by serial number (all records)", empty: "No records",
-      clear: "Clear status", errLoad: "Load error: ", errSave: "Save error: "
+      clear: "Clear status", errLoad: "Load error: ", errSave: "Save error: ",
+      noPn: "PN not found in the database. Label not printed.",
+      noPrinter: "Label printing is not available on this page."
     },
     ru: {
       title: "Журнал ремонта", sn: "Серийный номер", date: "Дата", time: "Время", status: "Статус",
       add: "+ Добавить", statusPh: "Статус (OK, VV, H...)",
       search: "Поиск по серийному номеру (вся база)", empty: "Нет записей",
-      clear: "Очистить статус", errLoad: "Ошибка загрузки: ", errSave: "Ошибка сохранения: "
+      clear: "Очистить статус", errLoad: "Ошибка загрузки: ", errSave: "Ошибка сохранения: ",
+      noPn: "PN не найден в базе. Этикетка не напечатана.",
+      noPrinter: "Печать этикеток недоступна на этой странице."
     },
     uk: {
       title: "Журнал ремонту", sn: "Серійний номер", date: "Дата", time: "Час", status: "Статус",
       add: "+ Додати", statusPh: "Статус (OK, VV, H...)",
       search: "Пошук за серійним номером (уся база)", empty: "Немає записів",
-      clear: "Очистити статус", errLoad: "Помилка завантаження: ", errSave: "Помилка збереження: "
+      clear: "Очистити статус", errLoad: "Помилка завантаження: ", errSave: "Помилка збереження: ",
+      noPn: "PN не знайдено в базі. Етикетку не надруковано.",
+      noPrinter: "Друк етикеток недоступний на цій сторінці."
     },
     pl: {
       title: "Dziennik napraw", sn: "Numer seryjny", date: "Data", time: "Czas", status: "Status",
       add: "+ Dodaj", statusPh: "Status (OK, VV, H...)",
       search: "Szukaj po numerze seryjnym (cała baza)", empty: "Brak wpisów",
-      clear: "Wyczyść status", errLoad: "Błąd ładowania: ", errSave: "Błąd zapisu: "
+      clear: "Wyczyść status", errLoad: "Błąd ładowania: ", errSave: "Błąd zapisu: ",
+      noPn: "Nie znaleziono PN w bazie. Etykieta nie została wydrukowana.",
+      noPrinter: "Drukowanie etykiet jest niedostępne na tej stronie."
     }
   };
 
@@ -232,6 +240,20 @@
     } catch (err) {
       alert(tr().errSave + err.message);
       return;
+    }
+
+    // Статус OK: печатаем этикетку в формате, выбранном на вкладке Final station II
+    if (status === "OK") {
+      if (typeof window.printFinal2BySn !== "function") {
+        alert(tr().noPrinter);
+      } else {
+        try {
+          const printed = await window.printFinal2BySn(sn);
+          if (!printed) alert(tr().noPn);
+        } catch (err) {
+          alert(tr().noPn);
+        }
+      }
     }
 
     snInput.value = "";
