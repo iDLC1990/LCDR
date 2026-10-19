@@ -655,3 +655,59 @@ html, body {
     width: 100%;
   }
 }
+
+/* ===== PN Base: тёмная тема сайта (вместо светлых блоков из pnbase.js) ===== */
+#pnbasePage #pnbaseSection .manual-input-card {
+  background: #0e0e0e;
+  border-color: #1f2937;
+}
+#pnbasePage #pnbaseSection .manual-input-title {
+  color: #4d94ff;
+}
+#pnbasePage #pnbaseSection .form-group label {
+  color: #4d94ff;
+}
+#pnbasePage #pnbaseSection .pb-hint {
+  color: #9CA3AF;
+}
+#pnbasePage #pnbaseSection .pb-status {
+  color: #4d94ff;
+}
+#pnbasePage #pnbaseSection #pb_edit {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 14px;
+  margin: 12px 0;
+}
+#pnbasePage #pnbaseSection .form-input {
+  background: #111827;
+  color: #fff;
+  border: 1px solid #374151;
+}
+#pnbasePage #pnbaseSection .form-input::placeholder {
+  color: #6B7280;
+}
+#pnbasePage #pnbaseSection .form-input:focus {
+  border-color: #2563EB;
+}
+#pnbasePage #pnbaseSection .data-table {
+  background: #0e0e0e;
+  color: #E5E7EB;
+}
+#pnbasePage #pnbaseSection .data-table th {
+  background: #111827;
+  color: #9CA3AF;
+  border-bottom: 1px solid #1f2937;
+}
+#pnbasePage #pnbaseSection .data-table td {
+  background: transparent;
+  color: #E5E7EB;
+  border-bottom: 1px solid #1f2937;
+}
+#pnbasePage #pnbaseSection .data-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+#pnbasePage #pnbaseSection .pb-print:hover {
+  background: #1f2937;
+}
