@@ -137,7 +137,7 @@
 /* Цветные кнопки: тот же градиент и полоска слева, что у строк таблицы */
 #secretPage .rl-codes .rl-code.st-ok {
   background: linear-gradient(90deg,
-    color-mix(in srgb, #22c55e 45%, transparent) 0%,
+    color-mix(in srgb, #22c55e 23%, transparent) 0%,
     color-mix(in srgb, #22c55e 12%, transparent) 55%,
     transparent 100%);
   border-color: color-mix(in srgb, #22c55e 70%, transparent);
