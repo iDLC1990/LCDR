@@ -59,17 +59,43 @@
     }
   };
 
-  // Стили раскладки: форма + поиск в одну строку, сокращения сеткой 12 в ряд
+  // Раскладка: слева форма и поиск, справа сетка сокращений 12 в ряд одного размера
   const LAYOUT_CSS = `
-#secretPage .rl-top { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
-#secretPage .rl-top .rl-form { margin-bottom: 0; flex: 0 1 auto; flex-wrap: nowrap; }
-#secretPage .rl-top #rlSearch { flex: 1 1 14rem; min-width: 12rem; width: auto; max-width: none; margin: 0; }
-#secretPage .rl-codes { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; margin-bottom: 0.9rem; }
-#secretPage .rl-codes .rl-code { width: 100%; min-width: 0; height: 2rem; padding: 0; display: flex; align-items: center; justify-content: center; }
+#secretPage .rl-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.25rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+#secretPage .rl-left { display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; }
+#secretPage .rl-top .rl-form { margin: 0; flex-wrap: nowrap; }
+#secretPage .rl-top .rl-form input { min-width: 0; flex: 1 1 0; }
+#secretPage .rl-top .rl-form .rl-add { flex: 0 0 auto; white-space: nowrap; }
+#secretPage .rl-top #rlSearch { width: 100%; max-width: none; margin: 0; }
+#secretPage .rl-codes {
+  display: grid;
+  grid-template-columns: repeat(12, 3rem);
+  gap: 6px;
+  margin: 0;
+}
+#secretPage .rl-codes .rl-code {
+  width: 3rem;
+  height: 2rem;
+  min-width: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
 @media (max-width: 900px) {
+  #secretPage .rl-top { grid-template-columns: minmax(0, 1fr); }
   #secretPage .rl-codes { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  #secretPage .rl-top .rl-form { flex-wrap: wrap; width: 100%; }
-  #secretPage .rl-top #rlSearch { width: 100%; }
+  #secretPage .rl-codes .rl-code { width: 100%; }
+  #secretPage .rl-top .rl-form { flex-wrap: wrap; }
+  #secretPage .rl-top .rl-form input { flex: 1 1 10rem; }
 }
 `;
 
@@ -109,16 +135,18 @@
     <div class="rl-wrap">
       <h2 id="rlTitle"></h2>
       <div class="rl-top">
-        <form id="rlForm" class="rl-form">
-          <input id="rlSn" autocomplete="off" required>
-          <input id="rlStatus" autocomplete="off" required>
-          <button type="submit" class="rl-add" id="rlAdd"></button>
-        </form>
-        <input id="rlSearch" autocomplete="off">
-      </div>
-      <div class="rl-codes" id="rlCodes">
-        ${codeButtons}
-        <button type="button" class="rl-code rl-clear" data-action="clear" id="rlClear">✕</button>
+        <div class="rl-left">
+          <form id="rlForm" class="rl-form">
+            <input id="rlSn" autocomplete="off" required>
+            <input id="rlStatus" autocomplete="off" required>
+            <button type="submit" class="rl-add" id="rlAdd"></button>
+          </form>
+          <input id="rlSearch" autocomplete="off">
+        </div>
+        <div class="rl-codes" id="rlCodes">
+          ${codeButtons}
+          <button type="button" class="rl-code rl-clear" data-action="clear" id="rlClear">✕</button>
+        </div>
       </div>
       <div class="rl-table-wrap">
         <table class="rl-table">
