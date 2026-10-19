@@ -137,10 +137,10 @@
 /* Цветные кнопки: тот же градиент и полоска слева, что у строк таблицы */
 #secretPage .rl-codes .rl-code.st-ok {
   background: linear-gradient(90deg,
-    color-mix(in srgb, #22c55e 23%, transparent) 0%,
-    color-mix(in srgb, #22c55e 8%, transparent) 55%,
-    transparent 70%);
-  border-color: color-mix(in srgb, #22c55e 50%, transparent);
+    color-mix(in srgb, #22c55e 45%, transparent) 0%,
+    color-mix(in srgb, #22c55e 12%, transparent) 55%,
+    transparent 100%);
+  border-color: color-mix(in srgb, #22c55e 70%, transparent);
   box-shadow: inset 4px 0 0 #22c55e;
   color: #fff;
 }
@@ -167,9 +167,9 @@
 #secretPage .rl-table tbody tr {
   box-shadow: inset 4px 0 0 var(--row-color, transparent);
   background: linear-gradient(90deg,
-    color-mix(in srgb, var(--row-color, transparent) 45%, transparent) 0%,
-    color-mix(in srgb, var(--row-color, transparent) 12%, transparent) 55%,
-    transparent 100%);
+    color-mix(in srgb, var(--row-color, transparent) 20%, transparent) 0%,
+    color-mix(in srgb, var(--row-color, transparent) 6%, transparent) 40%,
+    transparent 75%);
   transition: filter 0.2s;
 }
 #secretPage .rl-table tbody tr:hover { filter: brightness(1.15); }
