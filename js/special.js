@@ -11,10 +11,10 @@
   // Розміри SCC-етикеток (мм):
   //   label  - висота етикетки
   //   text   - висота зони для тексту
-  //   iconW / iconH - розмір картинки ICON на етикетці
+  //   iconW / iconH - розмір картинки ICON на етикетці (займає всю площу етикетки)
   const SCC_SIZES = {
-    '50x30': { label: 30, text: 25, iconW: 48, iconH: 28 },
-    '50x25': { label: 25, text: 20, iconW: 48, iconH: 23 }
+    '50x30': { label: 30, text: 25, iconW: 50, iconH: 29.5 },
+    '50x25': { label: 25, text: 20, iconW: 50, iconH: 24.5 }
   };
   const SCC_WIDTH_MM = 50, SCC_TEXT_WIDTH_MM = 46;
   const SCC_MAX_PT = 60, SCC_MIN_PT = 8, SCC_LINE_HEIGHT = 1.1;
@@ -205,7 +205,8 @@
       }
       if (maxX < 0) { iconUrl = url; return; }
 
-      const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.02);
+      // Без запасу: обрізка точно по межах малюнка
+      const pad = 0;
       minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
       maxX = Math.min(sw - 1, maxX + pad); maxY = Math.min(sh - 1, maxY + pad);
       const cw = maxX - minX + 1, ch = maxY - minY + 1;
@@ -338,7 +339,7 @@
         html, body { margin: 0; padding: 0; background: #fff; }
         .lbl { display: grid; place-items: center; width: ${SCC_WIDTH_MM}mm; height: ${lblH}mm; padding: 2mm;
                box-sizing: border-box; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
-        .lbl-pic { padding: 0 1mm; }
+        .lbl-pic { padding: 0; }
         .txt { width: 100%; color: #000; font-family: Arial, Helvetica, sans-serif; font-weight: 900;
                line-height: 1.1; overflow-wrap: anywhere; text-align: center; }
         /* Картинка друкується як є: браузер лише масштабує її до розміру, без порогів і точок */
