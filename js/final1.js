@@ -1,6 +1,7 @@
 /* Final inspection station I: список SN из Google Таблицы (вкладка FI 1), печать этикеток.
    Alt+P — печать с брендом в выбранном формате (первая строка или выделенные).
    Двойной клик по серийному номеру — копирование в буфер обмена (без уведомления).
+   Данные обновляются в фоне каждые 5 секунд, независимо от того, открыта ли страница.
    Подключення: <script src="js/final1.js"></script> ПІСЛЯ js/app.js (JsBarcode и Supabase уже подключены).
    Контейнер: <section id="final1Page">. Мову задає сайт через window.setFinal1Lang(код). */
 (function () {
@@ -17,7 +18,7 @@
   const SB_URL = 'https://wtqvaeongxncufvpvvge.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U';
   const TABLE = 'televisions', COL_PN = 'tpv_pn', COL_SN = 'panel_sn', COL_BRAND = 'brand';
-  const RETRY_MS = 3000, POLL_MS = 500, MAX_ROWS = 10;
+  const RETRY_MS = 3000, REFRESH_MS = 5000, FETCH_TIMEOUT_MS = 15000, MAX_ROWS = 10;
   const NS = 'http://www.w3.org/2000/svg';
   const P = CFG.name;
   const PAGE = `#${CFG.pageId}`;
@@ -224,12 +225,15 @@ html,body{margin:0;padding:0;background:#fff}
     return nf;
   }
 
+  // Загрузка идёт независимо от того, открыта ли страница
   async function loadProducts() {
-    if (loading || !isVisible()) return;
+    if (loading) return;
     loading = true;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
     try {
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CFG.gid}&_nc=${Date.now()}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
       if (!res.ok) throw new Error('sheet');
       const rows = parseCSV(await res.text());
 
@@ -248,10 +252,11 @@ html,body{margin:0;padding:0;background:#fff}
         items.push({ sn, pn: d.pn, brand: d.brand });
       }
       products = items;
-      if (!hasTableSelection()) render();
+      flushRender();
     } catch (e) {
       console.warn(`${P}: данные временно недоступны`);
     } finally {
+      clearTimeout(timer);
       loaded = true;
       loading = false;
     }
@@ -264,6 +269,13 @@ html,body{margin:0;padding:0;background:#fff}
     if (!s || s.rangeCount === 0 || s.isCollapsed) return false;
     const body = $(`${P}Body`);
     return !!body && body.contains(s.getRangeAt(0).commonAncestorContainer);
+  }
+
+  // Перерисовка таблицы. Пока пользователь выделяет текст, DOM не трогаем,
+  // следующее фоновое обновление перерисует таблицу
+  function flushRender() {
+    if (hasTableSelection()) return;
+    render();
   }
 
   /* ---------- Таблица ---------- */
@@ -546,6 +558,12 @@ html,body{margin:0;padding:0;background:#fff}
 
   /* ---------- Инициализация и вызовы из сайта ---------- */
 
+  // Фоновое обновление: работает постоянно, а не только на открытой странице
+  function startBackgroundRefresh() {
+    if (pollTimer) return;
+    pollTimer = setInterval(loadProducts, REFRESH_MS);
+  }
+
   function init() {
     const root = $(CFG.pageId);
     if (!root) return;
@@ -562,13 +580,16 @@ html,body{margin:0;padding:0;background:#fff}
     applyText();
     render();
     inited = true;
+
+    startBackgroundRefresh();
+    loadProducts();
   }
 
-  // Вызывается сайтом (app.js) при открытии страницы
+  // Вызывается сайтом (app.js) при открытии страницы: показываем свежие данные сразу
   window[CFG.show] = function () {
     if (!inited) return;
     loadProducts();
-    if (!pollTimer) pollTimer = setInterval(() => { if (isVisible()) loadProducts(); }, POLL_MS);
+    startBackgroundRefresh();
   };
 
   // Язык задаёт сайт (app.js)
