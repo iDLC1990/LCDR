@@ -190,6 +190,21 @@
 /* Двойной клик по серийному номеру: курсор-копирование */
 #secretPage .rl-table td.rl-sn { cursor: copy; }
 
+/* Мгновенная подсказка для кнопок сокращений */
+#rlTip {
+  position: fixed;
+  z-index: 99999;
+  display: none;
+  pointer-events: none;
+  padding: 4px 8px;
+  background: #111827;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   #secretPage .rl-top { grid-template-columns: minmax(0, 1fr); }
   #secretPage .rl-codes { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -256,10 +271,11 @@
   }
 
   // Сокращения в алфавитном порядке
+  // data-tip вместо title: подсказка показывается мгновенно (см. #rlTip)
   const codeButtons = Object.keys(STATUS_MAP)
     .sort((a, b) => a.localeCompare(b, "en", { numeric: false, sensitivity: "base" }))
     .map(code =>
-      `<button type="button" class="rl-code${buttonClass(STATUS_MAP[code])}" data-code="${code}" title="${esc(STATUS_MAP[code])}">${code}</button>`)
+      `<button type="button" class="rl-code${buttonClass(STATUS_MAP[code])}" data-code="${code}" data-tip="${esc(STATUS_MAP[code])}">${code}</button>`)
     .join("");
 
   const styleEl = document.createElement("style");
@@ -305,6 +321,27 @@
   const codesBox = page.querySelector("#rlCodes");
   const body = page.querySelector("#rlBody");
 
+  // Мгновенная подсказка вместо стандартного title
+  const tip = document.createElement("div");
+  tip.id = "rlTip";
+  document.body.appendChild(tip);
+
+  codesBox.addEventListener("mouseover", (e) => {
+    const btn = e.target.closest(".rl-code");
+    if (!btn || !btn.dataset.tip) return;
+    tip.textContent = btn.dataset.tip;
+    tip.style.display = "block";
+    const r = btn.getBoundingClientRect();
+    let left = r.left + r.width / 2 - tip.offsetWidth / 2;
+    left = Math.max(4, Math.min(left, window.innerWidth - tip.offsetWidth - 4));
+    tip.style.left = left + "px";
+    tip.style.top = (r.bottom + 6) + "px";
+  });
+
+  codesBox.addEventListener("mouseout", () => {
+    tip.style.display = "none";
+  });
+
   function pad(n) { return String(n).padStart(2, "0"); }
   function localDate(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
   function localTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
@@ -334,7 +371,7 @@
     snInput.placeholder = t.sn;
     statusInput.placeholder = t.statusPh;
     page.querySelector("#rlAdd").textContent = t.add;
-    page.querySelector("#rlClear").title = t.clear;
+    page.querySelector("#rlClear").dataset.tip = t.clear;
     searchInput.placeholder = t.search;
     page.querySelector("#thSn").textContent = t.sn;
     page.querySelector("#thDate").textContent = t.date;
@@ -446,6 +483,7 @@
 
     // OK, SCR, WTG сразу отправляют запись, как «+ Добавить»
     if (AUTO_SUBMIT_CODES.has(code)) {
+      tip.style.display = "none";
       if (typeof form.requestSubmit === "function") {
         form.requestSubmit();
       } else {
@@ -513,6 +551,7 @@
   // Alt+Q скрывает пункт Secret. Если страница открыта, закрываем её тоже
   document.addEventListener("keydown", (e) => {
     if (e.altKey && (e.key === "q" || e.key === "Q" || e.code === "KeyQ")) {
+      tip.style.display = "none";
       setTimeout(() => {
         if (tab.style.display === "none" && window.siteClosePage) {
           window.siteClosePage("secret");
