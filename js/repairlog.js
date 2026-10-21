@@ -46,11 +46,18 @@
     WTG: "WAITING"
   };
 
-  // Цвет строки по слову статуса. OK — зелёный, WAITING — жёлтый, SCRAP — красный
+  // Коды, которые сразу отправляют запись (без нажатия «+ Добавить»)
+  const AUTO_SUBMIT_CODES = new Set(["OK", "SCR", "WTG"]);
+
+  // Приоритет цвета для статуса из нескольких слов: SCRAP > WAITING > OK
+  const PRIORITY_COLORS = [
+    { word: "SCRAP", color: "#ef4444", cls: "st-scrap" },
+    { word: "WAITING", color: "#facc15", cls: "st-waiting" },
+    { word: "OK", color: "#22c55e", cls: "st-ok" }
+  ];
+
+  // Цвета остальных статусов (для строк таблицы)
   const STATUS_COLORS = {
-    OK: "#22c55e",
-    WAITING: "#facc15",
-    SCRAP: "#ef4444",
     LC: "#FFCC99", ABNORMAL: "#FFCC99", CELL: "#FFB266",
     NO: "#FFB266", "H-LINE": "#FFCCCC", "V-LINE": "#FFCCCC",
     SPRAWDZENIE: "#D1E8FF"
@@ -212,13 +219,34 @@
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  // Цвет кнопки определяется по слову статуса: OK, WAITING или SCRAP
+  // Слова статуса в верхнем регистре
+  function words(status) {
+    return String(status || "").toUpperCase().split(/\s+/).filter(Boolean);
+  }
+
+  // Главный цвет статуса: берётся самое важное слово (SCRAP > WAITING > OK).
+  // Если таких слов нет, берём первое слово, у которого есть свой цвет.
+  function primaryColor(status) {
+    const w = words(status);
+    for (const p of PRIORITY_COLORS) {
+      if (w.includes(p.word)) return p;
+    }
+    for (const x of w) {
+      if (STATUS_COLORS[x]) return { color: STATUS_COLORS[x], cls: "" };
+    }
+    return null;
+  }
+
+  // Цвет строки таблицы
+  function colorFor(status) {
+    const p = primaryColor(status);
+    return p ? p.color : "transparent";
+  }
+
+  // CSS-класс кнопки сокращения по статусу (только OK, WAITING, SCRAP)
   function buttonClass(status) {
-    const words = String(status).toUpperCase().split(/\s+/);
-    if (words.includes("OK")) return " st-ok";
-    if (words.includes("WAITING")) return " st-waiting";
-    if (words.includes("SCRAP")) return " st-scrap";
-    return "";
+    const p = primaryColor(status);
+    return p && p.cls ? " " + p.cls : "";
   }
 
   // Сокращения в алфавитном порядке
@@ -279,13 +307,6 @@
     return input.trim().split(/\s+/)
       .map(p => { const u = p.toUpperCase(); return STATUS_MAP[u] || u; })
       .join(" ");
-  }
-
-  function colorFor(status) {
-    for (const w of String(status).split(" ")) {
-      if (STATUS_COLORS[w]) return STATUS_COLORS[w];
-    }
-    return "transparent";
   }
 
   // Запасной способ копирования, если буфер обмена недоступен
@@ -358,15 +379,64 @@
     return data.length ? data[0].log_no + 1 : 1;
   }
 
+  // Сохранение записи и печать этикетки, если в статусе есть OK (в том числе в связке)
+  async function submitRecord(sn, status) {
+    const now = new Date();
+    const today = localDate(now);
+
+    try {
+      const logNo = await nextDailyNo(today);
+      const { error } = await db.from(TABLE).insert({
+        log_no: logNo,
+        panel_sn: sn,
+        repair_date: today,
+        repair_time: localTime(now),
+        status
+      });
+      if (error) throw error;
+    } catch (err) {
+      alert(tr().errSave + err.message);
+      return false;
+    }
+
+    // Статус содержит OK: печатаем этикетку в формате, выбранном на вкладке Final station II
+    if (words(status).includes("OK")) {
+      if (typeof window.printFinal2BySn !== "function") {
+        alert(tr().noPrinter);
+      } else {
+        try {
+          const printed = await window.printFinal2BySn(sn);
+          if (!printed) alert(tr().noPn);
+        } catch (err) {
+          alert(tr().noPn);
+        }
+      }
+    }
+    return true;
+  }
+
   codesBox.addEventListener("click", (e) => {
     const btn = e.target.closest(".rl-code");
     if (!btn) return;
 
     if (btn.dataset.action === "clear") {
       statusInput.value = "";
-    } else {
-      const cur = statusInput.value.trim();
-      statusInput.value = cur ? cur + " " + btn.dataset.code : btn.dataset.code;
+      statusInput.focus();
+      return;
+    }
+
+    const code = btn.dataset.code;
+    const cur = statusInput.value.trim();
+    statusInput.value = cur ? cur + " " + code : code;
+
+    // OK, SCR, WTG сразу отправляют запись, как «+ Добавить»
+    if (AUTO_SUBMIT_CODES.has(code)) {
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit();
+      } else {
+        form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      }
+      return;
     }
     statusInput.focus();
   });
@@ -403,37 +473,8 @@
     const status = expandStatus(statusInput.value);
     if (!sn || !status) return;
 
-    const now = new Date();
-    const today = localDate(now);
-
-    try {
-      const logNo = await nextDailyNo(today);
-      const { error } = await db.from(TABLE).insert({
-        log_no: logNo,
-        panel_sn: sn,
-        repair_date: today,
-        repair_time: localTime(now),
-        status
-      });
-      if (error) throw error;
-    } catch (err) {
-      alert(tr().errSave + err.message);
-      return;
-    }
-
-    // Статус OK: печатаем этикетку в формате, выбранном на вкладке Final station II
-    if (status === "OK") {
-      if (typeof window.printFinal2BySn !== "function") {
-        alert(tr().noPrinter);
-      } else {
-        try {
-          const printed = await window.printFinal2BySn(sn);
-          if (!printed) alert(tr().noPn);
-        } catch (err) {
-          alert(tr().noPn);
-        }
-      }
-    }
+    const ok = await submitRecord(sn, status);
+    if (!ok) return;
 
     snInput.value = "";
     statusInput.value = "";
