@@ -1,5 +1,5 @@
 /* Спеціальні етикетки (Special Label): великий текст, рамка з 11 рядків, SCC та ICON.
-   SCC-текст друкується на 50x30 мм (кількість комплектів працює тільки для SCC).
+   SCC-текст друкується на 50x30 мм, кількість комплектів діє тільки для SCC.
    ICON друкується окремою кнопкою на 49.5x24.5 мм, одна етикетка за натискання.
    Підключення: <script src="js/special.js"></script> ПІСЛЯ js/app.js.
    Контейнер: <section id="specialPage">. Мову задає сайт через window.setSpecialLang(код).
@@ -8,39 +8,45 @@
   const ICON_SRC = 'icon.jpg';
   // true  - обрізати білі поля навколо малюнка (кольори та якість не змінюються)
   // false - використовувати повний файл icon.jpg як є
-  const ICON_TRIM = false;
+  const ICON_TRIM = true;
 
-  // Фіксовані розміри друку (мм)
-  const SCC_LABEL_W = 50;
-  const SCC_LABEL_H = 30;      // висота етикетки для SCC-тексту
-  const SCC_TEXT_H = 25;       // висота зони для тексту
-  const ICON_LABEL_W = 49.5;
-  const ICON_LABEL_H = 24.5;   // етикетка для картинки ICON
-
+  // Розміри друку (мм)
+  const SCC_WIDTH_MM = 49;
+  const SCC_LABEL_H = 30;       // висота етикетки SCC
+  const SCC_TEXT_H = 25;        // висота зони для тексту SCC
   const SCC_TEXT_WIDTH_MM = 46;
+  const ICON_LABEL_W = 49.5;
+  const ICON_LABEL_H = 24.5;
   const SCC_MAX_PT = 60, SCC_MIN_PT = 8, SCC_LINE_HEIGHT = 1.1;
 
   const TR = {
-    uk: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Друк", printRepeat:"🖨️ ", sccPh1:"Значення SCC 1", sccPh2:"Значення SCC 2", copies:"Кількість комплектів", printScc:"🖨️ Друк SCC", printIcon:"🖨️ Друк ICON", alertText:"Введіть текст!", alertScc:"Позначте галочкою хоча б одне поле SCC та заповніть значення!", alertImg:"Не вдалося завантажити зображення" },
-    ru: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Печать", printRepeat:"🖨️ ", sccPh1:"Значение SCC 1", sccPh2:"Значение SCC 2", copies:"Количество комплектов", printScc:"🖨️ Печать SCC", printIcon:"🖨️ Печать ICON", alertText:"Введите текст!", alertScc:"Отметьте хотя бы одно поле SCC и заполните значение!", alertImg:"Не удалось загрузить изображение" },
-    pl: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Drukuj", printRepeat:"🖨️ ", sccPh1:"Wartość SCC 1", sccPh2:"Wartość SCC 2", copies:"Liczba kompletów", printScc:"🖨️ Drukuj SCC", printIcon:"🖨️ Drukuj ICON", alertText:"Wpisz tekst!", alertScc:"Zaznacz co najmniej jedno pole SCC i wpisz wartość!", alertImg:"Nie udało się wczytać obrazu" },
-    en: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Print", printRepeat:"🖨️ ", sccPh1:"SCC 1 value", sccPh2:"SCC 2 value", copies:"Number of sets", printScc:"🖨️ Print SCC", printIcon:"🖨️ Print ICON", alertText:"Enter text!", alertScc:"Check at least one SCC field and enter its value!", alertImg:"Failed to load the image" },
-    de: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Drucken", printRepeat:"🖨️ ", sccPh1:"SCC 1 Wert", sccPh2:"SCC 2 Wert", copies:"Anzahl Sätze", printScc:"🖨️ SCC drucken", printIcon:"🖨️ ICON drucken", alertText:"Bitte Text eingeben!", alertScc:"Bitte mindestens ein SCC-Feld markieren und einen Wert eingeben!", alertImg:"Bild konnte nicht geladen werden" },
-    fr: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Imprimer", printRepeat:"🖨️ ", sccPh1:"Valeur SCC 1", sccPh2:"Valeur SCC 2", copies:"Nombre de jeux", printScc:"🖨️ Imprimer SCC", printIcon:"🖨️ Imprimer ICON", alertText:"Saisissez du texte !", alertScc:"Cochez au moins un champ SCC et saisissez sa valeur !", alertImg:"Impossible de charger l'image" },
-    es: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Imprimir", printRepeat:"🖨️ ", sccPh1:"Valor SCC 1", sccPh2:"Valor SCC 2", copies:"Número de juegos", printScc:"🖨️ Imprimir SCC", printIcon:"🖨️ Imprimir ICON", alertText:"¡Introduzca texto!", alertScc:"¡Marque al menos un campo SCC e introduzca su valor!", alertImg:"No se pudo cargar la imagen" },
-    it: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Stampa", printRepeat:"🖨️ ", sccPh1:"Valore SCC 1", sccPh2:"Valore SCC 2", copies:"Numero di set", printScc:"🖨️ Stampa SCC", printIcon:"🖨️ Stampa ICON", alertText:"Inserisci il testo!", alertScc:"Seleziona almeno un campo SCC e inserisci il valore!", alertImg:"Impossibile caricare l'immagine" },
-    pt: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Imprimir", printRepeat:"🖨️ ", sccPh1:"Valor SCC 1", sccPh2:"Valor SCC 2", copies:"Número de conjuntos", printScc:"🖨️ Imprimir SCC", printIcon:"🖨️ Imprimir ICON", alertText:"Digite o texto!", alertScc:"Marque pelo menos um campo SCC e digite o valor!", alertImg:"Não foi possível carregar a imagem" },
-    tr: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Yazdır", printRepeat:"🖨️ ", sccPh1:"SCC 1 değeri", sccPh2:"SCC 2 değeri", copies:"Set sayısı", printScc:"🖨️ SCC yazdır", printIcon:"🖨️ ICON yazdır", alertText:"Metin girin!", alertScc:"En az bir SCC alanını işaretleyin ve değerini girin!", alertImg:"Resim yüklenemedi" }
+    uk: { print: "🖨️ Друк", printScc: "🖨️ Друк SCC", printIcon: "🖨️ Друк ICON" },
+    ru: { print: "🖨️ Печать", printScc: "🖨️ Печать SCC", printIcon: "🖨️ Печать ICON" },
+    pl: { print: "🖨️ Drukuj", printScc: "🖨️ Drukuj SCC", printIcon: "🖨️ Drukuj ICON" },
+    en: { print: "🖨️ Print", printScc: "🖨️ Print SCC", printIcon: "🖨️ Print ICON" },
+    de: { print: "🖨️ Drucken", printScc: "🖨️ SCC drucken", printIcon: "🖨️ ICON drucken" },
+    fr: { print: "🖨️ Imprimer", printScc: "🖨️ Imprimer SCC", printIcon: "🖨️ Imprimer ICON" },
+    es: { print: "🖨️ Imprimir", printScc: "🖨️ Imprimir SCC", printIcon: "🖨️ Imprimir ICON" },
+    it: { print: "🖨️ Stampa", printScc: "🖨️ Stampa SCC", printIcon: "🖨️ Stampa ICON" },
+    pt: { print: "🖨️ Imprimir", printScc: "🖨️ Imprimir SCC", printIcon: "🖨️ Imprimir ICON" },
+    tr: { print: "🖨️ Yazdır", printScc: "🖨️ SCC yazdır", printIcon: "🖨️ ICON yazdır" }
   };
 
   const MARKUP = `
 <div class="manual-input-card">
   <div class="sp-row">
     <div class="form-group sp-grow">
-      <input type="text" id="spBigText" class="form-input code-text" value="OK" data-sp-ph="wordPh">
+      <input type="text" id="spBigText" class="form-input code-text" value="OK">
+    </div>
+    <div class="form-group">
+      <select id="spBigSize" class="form-input">
+        <option value="100x78">100 × 78 mm</option>
+        <option value="80x68">80 × 68 mm</option>
+        <option value="50x25">50 × 25 mm</option>
+      </select>
     </div>
     <div class="form-group sp-end">
-      <button class="btn btn-brand" id="spBtnText" data-sp="printText"></button>
+      <button class="btn btn-brand" id="spBtnText" data-sp="print"></button>
     </div>
   </div>
 </div>
@@ -48,10 +54,10 @@
 <div class="manual-input-card">
   <div class="sp-row">
     <div class="form-group sp-grow">
-      <input type="text" id="spRepeat" class="form-input code-text" value="TRANSPORTATION FRAME" data-sp-ph="repeatPh">
+      <input type="text" id="spRepeat" class="form-input code-text" value="TRANSPORTATION FRAME">
     </div>
     <div class="form-group sp-end">
-      <button class="btn btn-brand" id="spBtnRepeat" data-sp="printRepeat"></button>
+      <button class="btn btn-brand" id="spBtnRepeat" data-sp="print"></button>
     </div>
   </div>
 </div>
@@ -59,15 +65,15 @@
 <div class="manual-input-card">
   <div class="sp-line">
     <input type="checkbox" class="sp-check" id="spChk1">
-    <input type="text" id="spVal1" class="form-input code-text" data-sp-ph="sccPh1">
+    <input type="text" id="spVal1" class="form-input code-text">
   </div>
   <div class="sp-line">
     <input type="checkbox" class="sp-check" id="spChk2">
-    <input type="text" id="spVal2" class="form-input code-text" data-sp-ph="sccPh2">
+    <input type="text" id="spVal2" class="form-input code-text">
   </div>
   <div class="sp-foot">
     <button class="btn btn-brand" id="spBtnScc" data-sp="printScc"></button>
-    <input type="number" id="spCopies" class="form-input" min="1" value="1" data-sp-title="copies">
+    <input type="number" id="spCopies" class="form-input" min="1" value="1">
     <button class="btn btn-brand" id="spBtnIcon" data-sp="printIcon"></button>
   </div>
 </div>`;
@@ -80,7 +86,7 @@
 #specialPage .sp-line { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
 #specialPage .sp-line .form-input { flex: 1 1 12rem; min-width: 0; }
 #specialPage .sp-check { width: 1.1rem; height: 1.1rem; accent-color: #2563EB; cursor: pointer; }
-#specialPage .sp-foot { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-top: 0.4rem; }
+#specialPage .sp-foot { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-top: 0.4rem; flex-wrap: wrap; }
 #specialPage #spCopies { width: 5.5rem; text-align: center; }
 `;
 
@@ -95,8 +101,6 @@
   }
   function applyText() {
     document.querySelectorAll('#specialPage [data-sp]').forEach(el => { el.textContent = t(el.dataset.sp); });
-    document.querySelectorAll('#specialPage [data-sp-ph]').forEach(el => { el.placeholder = t(el.dataset.spPh); });
-    document.querySelectorAll('#specialPage [data-sp-title]').forEach(el => { el.title = t(el.dataset.spTitle); });
   }
 
   function printInFrame(html) {
@@ -156,7 +160,7 @@
     return `<div class="txt" style="font-size:${pt}pt">${esc(text)}</div>`;
   }
 
-  // ===== ICON: файл icon.jpg використовується як є.
+  // ===== ICON: файл icon.jpg використовується як є (або обрізається по малюнку).
   let iconUrl = '';
 
   function loadIcon() {
@@ -172,6 +176,7 @@
       sctx.drawImage(img, 0, 0);
       const sd = sctx.getImageData(0, 0, sw, sh).data;
 
+      // Шукаємо межі малюнка (тільки для обрізки, самі пікселі не змінюються)
       let minX = sw, minY = sh, maxX = -1, maxY = -1;
       for (let y = 0; y < sh; y++) {
         for (let x = 0; x < sw; x++) {
@@ -187,9 +192,7 @@
       }
       if (maxX < 0) { iconUrl = url; return; }
 
-      const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.02);
-      minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
-      maxX = Math.min(sw - 1, maxX + pad); maxY = Math.min(sh - 1, maxY + pad);
+      // Без запасу: обрізка точно по межах малюнка
       const cw = maxX - minX + 1, ch = maxY - minY + 1;
 
       const out = document.createElement('canvas');
@@ -214,11 +217,11 @@
 
     const $ = (id) => document.getElementById(id);
 
-    // Печать текста на всю етикетку (100x78 мм, 80x68 мм или 50x25 мм)
+    // Текст на всю етикетку (100x78, 80x68 або 50x25 мм)
     function printBigText() {
       const text = $('spBigText').value.trim().toUpperCase();
-      if (!text) return alert(t('alertText'));
-      const [labelW, labelH] = [100, 78];
+      if (!text) return;
+      const [labelW, labelH] = $('spBigSize').value.split('x').map(Number);
 
       const svgNS = 'http://www.w3.org/2000/svg';
       const tmp = document.createElementNS(svgNS, 'svg');
@@ -250,30 +253,50 @@
       </div></body></html>`);
     }
 
+    // Рамка з 11 рядків: етикетка 76 x 130 мм (ширина x довжина).
+    // Текст іде поперек етикетки, по всій ширині 76 мм, без повороту.
+    // 11 рядків рівномірно розподілені по довжині 130 мм.
     function printRepeatText() {
       const text = $('spRepeat').value.trim().toUpperCase();
-      if (!text) return alert(t('alertText'));
-      let lines = '';
-      for (let i = 0; i < 11; i++) lines += `<div class="ln">${esc(text)}</div>`;
+      if (!text) return;
+
+      const LABEL_W = 76;   // ширина етикетки (мм), текст іде по ній
+      const LABEL_H = 130;  // довжина етикетки (мм)
+      const LINES = 11;
+
+      // Крок між рядками по довжині етикетки
+      const PITCH = LABEL_H / LINES;
+      // Розмір шрифту, при якому текст займає всю ширину 76 мм (Arial Bold, ~13.9 em)
+      const FONT = LABEL_W / 13.9;
+      // Висота великих літер ≈ 0.716 від розміру шрифту
+      const CAP = FONT * 0.716;
+
+      let rows = '';
+      for (let i = 0; i < LINES; i++) {
+        // Базова лінія рядка: центр кроку + половина висоти літер
+        const y = i * PITCH + PITCH / 2 + CAP / 2;
+        rows += `<text x="0" y="${y.toFixed(3)}" font-family="Arial, Helvetica, sans-serif" font-weight="700"
+          font-size="${FONT.toFixed(3)}" textLength="${LABEL_W}" lengthAdjust="spacing">${esc(text)}</text>`;
+      }
 
       printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-        @page { size: 100mm 78mm; margin: 0; }
+        @page { size: ${LABEL_W}mm ${LABEL_H}mm; margin: 0; }
         html, body { margin: 0; padding: 0; background: #fff; }
-        .lbl { width: 100mm; height: 77.6mm; padding: 2mm; display: flex; flex-direction: column;
-               justify-content: space-between; overflow: hidden; background: #fff; }
-        .ln { font-family: Arial, Helvetica, sans-serif; font-size: 16pt; text-align: center;
-              text-transform: uppercase; color: #000; line-height: 1; }
-      </style></head><body><div class="lbl">${lines}</div></body></html>`);
+        .lbl { width: ${LABEL_W}mm; height: ${LABEL_H}mm; overflow: hidden; background: #fff; }
+        .lbl svg { display: block; width: ${LABEL_W}mm; height: ${LABEL_H}mm; }
+      </style></head><body><div class="lbl">
+        <svg viewBox="0 0 ${LABEL_W} ${LABEL_H}" preserveAspectRatio="none">${rows}</svg>
+      </div></body></html>`);
     }
 
-    // Кнопка SCC: печатає відмічені SCC 1 / SCC 2. Кількість комплектів діє тільки тут.
+    // Кнопка SCC: друкує відмічені SCC 1 / SCC 2 на 50x30 мм. Кількість комплектів діє тільки тут.
     function printSCC() {
       const v1 = $('spVal1').value.trim(), v2 = $('spVal2').value.trim();
-      const textBlocks = [];
-      if ($('spChk1').checked && v1) textBlocks.push(buildWrappedText(v1, SCC_TEXT_H));
-      if ($('spChk2').checked && v2) textBlocks.push(buildWrappedText(v2, SCC_TEXT_H));
+      const blocks = [];
+      if ($('spChk1').checked && v1) blocks.push(buildWrappedText(v1, SCC_TEXT_H));
+      if ($('spChk2').checked && v2) blocks.push(buildWrappedText(v2, SCC_TEXT_H));
 
-      if (textBlocks.length === 0) return alert(t('alertScc'));
+      if (blocks.length === 0) return;
 
       let n = parseInt($('spCopies').value, 10);
       if (!n || n < 1) n = 1;
@@ -282,16 +305,15 @@
       // Порядок у комплекті: SCC 1 -> SCC 2
       let body = '';
       for (let i = 0; i < n; i++) {
-        textBlocks.forEach(b => { body += `<div class="lbl lbl-scc">${b}</div>`; });
+        blocks.forEach(b => { body += `<div class="lbl">${b}</div>`; });
       }
 
       printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-        @page { size: ${SCC_LABEL_W}mm ${SCC_LABEL_H}mm; margin: 0; }
+        @page { size: ${SCC_WIDTH_MM}mm ${SCC_LABEL_H}mm; margin: 0; }
         html, body { margin: 0; padding: 0; background: #fff; }
-        .lbl { box-sizing: border-box; overflow: hidden; break-inside: avoid; page-break-inside: avoid;
-               display: grid; place-items: center; padding: 2mm; }
+        .lbl { display: grid; place-items: center; width: ${SCC_WIDTH_MM}mm; height: ${SCC_LABEL_H - 0.5}mm;
+               padding: 2mm; box-sizing: border-box; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
         .lbl:not(:last-child) { break-after: page; page-break-after: always; }
-        .lbl-scc { width: ${SCC_LABEL_W}mm; height: ${SCC_LABEL_H - 0.5}mm; }
         .txt { width: 100%; color: #000; font-family: Arial, Helvetica, sans-serif; font-weight: 900;
                line-height: 1.1; overflow-wrap: anywhere; text-align: center; }
       </style></head><body>${body}</body></html>`);
@@ -299,7 +321,7 @@
 
     // Кнопка ICON: одна етикетка 49.5x24.5 мм, без кількості комплектів
     function printIcon() {
-      if (!iconUrl) return alert(t('alertImg'));
+      if (!iconUrl) return;
 
       printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
         @page { size: ${ICON_LABEL_W}mm ${ICON_LABEL_H}mm; margin: 0; }
