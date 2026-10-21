@@ -7,7 +7,7 @@
   const ICON_SRC = 'icon.jpg';
   // true  - обрізати білі поля навколо малюнка (кольори та якість не змінюються)
   // false - використовувати повний файл icon.jpg як є
-  const ICON_TRIM = true;
+  const ICON_TRIM = false;
 
   // Фіксовані розміри друку (мм)
   const SCC_LABEL_W = 50;
