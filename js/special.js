@@ -21,83 +21,64 @@
   const SCC_MAX_PT = 60, SCC_MIN_PT = 8, SCC_LINE_HEIGHT = 1.1;
 
   const TR = {
-    uk: { bigTitle:"🔠 Друк тексту на всю етикетку (OK, WAITING, SCRAP)", word:"Слово або статус", wordPh:"Наприклад: OK, WAITING, SCRAP", size:"Розмір етикетки", printText:"🖨️ Друк тексту", repeatTitle:"🔂 Друк рамки / повторюваного тексту (11 рядків)", repeatLabel:"Текст для дублювання", repeatPh:"Наприклад: TRANSPORTATION FRAME", printRepeat:"🖨️ Друк 11 рядків", sccTitle:"🏷️ Друк етикеток SCC", sccPh1:"Введіть значення SCC 1", sccPh2:"Введіть значення SCC 2", copies:"Кількість комплектів", printScc:"🖨️ Друк SCC", alertText:"Введіть текст!", alertScc:"Позначте галочкою хоча б одне поле SCC та заповніть значення!", alertImg:"Не вдалося завантажити зображення" },
-    ru: { bigTitle:"🔠 Печать текста на всю этикетку (OK, WAITING, SCRAP)", word:"Слово или статус", wordPh:"Например: OK, WAITING, SCRAP", size:"Размер этикетки", printText:"🖨️ Печать текста", repeatTitle:"🔂 Печать рамки / повторяющегося текста (11 строк)", repeatLabel:"Текст для дублирования", repeatPh:"Например: TRANSPORTATION FRAME", printRepeat:"🖨️ Печать 11 строк", sccTitle:"🏷️ Печать этикеток SCC", sccPh1:"Введите значение SCC 1", sccPh2:"Введите значение SCC 2", copies:"Количество комплектов", printScc:"🖨️ Печать SCC", alertText:"Введите текст!", alertScc:"Отметьте хотя бы одно поле SCC и заполните значение!", alertImg:"Не удалось загрузить изображение" },
-    pl: { bigTitle:"🔠 Druk tekstu na całej etykiecie (OK, WAITING, SCRAP)", word:"Słowo lub status", wordPh:"Np.: OK, WAITING, SCRAP", size:"Rozmiar etykiety", printText:"🖨️ Drukuj tekst", repeatTitle:"🔂 Druk ramki / powtarzanego tekstu (11 wierszy)", repeatLabel:"Tekst do powtórzenia", repeatPh:"Np.: TRANSPORTATION FRAME", printRepeat:"🖨️ Drukuj 11 wierszy", sccTitle:"🏷️ Druk etykiet SCC", sccPh1:"Wpisz wartość SCC 1", sccPh2:"Wpisz wartość SCC 2", copies:"Liczba kompletów", printScc:"🖨️ Drukuj SCC", alertText:"Wpisz tekst!", alertScc:"Zaznacz co najmniej jedno pole SCC i wpisz wartość!", alertImg:"Nie udało się wczytać obrazu" },
-    en: { bigTitle:"🔠 Print text across the whole label (OK, WAITING, SCRAP)", word:"Word or status", wordPh:"For example: OK, WAITING, SCRAP", size:"Label size", printText:"🖨️ Print text", repeatTitle:"🔂 Print frame / repeated text (11 lines)", repeatLabel:"Text to repeat", repeatPh:"For example: TRANSPORTATION FRAME", printRepeat:"🖨️ Print 11 lines", sccTitle:"🏷️ Print SCC labels", sccPh1:"Enter SCC 1 value", sccPh2:"Enter SCC 2 value", copies:"Number of sets", printScc:"🖨️ Print SCC", alertText:"Enter text!", alertScc:"Check at least one SCC field and enter its value!", alertImg:"Failed to load the image" },
-    de: { bigTitle:"🔠 Text über das ganze Etikett drucken (OK, WAITING, SCRAP)", word:"Wort oder Status", wordPh:"Zum Beispiel: OK, WAITING, SCRAP", size:"Etikettengröße", printText:"🖨️ Text drucken", repeatTitle:"🔂 Rahmen / wiederholten Text drucken (11 Zeilen)", repeatLabel:"Zu wiederholender Text", repeatPh:"Zum Beispiel: TRANSPORTATION FRAME", printRepeat:"🖨️ 11 Zeilen drucken", sccTitle:"🏷️ SCC-Etiketten drucken", sccPh1:"SCC 1 Wert eingeben", sccPh2:"SCC 2 Wert eingeben", copies:"Anzahl Sätze", printScc:"🖨️ SCC drucken", alertText:"Bitte Text eingeben!", alertScc:"Bitte mindestens ein SCC-Feld markieren und einen Wert eingeben!", alertImg:"Bild konnte nicht geladen werden" },
-    fr: { bigTitle:"🔠 Imprimer du texte sur toute l'étiquette (OK, WAITING, SCRAP)", word:"Mot ou statut", wordPh:"Par exemple : OK, WAITING, SCRAP", size:"Taille de l'étiquette", printText:"🖨️ Imprimer le texte", repeatTitle:"🔂 Imprimer un cadre / texte répété (11 lignes)", repeatLabel:"Texte à répéter", repeatPh:"Par exemple : TRANSPORTATION FRAME", printRepeat:"🖨️ Imprimer 11 lignes", sccTitle:"🏷️ Imprimer des étiquettes SCC", sccPh1:"Saisissez la valeur SCC 1", sccPh2:"Saisissez la valeur SCC 2", copies:"Nombre de jeux", printScc:"🖨️ Imprimer SCC", alertText:"Saisissez du texte !", alertScc:"Cochez au moins un champ SCC et saisissez sa valeur !", alertImg:"Impossible de charger l'image" },
-    es: { bigTitle:"🔠 Imprimir texto en toda la etiqueta (OK, WAITING, SCRAP)", word:"Palabra o estado", wordPh:"Por ejemplo: OK, WAITING, SCRAP", size:"Tamaño de etiqueta", printText:"🖨️ Imprimir texto", repeatTitle:"🔂 Imprimir marco / texto repetido (11 líneas)", repeatLabel:"Texto a repetir", repeatPh:"Por ejemplo: TRANSPORTATION FRAME", printRepeat:"🖨️ Imprimir 11 líneas", sccTitle:"🏷️ Imprimir etiquetas SCC", sccPh1:"Introduzca el valor SCC 1", sccPh2:"Introduzca el valor SCC 2", copies:"Número de juegos", printScc:"🖨️ Imprimir SCC", alertText:"¡Introduzca texto!", alertScc:"¡Marque al menos un campo SCC e introduzca su valor!", alertImg:"No se pudo cargar la imagen" },
-    it: { bigTitle:"🔠 Stampa testo su tutta l'etichetta (OK, WAITING, SCRAP)", word:"Parola o stato", wordPh:"Esempio: OK, WAITING, SCRAP", size:"Dimensione etichetta", printText:"🖨️ Stampa testo", repeatTitle:"🔂 Stampa cornice / testo ripetuto (11 righe)", repeatLabel:"Testo da ripetere", repeatPh:"Esempio: TRANSPORTATION FRAME", printRepeat:"🖨️ Stampa 11 righe", sccTitle:"🏷️ Stampa etichette SCC", sccPh1:"Inserisci il valore SCC 1", sccPh2:"Inserisci il valore SCC 2", copies:"Numero di set", printScc:"🖨️ Stampa SCC", alertText:"Inserisci il testo!", alertScc:"Seleziona almeno un campo SCC e inserisci il valore!", alertImg:"Impossibile caricare l'immagine" },
-    pt: { bigTitle:"🔠 Imprimir texto em toda a etiqueta (OK, WAITING, SCRAP)", word:"Palavra ou status", wordPh:"Por exemplo: OK, WAITING, SCRAP", size:"Tamanho da etiqueta", printText:"🖨️ Imprimir texto", repeatTitle:"🔂 Imprimir moldura / texto repetido (11 linhas)", repeatLabel:"Texto a repetir", repeatPh:"Por exemplo: TRANSPORTATION FRAME", printRepeat:"🖨️ Imprimir 11 linhas", sccTitle:"🏷️ Imprimir etiquetas SCC", sccPh1:"Digite o valor SCC 1", sccPh2:"Digite o valor SCC 2", copies:"Número de conjuntos", printScc:"🖨️ Imprimir SCC", alertText:"Digite o texto!", alertScc:"Marque pelo menos um campo SCC e digite o valor!", alertImg:"Não foi possível carregar a imagem" },
-    tr: { bigTitle:"🔠 Tüm etikete metin yazdır (OK, WAITING, SCRAP)", word:"Kelime veya durum", wordPh:"Örneğin: OK, WAITING, SCRAP", size:"Etiket boyutu", printText:"🖨️ Metni yazdır", repeatTitle:"🔂 Çerçeve / tekrarlanan metin yazdır (11 satır)", repeatLabel:"Tekrarlanacak metin", repeatPh:"Örneğin: TRANSPORTATION FRAME", printRepeat:"🖨️ 11 satır yazdır", sccTitle:"🏷️ SCC etiketleri yazdır", sccPh1:"SCC 1 değerini girin", sccPh2:"SCC 2 değerini girin", copies:"Set sayısı", printScc:"🖨️ SCC yazdır", alertText:"Metin girin!", alertScc:"En az bir SCC alanını işaretleyin ve değerini girin!", alertImg:"Resim yüklenemedi" }
+    uk: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Друк", printRepeat:"🖨️ Друк 11 рядків", sccPh1:"Значення SCC 1", sccPh2:"Значення SCC 2", copies:"Кількість комплектів", printScc:"🖨️ Друк SCC", printIcon:"🖨️ Друк ICON", alertText:"Введіть текст!", alertScc:"Позначте галочкою хоча б одне поле SCC та заповніть значення!", alertImg:"Не вдалося завантажити зображення" },
+    ru: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Печать", printRepeat:"🖨️ Печать 11 строк", sccPh1:"Значение SCC 1", sccPh2:"Значение SCC 2", copies:"Количество комплектов", printScc:"🖨️ Печать SCC", printIcon:"🖨️ Печать ICON", alertText:"Введите текст!", alertScc:"Отметьте хотя бы одно поле SCC и заполните значение!", alertImg:"Не удалось загрузить изображение" },
+    pl: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Drukuj", printRepeat:"🖨️ Drukuj 11 wierszy", sccPh1:"Wartość SCC 1", sccPh2:"Wartość SCC 2", copies:"Liczba kompletów", printScc:"🖨️ Drukuj SCC", printIcon:"🖨️ Drukuj ICON", alertText:"Wpisz tekst!", alertScc:"Zaznacz co najmniej jedno pole SCC i wpisz wartość!", alertImg:"Nie udało się wczytać obrazu" },
+    en: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Print", printRepeat:"🖨️ Print 11 lines", sccPh1:"SCC 1 value", sccPh2:"SCC 2 value", copies:"Number of sets", printScc:"🖨️ Print SCC", printIcon:"🖨️ Print ICON", alertText:"Enter text!", alertScc:"Check at least one SCC field and enter its value!", alertImg:"Failed to load the image" },
+    de: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Drucken", printRepeat:"🖨️ 11 Zeilen drucken", sccPh1:"SCC 1 Wert", sccPh2:"SCC 2 Wert", copies:"Anzahl Sätze", printScc:"🖨️ SCC drucken", printIcon:"🖨️ ICON drucken", alertText:"Bitte Text eingeben!", alertScc:"Bitte mindestens ein SCC-Feld markieren und einen Wert eingeben!", alertImg:"Bild konnte nicht geladen werden" },
+    fr: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Imprimer", printRepeat:"🖨️ Imprimer 11 lignes", sccPh1:"Valeur SCC 1", sccPh2:"Valeur SCC 2", copies:"Nombre de jeux", printScc:"🖨️ Imprimer SCC", printIcon:"🖨️ Imprimer ICON", alertText:"Saisissez du texte !", alertScc:"Cochez au moins un champ SCC et saisissez sa valeur !", alertImg:"Impossible de charger l'image" },
+    es: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Imprimir", printRepeat:"🖨️ Imprimir 11 líneas", sccPh1:"Valor SCC 1", sccPh2:"Valor SCC 2", copies:"Número de juegos", printScc:"🖨️ Imprimir SCC", printIcon:"🖨️ Imprimir ICON", alertText:"¡Introduzca texto!", alertScc:"¡Marque al menos un campo SCC e introduzca su valor!", alertImg:"No se pudo cargar la imagen" },
+    it: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Stampa", printRepeat:"🖨️ Stampa 11 righe", sccPh1:"Valore SCC 1", sccPh2:"Valore SCC 2", copies:"Numero di set", printScc:"🖨️ Stampa SCC", printIcon:"🖨️ Stampa ICON", alertText:"Inserisci il testo!", alertScc:"Seleziona almeno un campo SCC e inserisci il valore!", alertImg:"Impossibile caricare l'immagine" },
+    pt: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Imprimir", printRepeat:"🖨️ Imprimir 11 linhas", sccPh1:"Valor SCC 1", sccPh2:"Valor SCC 2", copies:"Número de conjuntos", printScc:"🖨️ Imprimir SCC", printIcon:"🖨️ Imprimir ICON", alertText:"Digite o texto!", alertScc:"Marque pelo menos um campo SCC e digite o valor!", alertImg:"Não foi possível carregar a imagem" },
+    tr: { wordPh:"OK, WAITING, SCRAP", repeatPh:"TRANSPORTATION FRAME", printText:"🖨️ Yazdır", printRepeat:"🖨️ 11 satır yazdır", sccPh1:"SCC 1 değeri", sccPh2:"SCC 2 değeri", copies:"Set sayısı", printScc:"🖨️ SCC yazdır", printIcon:"🖨️ ICON yazdır", alertText:"Metin girin!", alertScc:"En az bir SCC alanını işaretleyin ve değerini girin!", alertImg:"Resim yüklenemedi" }
   };
 
   const MARKUP = `
 <div class="manual-input-card">
-  <div class="manual-input-title" data-sp="bigTitle"></div>
   <div class="sp-row">
     <div class="form-group sp-grow">
-      <label data-sp="word"></label>
       <input type="text" id="spBigText" class="form-input code-text" value="OK" data-sp-ph="wordPh">
     </div>
-    <div class="form-group">
-      <label data-sp="size"></label>
-      <select id="spBigSize" class="form-input">
-        <option value="100x78">100 × 78 mm</option>
-        <option value="80x68">80 × 68 mm</option>
-        <option value="50x25">50 × 25 mm</option>
-      </select>
-    </div>
     <div class="form-group sp-end">
-      <label>&nbsp;</label>
       <button class="btn btn-brand" id="spBtnText" data-sp="printText"></button>
     </div>
   </div>
 </div>
 
 <div class="manual-input-card">
-  <div class="manual-input-title" data-sp="repeatTitle"></div>
   <div class="sp-row">
     <div class="form-group sp-grow">
-      <label data-sp="repeatLabel"></label>
       <input type="text" id="spRepeat" class="form-input code-text" value="TRANSPORTATION FRAME" data-sp-ph="repeatPh">
     </div>
     <div class="form-group sp-end">
-      <label>&nbsp;</label>
       <button class="btn btn-brand" id="spBtnRepeat" data-sp="printRepeat"></button>
     </div>
   </div>
 </div>
 
 <div class="manual-input-card">
-  <div class="manual-input-title" data-sp="sccTitle"></div>
   <div class="sp-line">
     <input type="checkbox" class="sp-check" id="spChk1">
-    <span class="sp-lbl">SCC 1</span>
     <input type="text" id="spVal1" class="form-input code-text" data-sp-ph="sccPh1">
   </div>
   <div class="sp-line">
     <input type="checkbox" class="sp-check" id="spChk2">
-    <span class="sp-lbl">SCC 2</span>
     <input type="text" id="spVal2" class="form-input code-text" data-sp-ph="sccPh2">
   </div>
   <div class="sp-foot">
     <button class="btn btn-brand" id="spBtnScc" data-sp="printScc"></button>
     <input type="number" id="spCopies" class="form-input" min="1" value="1" data-sp-title="copies">
-    <button class="btn btn-brand" id="spBtnIcon">🖨️ ICON</button>
+    <button class="btn btn-brand" id="spBtnIcon" data-sp="printIcon"></button>
   </div>
 </div>`;
 
   const STYLE = `
 #specialPage { max-width: 56rem; margin: 0 auto; }
-#specialPage .manual-input-title { font-size: 1rem; font-weight: 700; color: #2563EB; margin-bottom: 0.6rem; }
 #specialPage .sp-row { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: flex-end; }
 #specialPage .sp-grow { flex: 1 1 14rem; min-width: 0; }
 #specialPage .sp-end { justify-content: flex-end; }
 #specialPage .sp-line { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
 #specialPage .sp-line .form-input { flex: 1 1 12rem; min-width: 0; }
-#specialPage .sp-lbl { min-width: 3.8rem; font-size: 0.85rem; font-weight: 600; color: #E5E7EB; }
 #specialPage .sp-check { width: 1.1rem; height: 1.1rem; accent-color: #2563EB; cursor: pointer; }
 #specialPage .sp-foot { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-top: 0.4rem; }
 #specialPage #spCopies { width: 5.5rem; text-align: center; }
@@ -233,10 +214,11 @@
 
     const $ = (id) => document.getElementById(id);
 
+    // Печать текста на всю етикетку (100x78 мм, 80x68 мм или 50x25 мм)
     function printBigText() {
       const text = $('spBigText').value.trim().toUpperCase();
       if (!text) return alert(t('alertText'));
-      const [labelW, labelH] = $('spBigSize').value.split('x').map(Number);
+      const [labelW, labelH] = [100, 78];
 
       const svgNS = 'http://www.w3.org/2000/svg';
       const tmp = document.createElementNS(svgNS, 'svg');
