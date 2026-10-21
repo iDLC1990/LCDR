@@ -49,6 +49,12 @@
   // Коды, которые сразу отправляют запись (без нажатия «+ Добавить»)
   const AUTO_SUBMIT_CODES = new Set(["OK", "SCR", "WTG"]);
 
+  // Коды, при которых после сохранения печатается этикетка (в том числе в связке)
+  const PRINT_CODES = new Set(["OK", "SCR", "B", "WTG"]);
+
+  // Полные слова статуса, при которых печатается этикетка
+  const PRINT_WORDS = ["OK", "SCRAP", "WAITING"];
+
   // Приоритет цвета для статуса из нескольких слов: SCRAP > WAITING > OK
   const PRIORITY_COLORS = [
     { word: "SCRAP", color: "#ef4444", cls: "st-scrap" },
@@ -379,8 +385,17 @@
     return data.length ? data[0].log_no + 1 : 1;
   }
 
-  // Сохранение записи и печать этикетки, если в статусе есть OK (в том числе в связке)
-  async function submitRecord(sn, status) {
+  // Нужна ли печать: проверяем исходные коды (B не должен совпадать с BB, BOT и т.п.)
+  // и полные слова развёрнутого статуса
+  function needsPrint(rawInput, status) {
+    const rawTokens = String(rawInput || "").trim().toUpperCase().split(/\s+/).filter(Boolean);
+    if (rawTokens.some(t => PRINT_CODES.has(t))) return true;
+    const w = words(status);
+    return PRINT_WORDS.some(p => w.includes(p));
+  }
+
+  // Сохранение записи и печать этикетки, если статус требует печати (в том числе в связке)
+  async function submitRecord(sn, status, rawInput) {
     const now = new Date();
     const today = localDate(now);
 
@@ -399,8 +414,8 @@
       return false;
     }
 
-    // Статус содержит OK: печатаем этикетку в формате, выбранном на вкладке Final station II
-    if (words(status).includes("OK")) {
+    // Печать один раз на запись, даже если в связке несколько кодов для печати
+    if (needsPrint(rawInput, status)) {
       if (typeof window.printFinal2BySn !== "function") {
         alert(tr().noPrinter);
       } else {
@@ -470,10 +485,11 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const sn = snInput.value.trim().toUpperCase();
-    const status = expandStatus(statusInput.value);
+    const rawStatus = statusInput.value;
+    const status = expandStatus(rawStatus);
     if (!sn || !status) return;
 
-    const ok = await submitRecord(sn, status);
+    const ok = await submitRecord(sn, status, rawStatus);
     if (!ok) return;
 
     snInput.value = "";
