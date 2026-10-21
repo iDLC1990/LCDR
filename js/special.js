@@ -13,10 +13,10 @@
   //   text   - висота зони для тексту
   //   iconW / iconH - розмір картинки ICON на етикетці (займає всю площу етикетки)
   const SCC_SIZES = {
-    '50x30': { label: 30, text: 25, iconW: 50, iconH: 29.5 },
+    '50x30': { label: 30, text: 25, iconW: 49, iconH: 29.5 },
     '50x25': { label: 25, text: 20, iconW: 50, iconH: 24.5 }
   };
-  const SCC_WIDTH_MM = 50, SCC_TEXT_WIDTH_MM = 46;
+  const SCC_WIDTH_MM = 49, SCC_TEXT_WIDTH_MM = 46;
   const SCC_MAX_PT = 60, SCC_MIN_PT = 8, SCC_LINE_HEIGHT = 1.1;
 
   const TR = {
