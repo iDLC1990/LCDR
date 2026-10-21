@@ -1,6 +1,7 @@
 /* Final inspection station II: список SN из Google Таблицы (вкладка FI 2), печать этикеток.
    Функция window.printFinal2BySn(sn) печатает этикетку по SN в формате, выбранном на этой вкладке
    (100×78 или 130×76). Её вызывает журнал ремонта (repairlog.js) при статусе OK.
+   Shift+P — печать с брендом... (см. ниже) — печать с любой страницы сайта.
    Alt+P — печать с брендом в выбранном формате (первая строка или выделенные).
    Двойной клик по серийному номеру — копирование в буфер обмена (без уведомления).
    Данные обновляются в фоне каждые 5 секунд, независимо от того, открыта ли страница.
@@ -146,6 +147,11 @@ html,body{margin:0;padding:0;background:#fff}
     return !!el && el.style.display !== 'none';
   }
 
+  // Поле ввода, в котором пользователь печатает текст: горячие клавиши там не работают
+  function isTyping(target) {
+    return !!(target && target.matches && target.matches('input, textarea, select, [contenteditable]'));
+  }
+
   function applyText() {
     document.querySelectorAll(`${PAGE} [data-lv]`).forEach(el => { el.textContent = t(el.dataset.lv); });
   }
@@ -255,6 +261,9 @@ html,body{margin:0;padding:0;background:#fff}
       }
 
       products = items;
+      // Убираем из выбора строки, которых уже нет в таблице
+      const present = new Set(products.map(p => p.sn));
+      for (const sn of [...selected]) if (!present.has(sn)) selected.delete(sn);
       flushRender();
     } catch (e) {
       console.warn(`${P}: данные временно недоступны`);
@@ -423,7 +432,7 @@ html,body{margin:0;padding:0;background:#fff}
   function printStd(list, inc) { printDoc(stdPages(list, inc), 100, 78); }
   function printNew(list, inc) { printDoc(newPages(list, inc), 130, 76); }
 
-  // Пакетная печать и Ctrl+P: формат зависит от выбранной кнопки 100×78 / 130×76
+  // Пакетная печать и Shift+P: формат зависит от выбранной кнопки 100×78 / 130×76
   function printList(list, inc) {
     if (mode === '2') printNew(list, inc);
     else printStd(list, inc);
@@ -521,12 +530,25 @@ html,body{margin:0;padding:0;background:#fff}
     });
 
     document.addEventListener('keydown', (e) => {
-      if (!isVisible()) return;
-
       // Клавиши определяем по физической позиции (e.code), а не по букве:
-      // при украинской или русской раскладке e.key для Ctrl+P даёт «з», «п» и т.д.
+      // при украинской или русской раскладке e.key для P даёт другой символ
       const isP = e.code === 'KeyP' || (e.key && e.key.toLowerCase() === 'p');
       const isC = e.code === 'KeyC';
+
+      // Shift+P: печать с этикетками Final II с любой страницы сайта.
+      // В полях ввода не срабатывает, чтобы можно было печатать заглавные буквы.
+      if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && isP && !isTyping(e.target)) {
+        e.preventDefault();
+        if (e.repeat) return;
+        if (!products.length) return;
+        if (!selected.size && !products[0].pn) { toast(t('toastPn')); return; }
+        if (selected.size) printBatch(false);
+        else printList([products[0]], false);
+        return;
+      }
+
+      // Дальше только для страницы Final II
+      if (!isVisible()) return;
 
       // Alt+P: печать с брендом в выбранном формате
       if (e.altKey && !e.ctrlKey && !e.metaKey && isP) {
@@ -547,17 +569,6 @@ html,body{margin:0;padding:0;background:#fff}
         if (navigator.clipboard) {
           navigator.clipboard.writeText(text).then(() => toast(t('toastCopied', { n: colSel.cells.length })));
         }
-        return;
-      }
-
-      // Ctrl+P: печать без бренда. Стандартное окно печати браузера не открывается
-      if (isP) {
-        e.preventDefault();
-        if (e.repeat) return;
-        if (!products.length) return;
-        if (!selected.size && !products[0].pn) { toast(t('toastPn')); return; }
-        if (selected.size) printBatch(false);
-        else printList([products[0]], false);
       }
     });
 
