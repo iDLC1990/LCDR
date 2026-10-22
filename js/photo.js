@@ -30,7 +30,7 @@
   <h2>Photo</h2>
   <div class="ph-bar">
     <select id="ph-cam"></select>
-    <button type="button" class="ph-btn" id="ph-snap" disabled>📷 Сделать фото</button>
+    <button type="button" class="ph-btn" id="ph-snap" disabled>📷 Сделать  фото</button>
     <button type="button" class="ph-btn ghost" id="ph-retake" style="display:none">Переснять</button>
     <a class="ph-link" id="ph-download" style="display:none">⬇ Скачать фото</a>
   </div>
