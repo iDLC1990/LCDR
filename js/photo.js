@@ -1,11 +1,12 @@
 /* Вкладка «Photo»: снимок с камеры сохраняется в Supabase Storage под именем работника
    (например ULANOVYCH.JPG). Ниже список работников со статусом и кнопкой «Скачать».
-   Контейнер: <section id="photoPage">. Работает по HTTPS или на localhost. */
+   Фото живёт 15 минут. Контейнер: <section id="photoPage">. Работает по HTTPS или на localhost. */
 (function () {
   const PAGE_ID = 'photoPage';
   const BUCKET = 'photos';
   const SB_URL = 'https://wtqvaeongxncufvpvvge.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U';
+  const LIFE_MS = 15 * 60 * 1000; // срок жизни фото
 
   // label — как в списке, file — имя файла в бакете
   const WORKERS = [
@@ -76,6 +77,7 @@
   let inited = false;
   let stream = null;
   let previewUrl = null;
+  let client = null;
 
   function esc(v) {
     return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -83,9 +85,20 @@
 
   function msg(text) { $('ph-msg').textContent = text || ''; }
 
+  // Отдельный клиент только для Storage: без сессии и со своим storageKey,
+  // чтобы не конфликтовать с другими клиентами Supabase на сайте
   function sb() {
-    if (!window.__lcdrSb) window.__lcdrSb = window.supabase.createClient(SB_URL, SB_KEY);
-    return window.__lcdrSb;
+    if (!client) {
+      client = window.supabase.createClient(SB_URL, SB_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+          storageKey: 'sb-photo-tab'
+        }
+      });
+    }
+    return client;
   }
 
   /* ---------- Камера ---------- */
@@ -195,9 +208,6 @@
 
   /* ---------- Список работников и скачивание ---------- */
 
-  async function refreshList() {
-     const LIFE_MS = 15 * 60 * 1000; // срок жизни фото
-
   // Сколько минут осталось до удаления (или -1, если фото просрочено / его нет)
   function minutesLeft(file) {
     if (!file || !file.updated_at) return -1;
@@ -220,7 +230,7 @@
         <td>${esc(w.label)}</td>
         <td>${esc(w.file)}</td>
         <td class="${alive ? 'ok' : 'no'}">${status}</td>
-        <td>${alive ? new Date(f.updated_at).toLocaleTimeString() : ''}</td>
+        <td>${alive ? esc(new Date(f.updated_at).toLocaleTimeString()) : ''}</td>
         <td><button type="button" class="ph-btn ghost" data-dl="${i}" ${alive ? '' : 'disabled'}>⬇ Скачать</button></td>
       </tr>`;
     }).join('');
@@ -232,7 +242,7 @@
       </table>`;
   }
 
-    async function downloadWorker(index) {
+  async function downloadWorker(index) {
     const w = WORKERS[index];
     msg(`Загрузка ${w.file}...`);
     const { data: list } = await sb().storage.from(BUCKET).list('', { search: w.file, limit: 1 });
@@ -275,8 +285,10 @@
       const b = e.target.closest('button[data-dl]');
       if (b && !b.disabled) downloadWorker(+b.dataset.dl);
     });
+
     // Обновляем список раз в 30 секунд, пока открыта вкладка
     setInterval(() => { if (inited && $('ph-list').offsetParent) refreshList(); }, 30000);
+
     inited = true;
   }
 
