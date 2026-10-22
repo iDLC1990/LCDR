@@ -1,5 +1,6 @@
-/* Вкладка «Photo»: снимок с камеры сохраняется в Supabase Storage под именем работника
-   (например ULANOVYCH.JPG). Ниже список работников со статусом и кнопкой «Скачать».
+/* Вкладка «Photo»: нажимаешь фамилию работника, сканируешь серийный номер ТВ и делаешь фото.
+   Файл сохраняется в Supabase Storage (бакет photos) как ФАМИЛИЯ__серийный.jpg,
+   а в списке и при скачивании показывается как серийный.jpg (например tpfdg341234.jpg).
    Фото живёт 15 минут. Контейнер: <section id="photoPage">. Работает по HTTPS или на localhost. */
 (function () {
   const PAGE_ID = 'photoPage';
@@ -8,36 +9,39 @@
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U';
   const LIFE_MS = 15 * 60 * 1000; // срок жизни фото
 
-  // label — как в списке, file — имя файла в бакете
+  // key — ключ в имени файла (латиница), label — как на кнопке
   const WORKERS = [
-    { label: 'BŁASZKOWSKA M.', file: 'BLASZKOWSKA.JPG' },
-    { label: 'PYNTIA A.',      file: 'PYNTIA.JPG' },
-    { label: 'ZAHUBYPALETS K.', file: 'ZAHUBYPALETS.JPG' },
-    { label: 'KUKU O.',        file: 'KUKU.JPG' },
-    { label: 'NIKOLAIEV D.',   file: 'NIKOLAIEV.JPG' },
-    { label: 'YAROSHENKO L.',  file: 'YAROSHENKO.JPG' },
-    { label: 'POKALCHUK A.',   file: 'POKALCHUK.JPG' },
-    { label: 'HROZDOVA A.',    file: 'HROZDOVA.JPG' },
-    { label: 'BUJKO K.',       file: 'BUJKO.JPG' },
-    { label: 'ULANOVYCH R.',   file: 'ULANOVYCH.JPG' }
+    { key: 'BLASZKOWSKA',  label: 'BŁASZKOWSKA M.' },
+    { key: 'PYNTIA',       label: 'PYNTIA A.' },
+    { key: 'ZAHUBYPALETS', label: 'ZAHUBYPALETS K.' },
+    { key: 'KUKU',         label: 'KUKU O.' },
+    { key: 'NIKOLAIEV',    label: 'NIKOLAIEV D.' },
+    { key: 'YAROSHENKO',   label: 'YAROSHENKO L.' },
+    { key: 'POKALCHUK',    label: 'POKALCHUK A.' },
+    { key: 'HROZDOVA',     label: 'HROZDOVA A.' },
+    { key: 'BUJKO',        label: 'BUJKO K.' },
+    { key: 'ULANOVYCH',    label: 'ULANOVYCH R.' }
   ];
 
   const STYLE = `
 #photoPage { padding: 1.25rem; overflow: auto; }
-#photoPage .ph-wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem; border-radius: 16px;
+#photoPage .ph-wrap { max-width: 1000px; margin: 0 auto; padding: 1.25rem; border-radius: 16px;
   background: rgba(8,10,18,0.6); border: 1px solid rgba(255,255,255,0.14); color: #fff;
   box-shadow: 0 8px 30px rgba(0,0,0,0.5); backdrop-filter: blur(8px); }
 #photoPage h2 { margin: 0 0 1rem; font-size: 1.15rem; font-weight: 700; color: #c4b5fd; }
 #photoPage .ph-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
-#photoPage select { padding: 8px 10px; background: #111827; color: #fff; border: 1px solid #374151; border-radius: 8px; }
-#photoPage #ph-worker { min-width: 13rem; }
+#photoPage select, #photoPage input { padding: 9px 10px; background: #111827; color: #fff; border: 1px solid #374151; border-radius: 8px; }
 #photoPage #ph-cam { min-width: 14rem; }
+#photoPage #ph-serial { min-width: 18rem; font-size: 16px; letter-spacing: .03em; }
+#photoPage .ph-workers { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+#photoPage .ph-w { padding: 9px 14px; border: 1px solid #374151; border-radius: 8px; background: #111827;
+  color: #e5e7eb; cursor: pointer; font-weight: 600; }
+#photoPage .ph-w:hover { border-color: #7c3aed; }
+#photoPage .ph-w.sel { background: linear-gradient(135deg,#4f46e5,#7c3aed); border-color: transparent; color: #fff; }
 #photoPage .ph-btn { padding: 9px 18px; border: 0; border-radius: 8px; color: #fff; cursor: pointer;
   background: linear-gradient(135deg,#4f46e5,#7c3aed); font-weight: 600; }
 #photoPage .ph-btn:disabled { opacity: .4; cursor: not-allowed; }
 #photoPage .ph-btn.ghost { background: #374151; }
-#photoPage .ph-link { padding: 9px 18px; border-radius: 8px; color: #fff; text-decoration: none;
-  background: linear-gradient(135deg,#2563eb,#7c3aed); font-weight: 600; }
 #photoPage .ph-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 #photoPage .ph-box { background: #000; border: 1px solid #1f2937; border-radius: 10px; min-height: 200px;
   display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -47,19 +51,19 @@
 #photoPage .ph-table th, #photoPage .ph-table td { padding: 8px 12px; border-bottom: 1px solid #1f2937; font-size: 13px; text-align: left; }
 #photoPage .ph-table th { background: #111827; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; font-size: 11px; }
 #photoPage .ph-table td.ok { color: #4ade80; }
-#photoPage .ph-table td.no { color: #6B7280; }
+#photoPage .ph-empty { color: #6B7280; font-size: 13px; padding: 10px 2px; }
 @media (max-width: 800px) { #photoPage .ph-stage { grid-template-columns: 1fr; } }
 `;
 
   const MARKUP = `
 <div class="ph-wrap">
   <h2>Photo</h2>
+  <div class="ph-workers" id="ph-workers"></div>
   <div class="ph-bar">
-    <select id="ph-worker"></select>
+    <input type="text" id="ph-serial" placeholder="Серийный номер (сканер)" autocomplete="off" spellcheck="false">
     <select id="ph-cam"></select>
     <button type="button" class="ph-btn" id="ph-snap" disabled>📷 Сделать фото и сохранить</button>
-    <button type="button" class="ph-btn ghost" id="ph-retake" style="display:none">Переснять</button>
-    <a class="ph-link" id="ph-download" style="display:none">⬇ Скачать фото</a>
+    <button type="button" class="ph-btn ghost" id="ph-retake" style="display:none">Скрыть снимок</button>
   </div>
   <div class="ph-stage">
     <div class="ph-box"><video id="ph-video" autoplay playsinline muted></video></div>
@@ -67,7 +71,7 @@
   </div>
   <div class="ph-msg" id="ph-msg"></div>
   <div class="ph-bar" style="justify-content:space-between">
-    <strong style="color:#c4b5fd">Фото работников</strong>
+    <strong style="color:#c4b5fd">Фото (живут 15 минут)</strong>
     <button type="button" class="ph-btn ghost" id="ph-refresh">Обновить список</button>
   </div>
   <div id="ph-list"></div>
@@ -78,6 +82,7 @@
   let stream = null;
   let previewUrl = null;
   let client = null;
+  let selected = null; // выбранный работник (объект из WORKERS)
 
   function esc(v) {
     return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -85,8 +90,7 @@
 
   function msg(text) { $('ph-msg').textContent = text || ''; }
 
-  // Отдельный клиент только для Storage: без сессии и со своим storageKey,
-  // чтобы не конфликтовать с другими клиентами Supabase на сайте
+  // Отдельный клиент для вкладки Photo (без сессии), чтобы не конфликтовать с другими клиентами сайта
   function sb() {
     if (!client) {
       client = window.supabase.createClient(SB_URL, SB_KEY, {
@@ -99,6 +103,26 @@
       });
     }
     return client;
+  }
+
+  // Серийный номер: только буквы, цифры, _ и -
+  function cleanSerial(v) {
+    return String(v || '').trim().replace(/[^A-Za-z0-9_-]/g, '');
+  }
+
+  /* ---------- Работники ---------- */
+
+  function renderWorkers() {
+    $('ph-workers').innerHTML = WORKERS
+      .map((w, i) => `<button type="button" class="ph-w${selected === w ? ' sel' : ''}" data-w="${i}">${esc(w.label)}</button>`)
+      .join('');
+  }
+
+  function selectWorker(i) {
+    selected = WORKERS[i];
+    renderWorkers();
+    msg(`Работник: ${selected.label}. Сканируй серийный номер.`);
+    $('ph-serial').focus();
   }
 
   /* ---------- Камера ---------- */
@@ -154,15 +178,11 @@
 
   /* ---------- Снимок и сохранение ---------- */
 
-  function showPreview(blob, fileName) {
+  function showPreview(blob) {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = URL.createObjectURL(blob);
     $('ph-preview').src = previewUrl;
     $('ph-preview').style.display = 'block';
-    const a = $('ph-download');
-    a.href = previewUrl;
-    a.download = fileName;
-    a.style.display = 'inline-block';
     $('ph-retake').style.display = 'inline-block';
   }
 
@@ -170,15 +190,17 @@
     if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
     $('ph-preview').style.display = 'none';
     $('ph-preview').removeAttribute('src');
-    $('ph-download').style.display = 'none';
     $('ph-retake').style.display = 'none';
   }
 
   async function takeShot() {
+    if (!selected) { msg('Сначала нажми фамилию работника'); return; }
+    const serial = cleanSerial($('ph-serial').value);
+    if (serial.length < 3) { msg('Отсканируй серийный номер'); $('ph-serial').focus(); return; }
+
     const video = $('ph-video');
     if (!stream || !video.videoWidth) { msg('Камера ещё не готова'); return; }
 
-    const worker = WORKERS[+$('ph-worker').value];
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -186,18 +208,21 @@
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
     if (!blob) { msg('Не удалось создать снимок'); return; }
 
-    showPreview(blob, worker.file);
-    msg(`Сохраняю ${worker.file}...`);
+    const objectName = `${selected.key}__${serial}.jpg`;
+    showPreview(blob);
+    msg(`Сохраняю ${serial}.jpg...`);
     $('ph-snap').disabled = true;
 
     try {
-      const { error } = await sb().storage.from(BUCKET).upload(worker.file, blob, {
+      const { error } = await sb().storage.from(BUCKET).upload(objectName, blob, {
         upsert: true,
         contentType: 'image/jpeg',
         cacheControl: '0'
       });
       if (error) throw error;
-      msg(`Сохранено: ${worker.file}`);
+      msg(`Сохранено: ${serial}.jpg (${selected.label})`);
+      $('ph-serial').value = '';
+      $('ph-serial').focus();
       refreshList();
     } catch (err) {
       msg('Ошибка сохранения: ' + (err.message || err));
@@ -206,7 +231,7 @@
     }
   }
 
-  /* ---------- Список работников и скачивание ---------- */
+  /* ---------- Список и скачивание ---------- */
 
   // Сколько минут осталось до удаления (или -1, если фото просрочено / его нет)
   function minutesLeft(file) {
@@ -215,51 +240,62 @@
     return left > 0 ? Math.ceil(left / 60000) : -1;
   }
 
-  async function refreshList() {
-    const { data, error } = await sb().storage.from(BUCKET).list('', { limit: 100 });
-    if (error) { msg('Ошибка списка: ' + error.message); return; }
-    const files = {};
-    (data || []).forEach(f => { files[f.name] = f; });
-
-    const rows = WORKERS.map((w, i) => {
-      const f = files[w.file];
-      const left = minutesLeft(f);
-      const alive = left > 0;
-      const status = alive ? `✅ ещё ${left} мин` : '— нет';
-      return `<tr>
-        <td>${esc(w.label)}</td>
-        <td>${esc(w.file)}</td>
-        <td class="${alive ? 'ok' : 'no'}">${status}</td>
-        <td>${alive ? esc(new Date(f.updated_at).toLocaleTimeString()) : ''}</td>
-        <td><button type="button" class="ph-btn ghost" data-dl="${i}" ${alive ? '' : 'disabled'}>⬇ Скачать</button></td>
-      </tr>`;
-    }).join('');
-
-    $('ph-list').innerHTML = `
-      <table class="ph-table">
-        <thead><tr><th>Работник</th><th>Файл</th><th>Статус</th><th>Снято</th><th></th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+  // ФАМИЛИЯ__серийный.jpg -> { worker, serial }
+  function parseName(name) {
+    const m = /^([A-Z]+)__([A-Za-z0-9_-]+)\.jpg$/.exec(name);
+    if (!m) return null;
+    const w = WORKERS.find(x => x.key === m[1]);
+    return { worker: w ? w.label : m[1], serial: m[2] };
   }
 
-  async function downloadWorker(index) {
-    const w = WORKERS[index];
-    msg(`Загрузка ${w.file}...`);
-    const { data: list } = await sb().storage.from(BUCKET).list('', { search: w.file, limit: 1 });
-    const f = (list || []).find(x => x.name === w.file);
-    if (minutesLeft(f) <= 0) { msg(`Фото ${w.file} уже удалено или просрочено`); refreshList(); return; }
+  async function refreshList() {
+    const { data, error } = await sb().storage.from(BUCKET).list('', {
+      limit: 200,
+      sortBy: { column: 'updated_at', order: 'desc' }
+    });
+    if (error) { msg('Ошибка списка: ' + error.message); return; }
 
-    const { data, error } = await sb().storage.from(BUCKET).download(w.file);
-    if (error || !data) { msg(`Фото ${w.file} не найдено`); return; }
+    const rows = (data || [])
+      .map(f => ({ f, p: parseName(f.name), left: minutesLeft(f) }))
+      .filter(x => x.p && x.left > 0)
+      .map(x => `<tr>
+        <td>${esc(x.p.worker)}</td>
+        <td>${esc(x.p.serial)}.jpg</td>
+        <td class="ok">ещё ${x.left} мин</td>
+        <td>${esc(new Date(x.f.updated_at).toLocaleTimeString())}</td>
+        <td><button type="button" class="ph-btn ghost" data-dl="${esc(x.f.name)}">⬇ Скачать</button></td>
+      </tr>`)
+      .join('');
+
+    $('ph-list').innerHTML = rows
+      ? `<table class="ph-table">
+          <thead><tr><th>Работник</th><th>Файл</th><th>Осталось</th><th>Снято</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`
+      : '<div class="ph-empty">Сейчас нет фото</div>';
+  }
+
+  async function downloadFile(name) {
+    const p = parseName(name);
+    if (!p) return;
+    const fileName = p.serial + '.jpg';
+    msg(`Загрузка ${fileName}...`);
+
+    const { data: list } = await sb().storage.from(BUCKET).list('', { search: name, limit: 5 });
+    const f = (list || []).find(x => x.name === name);
+    if (minutesLeft(f) <= 0) { msg(`Фото ${fileName} уже удалено или просрочено`); refreshList(); return; }
+
+    const { data, error } = await sb().storage.from(BUCKET).download(name);
+    if (error || !data) { msg(`Фото ${fileName} не найдено`); return; }
     const url = URL.createObjectURL(data);
     const a = document.createElement('a');
     a.href = url;
-    a.download = w.file;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    msg(`Скачано: ${w.file}`);
+    msg(`Скачано: ${fileName}`);
   }
 
   /* ---------- Инициализация ---------- */
@@ -272,18 +308,23 @@
     style.textContent = STYLE;
     document.head.appendChild(style);
     root.innerHTML = MARKUP;
+    renderWorkers();
 
-    $('ph-worker').innerHTML = WORKERS
-      .map((w, i) => `<option value="${i}">${esc(w.label)} → ${esc(w.file)}</option>`)
-      .join('');
-
+    $('ph-workers').addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-w]');
+      if (b) selectWorker(+b.dataset.w);
+    });
+    // Сканер печатает номер и нажимает Enter — по Enter сразу делаем фото
+    $('ph-serial').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); takeShot(); }
+    });
     $('ph-snap').addEventListener('click', takeShot);
     $('ph-retake').addEventListener('click', resetPreview);
     $('ph-cam').addEventListener('change', startCamera);
     $('ph-refresh').addEventListener('click', refreshList);
     $('ph-list').addEventListener('click', (e) => {
       const b = e.target.closest('button[data-dl]');
-      if (b && !b.disabled) downloadWorker(+b.dataset.dl);
+      if (b) downloadFile(b.dataset.dl);
     });
 
     // Обновляем список раз в 30 секунд, пока открыта вкладка
@@ -297,6 +338,7 @@
     if (!inited) return;
     startCamera();
     refreshList();
+    $('ph-serial').focus();
   };
 
   // Вызывается сайтом при уходе с вкладки
