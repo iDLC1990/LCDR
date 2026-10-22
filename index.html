@@ -40,7 +40,7 @@
             </a>
             <!-- Скрытая вкладка: появляется по Alt+Q -->
             <a href="#" class="nav-item sub" id="secretTab" data-page="secret" style="display:none">
-              <span class="label">Secret</span>
+              <span class="label" data-i18n="secret">Repair Log</span>
             </a>
           </div>
         </div>
@@ -63,6 +63,10 @@
         <a href="#" class="nav-item" data-page="parts">
           <span class="label" data-i18n="repairBase">LCD Repair Center Base</span>
         </a>
+
+        <a href="#" class="nav-item" data-page="photo">
+          <span class="label" data-i18n="photo">Photo</span>
+        </a>
       </nav>
     </aside>
 
@@ -78,6 +82,7 @@
       <section class="label-page" id="final1Page" style="display:none"></section>
       <section class="label-page" id="final2Page" style="display:none"></section>
       <section class="label-page" id="secretPage" style="display:none"></section>
+      <section class="label-page" id="photoPage" style="display:none"></section>
     </main>
 
   </div>
@@ -98,6 +103,7 @@
   <script src="js/statistic.js"></script>
   <script src="js/collapse.js"></script>
   <script src="js/repairlog.js"></script>
+  <script src="js/photo.js"></script>
 
   <!-- Показ скрытой вкладки по Alt+Q -->
   <script>
