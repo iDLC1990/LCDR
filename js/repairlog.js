@@ -446,8 +446,26 @@
         status
       });
       if (error) throw error;
-    } catch (err) {
-      alert(tr().errSave + err.message);
+    }     let saved = false, lastErr = null;
+    for (let attempt = 0; attempt < 3 && !saved; attempt++) {
+      try {
+        const logNo = await nextDailyNo(today);
+        const { error } = await db.from(TABLE).insert({
+          log_no: logNo,
+          panel_sn: sn,
+          repair_date: today,
+          repair_time: localTime(now),
+          status
+        });
+        if (error) throw error;
+        saved = true;
+      } catch (err) {
+        lastErr = err;
+        if (err.code !== "23505") break; // повторяем только при конфликте уникального номера
+      }
+    }
+    if (!saved) {
+      alert(tr().errSave + (lastErr && lastErr.message ? lastErr.message : ""));
       return false;
     }
 
@@ -520,20 +538,29 @@
     load();
   });
 
+   let submitting = false;
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
     const sn = snInput.value.trim().toUpperCase();
     const rawStatus = statusInput.value;
     const status = expandStatus(rawStatus);
     if (!sn || !status) return;
 
-    const ok = await submitRecord(sn, status, rawStatus);
-    if (!ok) return;
+    submitting = true;
+    try {
+      const ok = await submitRecord(sn, status, rawStatus);
+      if (!ok) return;
 
-    snInput.value = "";
-    statusInput.value = "";
-    snInput.focus();
-    load();
+      snInput.value = "";
+      statusInput.value = "";
+      snInput.focus();
+      load();
+    } finally {
+      submitting = false;
+    }
   });
 
   // Вызывается сайтом при открытии страницы Repair Log
