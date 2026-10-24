@@ -72,8 +72,8 @@
     page.innerHTML = section;
 
     // ===== логіка бази (Supabase) =====
-    const SB_URL = 'https://wtqvaeongxncufvpvvge.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U';
+        const SB_URL = window.APP_CONFIG.SUPABASE_URL;
+    const SB_KEY = window.APP_CONFIG.SUPABASE_KEY;
     const TABLE = 'pn_base';
     const COLS = 'id, panel_pn, data, pn, location, info';
     const PAGE_SIZE = 1000;   // Supabase отдаёт максимум 1000 строк за запрос, дальше листаем
