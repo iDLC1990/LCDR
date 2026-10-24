@@ -431,22 +431,12 @@
     return PRINT_WORDS.some(p => w.includes(p));
   }
 
-  // Сохранение записи и печать этикетки, если статус требует печати (в том числе в связке)
+   // Сохранение записи и печать этикетки, если статус требует печати (в том числе в связке)
   async function submitRecord(sn, status, rawInput) {
     const now = new Date();
     const today = localDate(now);
 
-    try {
-      const logNo = await nextDailyNo(today);
-      const { error } = await db.from(TABLE).insert({
-        log_no: logNo,
-        panel_sn: sn,
-        repair_date: today,
-        repair_time: localTime(now),
-        status
-      });
-      if (error) throw error;
-    }     let saved = false, lastErr = null;
+    let saved = false, lastErr = null;
     for (let attempt = 0; attempt < 3 && !saved; attempt++) {
       try {
         const logNo = await nextDailyNo(today);
