@@ -3,12 +3,8 @@
    Підключення: <script src="js/livedata.js"></script> ПІСЛЯ js/app.js.
    Контейнер: <section id="livePage">. Дані завантажуються при першому відкритті сторінки. */
 (function () {
-  const apiKey = 'AIzaSyCP7tzYiGwIZ6cymLAlv_9QgPIEshnRgqI';
-  const sheetId = '10W03bvKlVFlIUcxsHkzP_v_13gtnYRBmnrrO0ujB1bU';
-  const sheetIdNew = '1Ets--Hho-SK_x6J9Xy3oVA7ILtYKx4gscBOwy6t4PTs';
-  const sheetIdArchive = '1UWu4bcuHg6NHhK8ZvjDlQAIue6R1FLBlmAlBhHBj-D8';
-  const helperSheetGid = 1460654843;
-
+   const sheetId = window.APP_CONFIG.SHEET_ID;
+  const sheetIdArchive = null; // архивные таблицы больше не используются
   const diagonalMapPrefix = {'WH8':55,'WC8':32,'WU0':43,'SQ1':43,'WM5':50,'WC7':32,'WP5':65,'WW1':75,'WM6':50};
   const diagonalMapSuffix = {'860':86,'850':85,'750':75,'700':70,'650':65,'580':58,'575':58,'550':55,'545':55,'500':50,'498':50,'495':50,'490':50,'438':43,'435':43,'430':43,'428':43,'425':43,'420':43,'418':43,'415':43,'398':43,'395':43,'390':43,'348':32,'345':32,'340':32,'328':32,'325':32,'320':32,'318':32,'315':32,'278':27,'275':27,'270':27,'248':24,'245':24,'240':24,'238':24,'235':24,'230':24};
 
@@ -375,24 +371,15 @@
     return [String(d.getDate()).padStart(2, '0'), String(d.getMonth() + 1).padStart(2, '0'), d.getFullYear()].join('.');
   }
 
-  function extractDiagonal(serial) {
-    if (!serial) return null;
-    const s = serial.trim();
-    return diagonalMapPrefix[s.substring(0, 3)] ||
-           diagonalMapSuffix[s.substring(3, 6)] ||
-           diagonalMapSuffix[s.slice(-3)] || null;
+   function extractDiagonal(serial) {
+    return window.LCDR_DIAG.fromSerial(serial);
   }
 
-  function buildSheetURL(spreadsheetId, sheetName) {
-    return `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}`;
-  }
-
+  // Читает вкладку основной таблицы. Для других таблиц (архив) возвращает null
   async function getData(sheetName, spreadsheetId = sheetId) {
+    if (spreadsheetId !== sheetId) return null;
     try {
-      const res = await fetch(buildSheetURL(spreadsheetId, sheetName));
-      if (!res.ok) throw new Error(res.statusText);
-      const data = await res.json();
-      return data.values || [];
+      return await window.LCDR_SHEETS.rows(sheetName);
     } catch (e) {
       console.error(`Fetch error ${sheetName}:`, e);
       return null;
@@ -401,13 +388,11 @@
 
   async function fetchAndCacheData() {
     try {
-      const [s1, s2, s3, s4] = await Promise.all([
-        getData('FI Station KOVALCHYK Y.', sheetId),
-        getData('FI Station 2 ULANOVYCH.R', sheetId),
-        getData('2024', sheetIdArchive),
-        getData('123', sheetIdNew)
+      const [s1, s2] = await Promise.all([
+        getData('FI Station KOVALCHYK Y.'),
+        getData('FI Station 2 ULANOVYCH.R')
       ]);
-      if (!s1 && !s2 && !s3 && !s4) return false;
+      if (!s1 && !s2) return false;
 
       const mapR = (r, insp) => ({
         date: r[0] || '',
@@ -423,9 +408,7 @@
 
       combinedDataCache = [
         ...(s1 ? s1.slice(1) : []).map(r => mapR(r, 'KOVALCHYK Y.')),
-        ...(s2 ? s2.slice(1) : []).map(r => mapR(r, 'ULANOVYCH.R')),
-        ...(s3 ? s3.slice(1) : []).map(r => mapR(r, 'ARCHIVE')),
-        ...(s4 ? s4.slice(1) : []).map(r => mapR(r, '123'))
+        ...(s2 ? s2.slice(1) : []).map(r => mapR(r, 'ULANOVYCH.R'))
       ];
       return true;
     } catch (e) {
@@ -433,7 +416,6 @@
       return false;
     }
   }
-
   function parseDatePart(val) {
     if (!val) return null;
     const first = val.split(' ')[0].trim();
@@ -708,18 +690,8 @@
   }
 
   /* ----- Аркуш pn: показ останнього запису (Alt + 3) ----- */
-  async function getHelperSheetTitle() {
-    if (helperSheetTitle) return helperSheetTitle;
-    try {
-      const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetIdArchive}?fields=sheets.properties(sheetId,title)&key=${apiKey}`);
-      if (!res.ok) throw new Error(res.statusText);
-      const data = await res.json();
-      const sh = (data.sheets || []).find(s => s.properties.sheetId === helperSheetGid);
-      if (sh) helperSheetTitle = sh.properties.title;
-    } catch (err) {
-      console.error('Sheet title lookup failed:', err);
-    }
-    return helperSheetTitle;
+    async function getHelperSheetTitle() {
+    return null;
   }
 
   async function refreshPnRecord(showLoader = false) {
