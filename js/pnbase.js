@@ -1,5 +1,6 @@
-/* Страница «PN Base» (база деталей).
-   Подключение: <script src="js/pnbase.js"></script> ПІСЛЯ js/app.js і JsBarcode.
+/* Страница «PN Base» (база деталей). Данные хранятся в Supabase, таблица public.pn_base:
+   id, panel_pn, data (date), pn, location, info.
+   Подключение: <script src="js/pnbase.js"></script> ПІСЛЯ js/app.js і JsBarcode (supabase-js уже подключён в index.html).
    Контейнер: <section id="pnbasePage">.
    Мову задає сайт через window.setPnBaseLang(код). Підтримуються 10 мов. */
 (function () {
@@ -70,24 +71,35 @@
     const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
     page.innerHTML = section;
 
-    // ===== логіка бази =====
-    const API_URL = "https://script.google.com/macros/s/AKfycbwCvcIfaYATD8AFk9PZezOnMILNgecMKkefI7P81pSR4hxiLQXIa9rirL8LCM7s0AzT/exec";
+    // ===== логіка бази (Supabase) =====
+    const SB_URL = 'https://wtqvaeongxncufvpvvge.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cXZhZW9uZ3huY3VmdnB2dmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDM5MjIsImV4cCI6MjEwMjExOTkyMn0.tRsrb29_b9ev3K75npD5zt_Dz9FMltzaRkdK0RPDn-U';
+    const TABLE = 'pn_base';
+    const COLS = 'id, panel_pn, data, pn, location, info';
+    const PAGE_SIZE = 1000;   // Supabase отдаёт максимум 1000 строк за запрос, дальше листаем
+    const CHUNK = 200;        // сколько id отправляем в одном запросе на правку или удаление
+
     const $ = (id) => document.getElementById(id);
     const showToast = (m) => alert(m);
     let results = [], lang = 'en';
     try { lang = localStorage.getItem('pnbase_lang') || 'en'; } catch (e) {}
 
+    function sbc() {
+      if (!window.__lcdrSb) window.__lcdrSb = window.supabase.createClient(SB_URL, SB_KEY);
+      return window.__lcdrSb;
+    }
+
     const TR = {
-      en: {addTitle:"Bulk Add",labelPanelPn:"Panel_pn (List, one per line)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Add List",searchTitle:"Search & Edit",searchPlaceholder:"Enter PN or Panel_pn",btnSearch:"Search",editTitle:"Edit Found Rows",editHint:"Leave the field empty if you don't want to change it.",labelNewData:"New Date",labelNewLocation:"New Location",labelNewInfo:"New info",btnUpdate:"Apply Changes",statusRecord:"Saving...",statusSearch:"Searching...",statusUpdate:"Updating...",notFound:"Nothing found.",errEnterPn:"Enter at least one Panel_pn",errEnterQuery:"Enter search query",errFillOne:"Fill out at least one field!",confirmUpdate:c=>`Update ${c} rows?`,confirmYes:"Yes",confirmNo:"Cancel",btnDedupe:"Remove duplicates",noDuplicates:"No duplicates.",statusDedupe:"Deleting...",confirmDedupe:c=>`Delete ${c} duplicates? Only the latest entry by date will be kept.`,err:"Error",printTip:"Print label",pasteNoCol:"Customer Model column not found",pasteAdded:c=>`✅ Panel_pn added: ${c}`},
-      uk: {addTitle:"Масове додавання",labelPanelPn:"Panel_pn (Список з нового рядка)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Додати список",searchTitle:"Пошук та Редагування",searchPlaceholder:"Введіть PN або Panel_pn",btnSearch:"Знайти",editTitle:"Змінити знайдені рядки",editHint:"Залиште поле порожнім, якщо не хочете його змінювати.",labelNewData:"Нова Дата",labelNewLocation:"Нова Локація",labelNewInfo:"Нове info",btnUpdate:"Застосувати зміни",statusRecord:"Запис...",statusSearch:"Пошук...",statusUpdate:"Оновлення...",notFound:"Нічого не знайдено.",errEnterPn:"Введіть хоча б один Panel_pn",errEnterQuery:"Введіть запит",errFillOne:"Заповніть хоча б одне поле!",confirmUpdate:c=>`Оновити ${c} рядків?`,confirmYes:"Так",confirmNo:"Скасувати",btnDedupe:"Видалити дублікати",noDuplicates:"Дублікатів немає.",statusDedupe:"Видалення...",confirmDedupe:c=>`Видалити ${c} дублікатів? Залишиться лише останній запис за датою.`,err:"Помилка",printTip:"Друк етикетки",pasteNoCol:"Колонку Customer Model не знайдено",pasteAdded:c=>`✅ Додано Panel_pn: ${c}`},
-      ru: {addTitle:"Массовое добавление",labelPanelPn:"Panel_pn (Список с новой строки)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Добавить список",searchTitle:"Поиск и Редактирование",searchPlaceholder:"Введите PN или Panel_pn",btnSearch:"Найти",editTitle:"Изменить найденные строки",editHint:"Оставьте поле пустым, если не хотите его менять.",labelNewData:"Новая Дата",labelNewLocation:"Новая Локация",labelNewInfo:"Новое info",btnUpdate:"Применить изменения",statusRecord:"Запись...",statusSearch:"Поиск...",statusUpdate:"Обновление...",notFound:"Ничего не найдено.",errEnterPn:"Введите хотя бы один Panel_pn",errEnterQuery:"Введите запрос",errFillOne:"Заполните хотя бы одно поле!",confirmUpdate:c=>`Обновить ${c} строк?`,confirmYes:"Да",confirmNo:"Отмена",btnDedupe:"Удалить дубликаты",noDuplicates:"Дубликатов нет.",statusDedupe:"Удаление...",confirmDedupe:c=>`Удалить ${c} дубликатов? Останется только последняя по дате запись.`,err:"Ошибка",printTip:"Печать этикетки",pasteNoCol:"Колонка Customer Model не найдена",pasteAdded:c=>`✅ Добавлено Panel_pn: ${c}`},
-      pl: {addTitle:"Masowe dodawanie",labelPanelPn:"Panel_pn (Lista z nowej linii)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Dodaj listę",searchTitle:"Wyszukiwanie i Edycja",searchPlaceholder:"Wpisz PN lub Panel_pn",btnSearch:"Szukaj",editTitle:"Edytuj znalezione wiersze",editHint:"Pozostaw pole puste, jeśli chcesz je pominąć.",labelNewData:"Nowa Data",labelNewLocation:"Nowa Lokalizacja",labelNewInfo:"Nowe info",btnUpdate:"Zastosuj zmiany",statusRecord:"Zapisywanie...",statusSearch:"Szukanie...",statusUpdate:"Aktualizacja...",notFound:"Nic nie znaleziono.",errEnterPn:"Wprowadź co najmniej jeden Panel_pn",errEnterQuery:"Wprowadź zapytanie",errFillOne:"Wypełnij co najmniej jedno pole!",confirmUpdate:c=>`Zaktualizować ${c} wierszy?`,confirmYes:"Tak",confirmNo:"Anuluj",btnDedupe:"Usuń duplikaty",noDuplicates:"Brak duplikatów.",statusDedupe:"Usuwanie...",confirmDedupe:c=>`Usunąć ${c} duplikatów? Zostanie tylko najnowszy wpis wg daty.`,err:"Błąd",printTip:"Drukuj etykietę",pasteNoCol:"Nie znaleziono kolumny Customer Model",pasteAdded:c=>`✅ Dodano Panel_pn: ${c}`},
-      de: {addTitle:"Massenerfassung",labelPanelPn:"Panel_pn (Liste, eine pro Zeile)",labelData:"DATUM",labelPn:"PN",labelLocation:"Standort",labelInfo:"Info",btnAdd:"+ Liste hinzufügen",searchTitle:"Suchen & Bearbeiten",searchPlaceholder:"PN oder Panel_pn eingeben",btnSearch:"Suchen",editTitle:"Gefundene Zeilen bearbeiten",editHint:"Feld leer lassen, wenn es nicht geändert werden soll.",labelNewData:"Neues Datum",labelNewLocation:"Neuer Standort",labelNewInfo:"Neue Info",btnUpdate:"Änderungen übernehmen",statusRecord:"Wird gespeichert...",statusSearch:"Suche läuft...",statusUpdate:"Wird aktualisiert...",notFound:"Nichts gefunden.",errEnterPn:"Bitte mindestens einen Panel_pn eingeben",errEnterQuery:"Bitte Suchbegriff eingeben",errFillOne:"Bitte mindestens ein Feld ausfüllen!",confirmUpdate:c=>`${c} Zeilen aktualisieren?`,confirmYes:"Ja",confirmNo:"Abbrechen",btnDedupe:"Duplikate entfernen",noDuplicates:"Keine Duplikate.",statusDedupe:"Wird gelöscht...",confirmDedupe:c=>`${c} Duplikate löschen? Nur der neueste Eintrag nach Datum bleibt erhalten.`,err:"Fehler",printTip:"Etikett drucken",pasteNoCol:"Spalte Customer Model nicht gefunden",pasteAdded:c=>`✅ Panel_pn hinzugefügt: ${c}`},
-      fr: {addTitle:"Ajout en masse",labelPanelPn:"Panel_pn (liste, une par ligne)",labelData:"DATE",labelPn:"PN",labelLocation:"Emplacement",labelInfo:"info",btnAdd:"+ Ajouter la liste",searchTitle:"Recherche et modification",searchPlaceholder:"Saisissez un PN ou Panel_pn",btnSearch:"Rechercher",editTitle:"Modifier les lignes trouvées",editHint:"Laissez le champ vide si vous ne voulez pas le modifier.",labelNewData:"Nouvelle date",labelNewLocation:"Nouvel emplacement",labelNewInfo:"Nouvelle info",btnUpdate:"Appliquer les modifications",statusRecord:"Enregistrement...",statusSearch:"Recherche...",statusUpdate:"Mise à jour...",notFound:"Aucun résultat.",errEnterPn:"Saisissez au moins un Panel_pn",errEnterQuery:"Saisissez une requête",errFillOne:"Remplissez au moins un champ !",confirmUpdate:c=>`Mettre à jour ${c} lignes ?`,confirmYes:"Oui",confirmNo:"Annuler",btnDedupe:"Supprimer les doublons",noDuplicates:"Aucun doublon.",statusDedupe:"Suppression...",confirmDedupe:c=>`Supprimer ${c} doublons ? Seule l'entrée la plus récente sera conservée.`,err:"Erreur",printTip:"Imprimer l'étiquette",pasteNoCol:"Colonne Customer Model introuvable",pasteAdded:c=>`✅ Panel_pn ajouté : ${c}`},
-      es: {addTitle:"Adición masiva",labelPanelPn:"Panel_pn (lista, una por línea)",labelData:"FECHA",labelPn:"PN",labelLocation:"Ubicación",labelInfo:"info",btnAdd:"+ Añadir lista",searchTitle:"Buscar y editar",searchPlaceholder:"Introduzca PN o Panel_pn",btnSearch:"Buscar",editTitle:"Editar filas encontradas",editHint:"Deje el campo vacío si no desea cambiarlo.",labelNewData:"Nueva fecha",labelNewLocation:"Nueva ubicación",labelNewInfo:"Nueva info",btnUpdate:"Aplicar cambios",statusRecord:"Guardando...",statusSearch:"Buscando...",statusUpdate:"Actualizando...",notFound:"No se encontró nada.",errEnterPn:"Introduzca al menos un Panel_pn",errEnterQuery:"Introduzca una consulta",errFillOne:"¡Complete al menos un campo!",confirmUpdate:c=>`¿Actualizar ${c} filas?`,confirmYes:"Sí",confirmNo:"Cancelar",btnDedupe:"Eliminar duplicados",noDuplicates:"No hay duplicados.",statusDedupe:"Eliminando...",confirmDedupe:c=>`¿Eliminar ${c} duplicados? Solo se conservará el registro más reciente por fecha.`,err:"Error",printTip:"Imprimir etiqueta",pasteNoCol:"No se encontró la columna Customer Model",pasteAdded:c=>`✅ Panel_pn añadido: ${c}`},
-      it: {addTitle:"Aggiunta multipla",labelPanelPn:"Panel_pn (elenco, uno per riga)",labelData:"DATA",labelPn:"PN",labelLocation:"Posizione",labelInfo:"info",btnAdd:"+ Aggiungi elenco",searchTitle:"Cerca e modifica",searchPlaceholder:"Inserisci PN o Panel_pn",btnSearch:"Cerca",editTitle:"Modifica le righe trovate",editHint:"Lascia vuoto il campo se non vuoi modificarlo.",labelNewData:"Nuova data",labelNewLocation:"Nuova posizione",labelNewInfo:"Nuove info",btnUpdate:"Applica modifiche",statusRecord:"Salvataggio...",statusSearch:"Ricerca...",statusUpdate:"Aggiornamento...",notFound:"Nessun risultato.",errEnterPn:"Inserisci almeno un Panel_pn",errEnterQuery:"Inserisci una ricerca",errFillOne:"Compila almeno un campo!",confirmUpdate:c=>`Aggiornare ${c} righe?`,confirmYes:"Sì",confirmNo:"Annulla",btnDedupe:"Rimuovi duplicati",noDuplicates:"Nessun duplicato.",statusDedupe:"Eliminazione...",confirmDedupe:c=>`Eliminare ${c} duplicati? Verrà mantenuta solo la voce più recente per data.`,err:"Errore",printTip:"Stampa etichetta",pasteNoCol:"Colonna Customer Model non trovata",pasteAdded:c=>`✅ Panel_pn aggiunto: ${c}`},
-      pt: {addTitle:"Adição em massa",labelPanelPn:"Panel_pn (lista, uma por linha)",labelData:"DATA",labelPn:"PN",labelLocation:"Localização",labelInfo:"info",btnAdd:"+ Adicionar lista",searchTitle:"Pesquisar e editar",searchPlaceholder:"Digite PN ou Panel_pn",btnSearch:"Pesquisar",editTitle:"Editar linhas encontradas",editHint:"Deixe o campo vazio se não quiser alterá-lo.",labelNewData:"Nova data",labelNewLocation:"Nova localização",labelNewInfo:"Nova info",btnUpdate:"Aplicar alterações",statusRecord:"Salvando...",statusSearch:"Pesquisando...",statusUpdate:"Atualizando...",notFound:"Nada encontrado.",errEnterPn:"Digite pelo menos um Panel_pn",errEnterQuery:"Digite um termo de pesquisa",errFillOne:"Preencha pelo menos um campo!",confirmUpdate:c=>`Atualizar ${c} linhas?`,confirmYes:"Sim",confirmNo:"Cancelar",btnDedupe:"Remover duplicatas",noDuplicates:"Nenhuma duplicata.",statusDedupe:"Excluindo...",confirmDedupe:c=>`Excluir ${c} duplicatas? Apenas o registro mais recente por data será mantido.`,err:"Erro",printTip:"Imprimir etiqueta",pasteNoCol:"Coluna Customer Model não encontrada",pasteAdded:c=>`✅ Panel_pn adicionado: ${c}`},
-      tr: {addTitle:"Toplu ekleme",labelPanelPn:"Panel_pn (satır başına bir tane)",labelData:"TARİH",labelPn:"PN",labelLocation:"Konum",labelInfo:"info",btnAdd:"+ Listeyi ekle",searchTitle:"Ara ve düzenle",searchPlaceholder:"PN veya Panel_pn girin",btnSearch:"Ara",editTitle:"Bulunan satırları düzenle",editHint:"Değiştirmek istemiyorsanız alanı boş bırakın.",labelNewData:"Yeni tarih",labelNewLocation:"Yeni konum",labelNewInfo:"Yeni info",btnUpdate:"Değişiklikleri uygula",statusRecord:"Kaydediliyor...",statusSearch:"Aranıyor...",statusUpdate:"Güncelleniyor...",notFound:"Hiçbir şey bulunamadı.",errEnterPn:"En az bir Panel_pn girin",errEnterQuery:"Arama metni girin",errFillOne:"En az bir alanı doldurun!",confirmUpdate:c=>`${c} satır güncellensin mi?`,confirmYes:"Evet",confirmNo:"İptal",btnDedupe:"Yinelenenleri kaldır",noDuplicates:"Yinelenen yok.",statusDedupe:"Siliniyor...",confirmDedupe:c=>`${c} yinelenen silinsin mi? Tarihe göre yalnızca en son kayıt kalacak.`,err:"Hata",printTip:"Etiketi yazdır",pasteNoCol:"Customer Model sütunu bulunamadı",pasteAdded:c=>`✅ Panel_pn eklendi: ${c}`}
+      en: {addTitle:"Bulk Add",labelPanelPn:"Panel_pn (List, one per line)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Add List",searchTitle:"Search & Edit",searchPlaceholder:"Enter PN or Panel_pn",btnSearch:"Search",editTitle:"Edit Found Rows",editHint:"Leave the field empty if you don't want to change it.",labelNewData:"New Date",labelNewLocation:"New Location",labelNewInfo:"New info",btnUpdate:"Apply Changes",statusRecord:"Saving...",statusSearch:"Searching...",statusUpdate:"Updating...",notFound:"Nothing found.",errEnterPn:"Enter at least one Panel_pn",errEnterQuery:"Enter search query",errFillOne:"Fill out at least one field!",confirmUpdate:c=>`Update ${c} rows?`,confirmYes:"Yes",confirmNo:"Cancel",btnDedupe:"Remove duplicates",noDuplicates:"No duplicates.",statusDedupe:"Deleting...",confirmDedupe:c=>`Delete ${c} duplicates? Only the latest entry by date will be kept.`,err:"Error",printTip:"Print label",pasteNoCol:"Customer Model column not found",pasteAdded:c=>`✅ Panel_pn added: ${c}`,msgAdded:c=>`✅ Added rows: ${c}`,msgUpdated:c=>`✅ Updated rows: ${c}`,msgDeleted:c=>`✅ Deleted rows: ${c}`,errNoAccess:"Nothing was changed. Check the access policies of table pn_base in Supabase."},
+      uk: {addTitle:"Масове додавання",labelPanelPn:"Panel_pn (Список з нового рядка)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Додати список",searchTitle:"Пошук та Редагування",searchPlaceholder:"Введіть PN або Panel_pn",btnSearch:"Знайти",editTitle:"Змінити знайдені рядки",editHint:"Залиште поле порожнім, якщо не хочете його змінювати.",labelNewData:"Нова Дата",labelNewLocation:"Нова Локація",labelNewInfo:"Нове info",btnUpdate:"Застосувати зміни",statusRecord:"Запис...",statusSearch:"Пошук...",statusUpdate:"Оновлення...",notFound:"Нічого не знайдено.",errEnterPn:"Введіть хоча б один Panel_pn",errEnterQuery:"Введіть запит",errFillOne:"Заповніть хоча б одне поле!",confirmUpdate:c=>`Оновити ${c} рядків?`,confirmYes:"Так",confirmNo:"Скасувати",btnDedupe:"Видалити дублікати",noDuplicates:"Дублікатів немає.",statusDedupe:"Видалення...",confirmDedupe:c=>`Видалити ${c} дублікатів? Залишиться лише останній запис за датою.`,err:"Помилка",printTip:"Друк етикетки",pasteNoCol:"Колонку Customer Model не знайдено",pasteAdded:c=>`✅ Додано Panel_pn: ${c}`,msgAdded:c=>`✅ Додано рядків: ${c}`,msgUpdated:c=>`✅ Оновлено рядків: ${c}`,msgDeleted:c=>`✅ Видалено рядків: ${c}`,errNoAccess:"Нічого не змінено. Перевірте політики доступу таблиці pn_base у Supabase."},
+      ru: {addTitle:"Массовое добавление",labelPanelPn:"Panel_pn (Список с новой строки)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Добавить список",searchTitle:"Поиск и Редактирование",searchPlaceholder:"Введите PN или Panel_pn",btnSearch:"Найти",editTitle:"Изменить найденные строки",editHint:"Оставьте поле пустым, если не хотите его менять.",labelNewData:"Новая Дата",labelNewLocation:"Новая Локация",labelNewInfo:"Новое info",btnUpdate:"Применить изменения",statusRecord:"Запись...",statusSearch:"Поиск...",statusUpdate:"Обновление...",notFound:"Ничего не найдено.",errEnterPn:"Введите хотя бы один Panel_pn",errEnterQuery:"Введите запрос",errFillOne:"Заполните хотя бы одно поле!",confirmUpdate:c=>`Обновить ${c} строк?`,confirmYes:"Да",confirmNo:"Отмена",btnDedupe:"Удалить дубликаты",noDuplicates:"Дубликатов нет.",statusDedupe:"Удаление...",confirmDedupe:c=>`Удалить ${c} дубликатов? Останется только последняя по дате запись.`,err:"Ошибка",printTip:"Печать этикетки",pasteNoCol:"Колонка Customer Model не найдена",pasteAdded:c=>`✅ Добавлено Panel_pn: ${c}`,msgAdded:c=>`✅ Добавлено строк: ${c}`,msgUpdated:c=>`✅ Обновлено строк: ${c}`,msgDeleted:c=>`✅ Удалено строк: ${c}`,errNoAccess:"Ничего не изменилось. Проверьте политики доступа таблицы pn_base в Supabase."},
+      pl: {addTitle:"Masowe dodawanie",labelPanelPn:"Panel_pn (Lista z nowej linii)",labelData:"DATA",labelPn:"PN",labelLocation:"Location",labelInfo:"info",btnAdd:"+ Dodaj listę",searchTitle:"Wyszukiwanie i Edycja",searchPlaceholder:"Wpisz PN lub Panel_pn",btnSearch:"Szukaj",editTitle:"Edytuj znalezione wiersze",editHint:"Pozostaw pole puste, jeśli chcesz je pominąć.",labelNewData:"Nowa Data",labelNewLocation:"Nowa Lokalizacja",labelNewInfo:"Nowe info",btnUpdate:"Zastosuj zmiany",statusRecord:"Zapisywanie...",statusSearch:"Szukanie...",statusUpdate:"Aktualizacja...",notFound:"Nic nie znaleziono.",errEnterPn:"Wprowadź co najmniej jeden Panel_pn",errEnterQuery:"Wprowadź zapytanie",errFillOne:"Wypełnij co najmniej jedno pole!",confirmUpdate:c=>`Zaktualizować ${c} wierszy?`,confirmYes:"Tak",confirmNo:"Anuluj",btnDedupe:"Usuń duplikaty",noDuplicates:"Brak duplikatów.",statusDedupe:"Usuwanie...",confirmDedupe:c=>`Usunąć ${c} duplikatów? Zostanie tylko najnowszy wpis wg daty.`,err:"Błąd",printTip:"Drukuj etykietę",pasteNoCol:"Nie znaleziono kolumny Customer Model",pasteAdded:c=>`✅ Dodano Panel_pn: ${c}`,msgAdded:c=>`✅ Dodano wierszy: ${c}`,msgUpdated:c=>`✅ Zaktualizowano wierszy: ${c}`,msgDeleted:c=>`✅ Usunięto wierszy: ${c}`,errNoAccess:"Nic nie zmieniono. Sprawdź polityki dostępu tabeli pn_base w Supabase."},
+      de: {addTitle:"Massenerfassung",labelPanelPn:"Panel_pn (Liste, eine pro Zeile)",labelData:"DATUM",labelPn:"PN",labelLocation:"Standort",labelInfo:"Info",btnAdd:"+ Liste hinzufügen",searchTitle:"Suchen & Bearbeiten",searchPlaceholder:"PN oder Panel_pn eingeben",btnSearch:"Suchen",editTitle:"Gefundene Zeilen bearbeiten",editHint:"Feld leer lassen, wenn es nicht geändert werden soll.",labelNewData:"Neues Datum",labelNewLocation:"Neuer Standort",labelNewInfo:"Neue Info",btnUpdate:"Änderungen übernehmen",statusRecord:"Wird gespeichert...",statusSearch:"Suche läuft...",statusUpdate:"Wird aktualisiert...",notFound:"Nichts gefunden.",errEnterPn:"Bitte mindestens einen Panel_pn eingeben",errEnterQuery:"Bitte Suchbegriff eingeben",errFillOne:"Bitte mindestens ein Feld ausfüllen!",confirmUpdate:c=>`${c} Zeilen aktualisieren?`,confirmYes:"Ja",confirmNo:"Abbrechen",btnDedupe:"Duplikate entfernen",noDuplicates:"Keine Duplikate.",statusDedupe:"Wird gelöscht...",confirmDedupe:c=>`${c} Duplikate löschen? Nur der neueste Eintrag nach Datum bleibt erhalten.`,err:"Fehler",printTip:"Etikett drucken",pasteNoCol:"Spalte Customer Model nicht gefunden",pasteAdded:c=>`✅ Panel_pn hinzugefügt: ${c}`,msgAdded:c=>`✅ Zeilen hinzugefügt: ${c}`,msgUpdated:c=>`✅ Zeilen aktualisiert: ${c}`,msgDeleted:c=>`✅ Zeilen gelöscht: ${c}`,errNoAccess:"Nichts wurde geändert. Zugriffsrichtlinien der Tabelle pn_base in Supabase prüfen."},
+      fr: {addTitle:"Ajout en masse",labelPanelPn:"Panel_pn (liste, une par ligne)",labelData:"DATE",labelPn:"PN",labelLocation:"Emplacement",labelInfo:"info",btnAdd:"+ Ajouter la liste",searchTitle:"Recherche et modification",searchPlaceholder:"Saisissez un PN ou Panel_pn",btnSearch:"Rechercher",editTitle:"Modifier les lignes trouvées",editHint:"Laissez le champ vide si vous ne voulez pas le modifier.",labelNewData:"Nouvelle date",labelNewLocation:"Nouvel emplacement",labelNewInfo:"Nouvelle info",btnUpdate:"Appliquer les modifications",statusRecord:"Enregistrement...",statusSearch:"Recherche...",statusUpdate:"Mise à jour...",notFound:"Aucun résultat.",errEnterPn:"Saisissez au moins un Panel_pn",errEnterQuery:"Saisissez une requête",errFillOne:"Remplissez au moins un champ !",confirmUpdate:c=>`Mettre à jour ${c} lignes ?`,confirmYes:"Oui",confirmNo:"Annuler",btnDedupe:"Supprimer les doublons",noDuplicates:"Aucun doublon.",statusDedupe:"Suppression...",confirmDedupe:c=>`Supprimer ${c} doublons ? Seule l'entrée la plus récente sera conservée.`,err:"Erreur",printTip:"Imprimer l'étiquette",pasteNoCol:"Colonne Customer Model introuvable",pasteAdded:c=>`✅ Panel_pn ajouté : ${c}`,msgAdded:c=>`✅ Lignes ajoutées : ${c}`,msgUpdated:c=>`✅ Lignes mises à jour : ${c}`,msgDeleted:c=>`✅ Lignes supprimées : ${c}`,errNoAccess:"Rien n'a été modifié. Vérifiez les politiques d'accès de la table pn_base dans Supabase."},
+      es: {addTitle:"Adición masiva",labelPanelPn:"Panel_pn (lista, una por línea)",labelData:"FECHA",labelPn:"PN",labelLocation:"Ubicación",labelInfo:"info",btnAdd:"+ Añadir lista",searchTitle:"Buscar y editar",searchPlaceholder:"Introduzca PN o Panel_pn",btnSearch:"Buscar",editTitle:"Editar filas encontradas",editHint:"Deje el campo vacío si no desea cambiarlo.",labelNewData:"Nueva fecha",labelNewLocation:"Nueva ubicación",labelNewInfo:"Nueva info",btnUpdate:"Aplicar cambios",statusRecord:"Guardando...",statusSearch:"Buscando...",statusUpdate:"Actualizando...",notFound:"No se encontró nada.",errEnterPn:"Introduzca al menos un Panel_pn",errEnterQuery:"Introduzca una consulta",errFillOne:"¡Complete al menos un campo!",confirmUpdate:c=>`¿Actualizar ${c} filas?`,confirmYes:"Sí",confirmNo:"Cancelar",btnDedupe:"Eliminar duplicados",noDuplicates:"No hay duplicados.",statusDedupe:"Eliminando...",confirmDedupe:c=>`¿Eliminar ${c} duplicados? Solo se conservará el registro más reciente por fecha.`,err:"Error",printTip:"Imprimir etiqueta",pasteNoCol:"No se encontró la columna Customer Model",pasteAdded:c=>`✅ Panel_pn añadido: ${c}`,msgAdded:c=>`✅ Filas añadidas: ${c}`,msgUpdated:c=>`✅ Filas actualizadas: ${c}`,msgDeleted:c=>`✅ Filas eliminadas: ${c}`,errNoAccess:"No se cambió nada. Revise las políticas de acceso de la tabla pn_base en Supabase."},
+      it: {addTitle:"Aggiunta multipla",labelPanelPn:"Panel_pn (elenco, uno per riga)",labelData:"DATA",labelPn:"PN",labelLocation:"Posizione",labelInfo:"info",btnAdd:"+ Aggiungi elenco",searchTitle:"Cerca e modifica",searchPlaceholder:"Inserisci PN o Panel_pn",btnSearch:"Cerca",editTitle:"Modifica le righe trovate",editHint:"Lascia vuoto il campo se non vuoi modificarlo.",labelNewData:"Nuova data",labelNewLocation:"Nuova posizione",labelNewInfo:"Nuove info",btnUpdate:"Applica modifiche",statusRecord:"Salvataggio...",statusSearch:"Ricerca...",statusUpdate:"Aggiornamento...",notFound:"Nessun risultato.",errEnterPn:"Inserisci almeno un Panel_pn",errEnterQuery:"Inserisci una ricerca",errFillOne:"Compila almeno un campo!",confirmUpdate:c=>`Aggiornare ${c} righe?`,confirmYes:"Sì",confirmNo:"Annulla",btnDedupe:"Rimuovi duplicati",noDuplicates:"Nessun duplicato.",statusDedupe:"Eliminazione...",confirmDedupe:c=>`Eliminare ${c} duplicati? Verrà mantenuta solo la voce più recente per data.`,err:"Errore",printTip:"Stampa etichetta",pasteNoCol:"Colonna Customer Model non trovata",pasteAdded:c=>`✅ Panel_pn aggiunto: ${c}`,msgAdded:c=>`✅ Righe aggiunte: ${c}`,msgUpdated:c=>`✅ Righe aggiornate: ${c}`,msgDeleted:c=>`✅ Righe eliminate: ${c}`,errNoAccess:"Non è stato modificato nulla. Controlla le policy di accesso della tabella pn_base in Supabase."},
+      pt: {addTitle:"Adição em massa",labelPanelPn:"Panel_pn (lista, uma por linha)",labelData:"DATA",labelPn:"PN",labelLocation:"Localização",labelInfo:"info",btnAdd:"+ Adicionar lista",searchTitle:"Pesquisar e editar",searchPlaceholder:"Digite PN ou Panel_pn",btnSearch:"Pesquisar",editTitle:"Editar linhas encontradas",editHint:"Deixe o campo vazio se não quiser alterá-lo.",labelNewData:"Nova data",labelNewLocation:"Nova localização",labelNewInfo:"Nova info",btnUpdate:"Aplicar alterações",statusRecord:"Salvando...",statusSearch:"Pesquisando...",statusUpdate:"Atualizando...",notFound:"Nada encontrado.",errEnterPn:"Digite pelo menos um Panel_pn",errEnterQuery:"Digite um termo de pesquisa",errFillOne:"Preencha pelo menos um campo!",confirmUpdate:c=>`Atualizar ${c} linhas?`,confirmYes:"Sim",confirmNo:"Cancelar",btnDedupe:"Remover duplicatas",noDuplicates:"Nenhuma duplicata.",statusDedupe:"Excluindo...",confirmDedupe:c=>`Excluir ${c} duplicatas? Apenas o registro mais recente por data será mantido.`,err:"Erro",printTip:"Imprimir etiqueta",pasteNoCol:"Coluna Customer Model não encontrada",pasteAdded:c=>`✅ Panel_pn adicionado: ${c}`,msgAdded:c=>`✅ Linhas adicionadas: ${c}`,msgUpdated:c=>`✅ Linhas atualizadas: ${c}`,msgDeleted:c=>`✅ Linhas excluídas: ${c}`,errNoAccess:"Nada foi alterado. Verifique as políticas de acesso da tabela pn_base no Supabase."},
+      tr: {addTitle:"Toplu ekleme",labelPanelPn:"Panel_pn (satır başına bir tane)",labelData:"TARİH",labelPn:"PN",labelLocation:"Konum",labelInfo:"info",btnAdd:"+ Listeyi ekle",searchTitle:"Ara ve düzenle",searchPlaceholder:"PN veya Panel_pn girin",btnSearch:"Ara",editTitle:"Bulunan satırları düzenle",editHint:"Değiştirmek istemiyorsanız alanı boş bırakın.",labelNewData:"Yeni tarih",labelNewLocation:"Yeni konum",labelNewInfo:"Yeni info",btnUpdate:"Değişiklikleri uygula",statusRecord:"Kaydediliyor...",statusSearch:"Aranıyor...",statusUpdate:"Güncelleniyor...",notFound:"Hiçbir şey bulunamadı.",errEnterPn:"En az bir Panel_pn girin",errEnterQuery:"Arama metni girin",errFillOne:"En az bir alanı doldurun!",confirmUpdate:c=>`${c} satır güncellensin mi?`,confirmYes:"Evet",confirmNo:"İptal",btnDedupe:"Yinelenenleri kaldır",noDuplicates:"Yinelenen yok.",statusDedupe:"Siliniyor...",confirmDedupe:c=>`${c} yinelenen silinsin mi? Tarihe göre yalnızca en son kayıt kalacak.`,err:"Hata",printTip:"Etiketi yazdır",pasteNoCol:"Customer Model sütunu bulunamadı",pasteAdded:c=>`✅ Panel_pn eklendi: ${c}`,msgAdded:c=>`✅ Eklenen satır: ${c}`,msgUpdated:c=>`✅ Güncellenen satır: ${c}`,msgDeleted:c=>`✅ Silinen satır: ${c}`,errNoAccess:"Hiçbir şey değişmedi. Supabase'de pn_base tablosunun erişim politikalarını kontrol edin."}
     };
     if (!TR[lang]) lang = 'en';
     const T = () => TR[lang];
@@ -115,15 +127,34 @@
         o.addEventListener('click', (e) => { if (e.target === o) done(false); });
       });
     }
-    async function request(payload) {
-      try {
-        const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-        return await r.json();
-      } catch (e) { return { success: false, error: e.message }; }
-    }
     const esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     const fmtDate = (v) => { if (!v) return ''; const s = String(v), m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}.${m[2]}.${m[1]}` : s; };
-    const fail = (e) => showToast(T().err + ': ' + e);
+    const fail = (e) => showToast(T().err + ': ' + (e && e.message ? e.message : e));
+    const chunks = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
+
+    // ===== запросы к Supabase =====
+    // Экранируем символы шаблона ilike, чтобы % и _ искались как обычные символы
+    const likeEsc = (s) => s.replace(/[\\%_]/g, '\\$&');
+
+    // Все строки, где колонка подходит под шаблон (листаем по 1000 строк)
+    async function fetchAll(col, pattern) {
+      const out = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await sbc().from(TABLE).select(COLS).ilike(col, pattern).order('id').range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        out.push(...data);
+        if (data.length < PAGE_SIZE) break;
+      }
+      return out;
+    }
+
+    // Поиск по PN или Panel_pn (без учёта регистра)
+    async function findBy(pattern) {
+      const [a, b] = await Promise.all([fetchAll('panel_pn', pattern), fetchAll('pn', pattern)]);
+      const map = new Map();
+      [...a, ...b].forEach((r) => map.set(r.id, r));
+      return [...map.values()].map((r) => ({ ...r, rowNumber: r.id }));
+    }
 
     // ===== друк етикетки 130x90 мм =====
     function printLabels(data, pn, location) {
@@ -177,15 +208,27 @@ html,body{margin:0;padding:0;background:#fff}
     async function addBulk() {
       const panelPns = $('pb_panelPn').value.trim();
       if (!panelPns) return showToast(T().errEnterPn);
-      const data = $('pb_addData').value, pn = $('pb_addPn').value.trim(), location = $('pb_addLocation').value.trim(), info = $('pb_addInfo').value;
+      const data = $('pb_addData').value, pn = $('pb_addPn').value.trim(), location = $('pb_addLocation').value.trim(), info = $('pb_addInfo').value.trim();
+
+      // список Panel_pn: по одному в строке, без пустых и повторов внутри списка
+      const list = [...new Set(panelPns.split(/\r?\n/).map((s) => s.trim().toUpperCase()).filter(Boolean))];
+      if (!list.length) return showToast(T().errEnterPn);
+      const rows = list.map((p) => ({ panel_pn: p, data: data || null, pn: pn || null, location: location || null, info: info || null }));
+
       $('pb_addStatus').textContent = T().statusRecord;
-      const res = await request({ action: 'addBulk', panelPns, data, pn, location, info });
+      try {
+        for (const part of chunks(rows, 500)) {
+          const { error } = await sbc().from(TABLE).insert(part);
+          if (error) throw error;
+        }
+      } catch (e) {
+        $('pb_addStatus').textContent = '';
+        return fail(e);
+      }
       $('pb_addStatus').textContent = '';
-      if (res.success) {
-        printLabels(data, pn, location);
-        $('pb_panelPn').value = ''; $('pb_addInfo').value = '';
-        showToast(res.message);
-      } else fail(res.error);
+      printLabels(data, pn, location);
+      $('pb_panelPn').value = ''; $('pb_addInfo').value = '';
+      showToast(T().msgAdded(rows.length));
     }
     async function search() {
       const q = $('pb_query').value.trim();
@@ -193,10 +236,19 @@ html,body{margin:0;padding:0;background:#fff}
       $('pb_searchStatus').textContent = T().statusSearch;
       $('pb_results').innerHTML = '';
       $('pb_edit').style.display = 'none'; $('pb_dedupeBtn').style.display = 'none';
-      const res = await request({ action: 'search', query: q });
+      try {
+        // сначала точное совпадение, если ничего нет, то поиск по части текста
+        const pat = likeEsc(q);
+        let found = await findBy(pat);
+        if (!found.length) found = await findBy('%' + pat + '%');
+        // сначала самые свежие по дате
+        found.sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')) || b.id - a.id);
+        results = found;
+      } catch (e) {
+        $('pb_searchStatus').textContent = '';
+        return fail(e);
+      }
       $('pb_searchStatus').textContent = '';
-      if (!res.success) return fail(res.error);
-      results = res.data;
       if (results.length) {
         renderTable(results);
         $('pb_edit').style.display = 'block'; $('pb_dedupeBtn').style.display = 'inline-flex';
@@ -214,19 +266,37 @@ html,body{margin:0;padding:0;background:#fff}
     }
     async function update() {
       if (!results.length) return;
-      const rowNumbers = results.map((r) => r.rowNumber);
-      const nd = $('pb_editData').value, nl = $('pb_editLocation').value.trim(), ni = $('pb_editInfo').value;
+      const ids = results.map((r) => r.id);
+      const nd = $('pb_editData').value, nl = $('pb_editLocation').value.trim(), ni = $('pb_editInfo').value.trim();
       if (!nd && !nl && !ni) return showToast(T().errFillOne);
-      if (!(await ask(T().confirmUpdate(rowNumbers.length)))) return;
+      if (!(await ask(T().confirmUpdate(ids.length)))) return;
+
+      const patch = {};
+      if (nd) patch.data = nd;
+      if (nl) patch.location = nl;
+      if (ni) patch.info = ni;
+
       $('pb_searchStatus').textContent = T().statusUpdate;
-      const res = await request({ action: 'updateBulk', rowNumbers, data: nd, location: nl, info: ni });
+      let done = 0;
+      try {
+        for (const part of chunks(ids, CHUNK)) {
+          const { data, error } = await sbc().from(TABLE).update(patch).in('id', part).select('id');
+          if (error) throw error;
+          done += data.length;
+        }
+      } catch (e) {
+        $('pb_searchStatus').textContent = '';
+        return fail(e);
+      }
       $('pb_searchStatus').textContent = '';
-      if (!res.success) return fail(res.error);
+      // 0 строк без ошибки значит, что политики Supabase не разрешили изменение
+      if (!done) return showToast(T().errNoAccess);
+
       const f = results[0];
       printLabels(nd || f.data || '', f.pn || '', nl || f.location || '');
       $('pb_editData').value = ''; $('pb_editLocation').value = ''; $('pb_editInfo').value = '';
       setTimeout(search, 700);
-      showToast(res.message);
+      showToast(T().msgUpdated(done));
     }
     // дублікати: по Panel_pn лишається рядок з найпізнішою датою
     function findDuplicates(rows) {
@@ -235,8 +305,8 @@ html,body{margin:0;padding:0;background:#fff}
       const del = [];
       Object.values(groups).forEach((g) => {
         if (g.length < 2) return;
-        g.sort((a, b) => { const d = String(b.data || '').localeCompare(String(a.data || '')); return d !== 0 ? d : b.rowNumber - a.rowNumber; });
-        g.slice(1).forEach((r) => del.push({ rowNumber: r.rowNumber, panel_pn: r.panel_pn }));
+        g.sort((a, b) => { const d = String(b.data || '').localeCompare(String(a.data || '')); return d !== 0 ? d : b.id - a.id; });
+        g.slice(1).forEach((r) => del.push({ id: r.id, panel_pn: r.panel_pn }));
       });
       return del;
     }
@@ -245,9 +315,21 @@ html,body{margin:0;padding:0;background:#fff}
       if (!del.length) return showToast(T().noDuplicates);
       if (!(await ask(T().confirmDedupe(del.length)))) return;
       $('pb_searchStatus').textContent = T().statusDedupe;
-      const res = await request({ action: 'deleteRows', rows: del });
+      let done = 0;
+      try {
+        for (const part of chunks(del.map((r) => r.id), CHUNK)) {
+          const { data, error } = await sbc().from(TABLE).delete().in('id', part).select('id');
+          if (error) throw error;
+          done += data.length;
+        }
+      } catch (e) {
+        $('pb_searchStatus').textContent = '';
+        return fail(e);
+      }
       $('pb_searchStatus').textContent = '';
-      if (res.success) { showToast(res.message); search(); } else fail(res.error);
+      if (!done) return showToast(T().errNoAccess);
+      showToast(T().msgDeleted(done));
+      search();
     }
 
     // ===== вставка таблиці з QSP у Panel_pn: лишається тільки колонка Customer Model =====
