@@ -218,7 +218,7 @@
   const tab = document.getElementById("secretTab");
   if (!page || !tab || !window.supabase) return;
 
-  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const db = window.__lcdrSb || (window.__lcdrSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY));
   let allRows = [];
   let searchTimer = null;
 
