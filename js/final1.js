@@ -233,7 +233,9 @@ html,body{margin:0;padding:0;background:#fff}
     const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
     try {
             // Основной адрес и запасной: если один не отвечает, пробуем другой
+            // Основной адрес качает только колонку C (серийники), запасной: всю таблицу
       const urls = [
+        `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CFG.gid}&range=C:C&_nc=${Date.now()}`,
         `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CFG.gid}&_nc=${Date.now()}`,
         `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CFG.gid}&_nc=${Date.now()}`
       ];
@@ -246,10 +248,12 @@ html,body{margin:0;padding:0;background:#fff}
       }
       if (!res) throw new Error('sheet');
       const rows = parseCSV(await res.text());
+             // В коротком ответе одна колонка (серийники), в полном серийник стоит третьим
+      const col = rows[0] && rows[0].length === 1 ? 0 : 2;
 
       const sns = [];
       for (let i = 1; i < rows.length; i++) {
-        const sn = rows[i] && rows[i][2] ? rows[i][2].trim() : '';
+                const sn = rows[i] && rows[i][col] ? rows[i][col].trim() : '';
         if (sn && sn.toUpperCase() !== 'SERIAL NUMBER') sns.push(sn);
       }
       const last = sns.slice(-MAX_ROWS).reverse();
