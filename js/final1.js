@@ -232,8 +232,17 @@ html,body{margin:0;padding:0;background:#fff}
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
     try {
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CFG.gid}&_nc=${Date.now()}`;
-      const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+      c const urls = [
+        `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CFG.gid}&_nc=${Date.now()}`,
+        `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CFG.gid}&_nc=${Date.now()}`
+      ];
+      let res = null;
+      for (const url of urls) {
+        try {
+          const r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+          if (r.ok) { res = r; break; }
+        } catch (e) {}
+      }
       if (!res.ok) throw new Error('sheet');
       const rows = parseCSV(await res.text());
 
@@ -561,7 +570,7 @@ html,body{margin:0;padding:0;background:#fff}
   // Фоновое обновление: работает постоянно, а не только на открытой странице
   function startBackgroundRefresh() {
     if (pollTimer) return;
-    pollTimer = setInterval(loadProducts, REFRESH_MS);
+        pollTimer = setInterval(() => { if (!document.hidden) loadProducts(); }, REFRESH_MS);
   }
 
   function init() {
