@@ -232,7 +232,8 @@ html,body{margin:0;padding:0;background:#fff}
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
     try {
-      c const urls = [
+            // Основной адрес и запасной: если один не отвечает, пробуем другой
+      const urls = [
         `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CFG.gid}&_nc=${Date.now()}`,
         `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CFG.gid}&_nc=${Date.now()}`
       ];
@@ -243,7 +244,7 @@ html,body{margin:0;padding:0;background:#fff}
           if (r.ok) { res = r; break; }
         } catch (e) {}
       }
-      if (!res.ok) throw new Error('sheet');
+      if (!res) throw new Error('sheet');
       const rows = parseCSV(await res.text());
 
       const sns = [];
