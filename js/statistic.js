@@ -3,9 +3,6 @@
    Підключення: <script src="js/statistic.js"></script> ПІСЛЯ js/app.js.
    Контейнер: <section id="statsPage">. Дані завантажуються при першому відкритті сторінки. */
 (function () {
-  const apiKey = 'AIzaSyCP7tzYiGwIZ6cymLAlv_9QgPIEshnRgqI';
-  const sheetId = '10W03bvKlVFlIUcxsHkzP_v_13gtnYRBmnrrO0ujB1bU';
-  const sheetURL = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/`;
   const SHEET_NAMES = ['FI Station KOVALCHYK Y.', 'FI Station 2 ULANOVYCH.R'];
   const VALID_STATUSES = ['OK', 'NDF'];
 
@@ -256,22 +253,14 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  function getDiagonals(serial) {
-    if (!serial || serial.length < 6) return [];
-    const upper = serial.toUpperCase();
-    const result = new Set();
-    const match = upper.match(/^[A-Z]{3}(\d{3})/);
-    if (match && diagonalMap[match[1]]) result.add(diagonalMap[match[1]]);
-    const prefix = upper.slice(0, 3);
-    if (diagonalMapPrefix[prefix]) result.add(diagonalMapPrefix[prefix]);
-    return [...result];
+   function getDiagonals(serial) {
+    const d = window.LCDR_DIAG.fromSerial(serial);
+    return d ? [d] : [];
   }
 
-  async function getData(sheetName) {
+   async function getData(sheetName) {
     try {
-      const res = await fetch(`${sheetURL}${encodeURIComponent(sheetName)}?key=${apiKey}&t=${Date.now()}`);
-      const data = await res.json();
-      return data.values || [];
+      return await window.LCDR_SHEETS.rows(sheetName);
     } catch (err) {
       console.error('Fetch error:', err);
       return [];
