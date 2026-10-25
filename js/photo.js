@@ -1,13 +1,14 @@
 /* Вкладка «Photo»: нажимаешь фамилию работника, сканируешь серийный номер ТВ и делаешь фото.
    Файл сохраняется в Supabase Storage (бакет photos) как ФАМИЛИЯ__серийный.jpg,
    а в списке и при скачивании показывается как серийный.jpg (например tpfdg341234.jpg).
-   Фото живёт 15 минут. Контейнер: <section id="photoPage">. Работает по HTTPS или на localhost. */
+   Фото хранится, пока его не удалят кнопкой «Удалить» (или «Удалить все»).
+   Контейнер: <section id="photoPage">. Работает по HTTPS или на localhost.
+   Для удаления в Supabase нужна политика на storage.objects (см. инструкцию). */
 (function () {
   const PAGE_ID = 'photoPage';
   const BUCKET = 'photos';
   const SB_URL = window.APP_CONFIG.SUPABASE_URL;
   const SB_KEY = window.APP_CONFIG.SUPABASE_KEY;
-  const LIFE_MS = 15 * 60 * 1000; // срок жизни фото
 
   // key — ключ в имени файла (латиница), label — как на кнопке
   const WORKERS = [
@@ -42,6 +43,8 @@
   background: linear-gradient(135deg,#4f46e5,#7c3aed); font-weight: 600; }
 #photoPage .ph-btn:disabled { opacity: .4; cursor: not-allowed; }
 #photoPage .ph-btn.ghost { background: #374151; }
+#photoPage .ph-btn.danger { background: #991B1B; }
+#photoPage .ph-btn.danger:hover { background: #B91C1C; }
 #photoPage .ph-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 #photoPage .ph-box { background: #000; border: 1px solid #1f2937; border-radius: 10px; min-height: 200px;
   display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -50,7 +53,7 @@
 #photoPage .ph-table { width: 100%; border-collapse: collapse; background: #0e0e0e; border-radius: 8px; overflow: hidden; }
 #photoPage .ph-table th, #photoPage .ph-table td { padding: 8px 12px; border-bottom: 1px solid #1f2937; font-size: 13px; text-align: left; }
 #photoPage .ph-table th { background: #111827; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; font-size: 11px; }
-#photoPage .ph-table td.ok { color: #4ade80; }
+#photoPage .ph-table td.acts { display: flex; gap: 8px; justify-content: flex-end; }
 #photoPage .ph-empty { color: #6B7280; font-size: 13px; padding: 10px 2px; }
 @media (max-width: 800px) { #photoPage .ph-stage { grid-template-columns: 1fr; } }
 `;
@@ -71,8 +74,11 @@
   </div>
   <div class="ph-msg" id="ph-msg"></div>
   <div class="ph-bar" style="justify-content:space-between">
-    <strong style="color:#c4b5fd">Фото (живут 15 минут)</strong>
-    <button type="button" class="ph-btn ghost" id="ph-refresh">Обновить список</button>
+    <strong style="color:#c4b5fd">Фото (хранятся, пока не удалишь)</strong>
+    <div class="ph-bar" style="margin:0">
+      <button type="button" class="ph-btn ghost" id="ph-refresh">Обновить список</button>
+      <button type="button" class="ph-btn danger" id="ph-delall">Удалить все</button>
+    </div>
   </div>
   <div id="ph-list"></div>
 </div>`;
@@ -83,6 +89,7 @@
   let previewUrl = null;
   let client = null;
   let selected = null; // выбранный работник (объект из WORKERS)
+  let listed = [];     // имена файлов, которые сейчас показаны в списке
 
   function esc(v) {
     return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -231,14 +238,7 @@
     }
   }
 
-  /* ---------- Список и скачивание ---------- */
-
-  // Сколько минут осталось до удаления (или -1, если фото просрочено / его нет)
-  function minutesLeft(file) {
-    if (!file || !file.updated_at) return -1;
-    const left = LIFE_MS - (Date.now() - new Date(file.updated_at).getTime());
-    return left > 0 ? Math.ceil(left / 60000) : -1;
-  }
+  /* ---------- Список, скачивание и удаление ---------- */
 
   // ФАМИЛИЯ__серийный.jpg -> { worker, serial }
   function parseName(name) {
@@ -250,29 +250,33 @@
 
   async function refreshList() {
     const { data, error } = await sb().storage.from(BUCKET).list('', {
-      limit: 200,
+      limit: 1000,
       sortBy: { column: 'updated_at', order: 'desc' }
     });
     if (error) { msg('Ошибка списка: ' + error.message); return; }
 
-    const rows = (data || [])
-      .map(f => ({ f, p: parseName(f.name), left: minutesLeft(f) }))
-      .filter(x => x.p && x.left > 0)
-      .map(x => `<tr>
+    const items = (data || [])
+      .map(f => ({ f, p: parseName(f.name) }))
+      .filter(x => x.p);
+    listed = items.map(x => x.f.name);
+
+    const rows = items.map(x => `<tr>
         <td>${esc(x.p.worker)}</td>
         <td>${esc(x.p.serial)}.jpg</td>
-        <td class="ok">ещё ${x.left} мин</td>
-        <td>${esc(new Date(x.f.updated_at).toLocaleTimeString())}</td>
-        <td><button type="button" class="ph-btn ghost" data-dl="${esc(x.f.name)}">⬇ Скачать</button></td>
-      </tr>`)
-      .join('');
+        <td>${esc(x.f.updated_at ? new Date(x.f.updated_at).toLocaleString() : '')}</td>
+        <td class="acts">
+          <button type="button" class="ph-btn ghost" data-dl="${esc(x.f.name)}">⬇ Скачать</button>
+          <button type="button" class="ph-btn danger" data-del="${esc(x.f.name)}">🗑 Удалить</button>
+        </td>
+      </tr>`).join('');
 
     $('ph-list').innerHTML = rows
       ? `<table class="ph-table">
-          <thead><tr><th>Работник</th><th>Файл</th><th>Осталось</th><th>Снято</th><th></th></tr></thead>
+          <thead><tr><th>Работник</th><th>Файл</th><th>Снято</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>`
       : '<div class="ph-empty">Сейчас нет фото</div>';
+    $('ph-delall').disabled = !listed.length;
   }
 
   async function downloadFile(name) {
@@ -281,12 +285,8 @@
     const fileName = p.serial + '.jpg';
     msg(`Загрузка ${fileName}...`);
 
-    const { data: list } = await sb().storage.from(BUCKET).list('', { search: name, limit: 5 });
-    const f = (list || []).find(x => x.name === name);
-    if (minutesLeft(f) <= 0) { msg(`Фото ${fileName} уже удалено или просрочено`); refreshList(); return; }
-
     const { data, error } = await sb().storage.from(BUCKET).download(name);
-    if (error || !data) { msg(`Фото ${fileName} не найдено`); return; }
+    if (error || !data) { msg(`Фото ${fileName} не найдено`); refreshList(); return; }
     const url = URL.createObjectURL(data);
     const a = document.createElement('a');
     a.href = url;
@@ -296,6 +296,38 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     msg(`Скачано: ${fileName}`);
+  }
+
+  // Удаляет файлы из хранилища. Если ни один файл не удалён, значит, нет политики на удаление
+  async function removeFiles(names) {
+    const { data, error } = await sb().storage.from(BUCKET).remove(names);
+    if (error) throw error;
+    if (!data || !data.length) throw new Error('файл не удалён: проверь политику удаления в Supabase');
+    return data.length;
+  }
+
+  async function deleteFile(name) {
+    const p = parseName(name);
+    if (!p) return;
+    try {
+      await removeFiles([name]);
+      msg(`Удалено: ${p.serial}.jpg`);
+    } catch (err) {
+      msg('Ошибка удаления: ' + (err.message || err));
+    }
+    refreshList();
+  }
+
+  async function deleteAll() {
+    if (!listed.length) return;
+    if (!confirm(`Удалить все фото (${listed.length} шт.)? Это нельзя отменить.`)) return;
+    try {
+      const n = await removeFiles(listed.slice());
+      msg(`Удалено фото: ${n}`);
+    } catch (err) {
+      msg('Ошибка удаления: ' + (err.message || err));
+    }
+    refreshList();
   }
 
   /* ---------- Инициализация ---------- */
@@ -322,13 +354,16 @@
     $('ph-retake').addEventListener('click', resetPreview);
     $('ph-cam').addEventListener('change', startCamera);
     $('ph-refresh').addEventListener('click', refreshList);
+    $('ph-delall').addEventListener('click', deleteAll);
     $('ph-list').addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-dl]');
-      if (b) downloadFile(b.dataset.dl);
+      const dl = e.target.closest('button[data-dl]');
+      if (dl) { downloadFile(dl.dataset.dl); return; }
+      const del = e.target.closest('button[data-del]');
+      if (del) deleteFile(del.dataset.del);
     });
 
-    // Обновляем список раз в 30 секунд, пока открыта вкладка
-    setInterval(() => { if (inited && $('ph-list').offsetParent) refreshList(); }, 30000);
+    // Обновляем список раз в 30 секунд, пока открыта вкладка (чтобы видеть фото коллеги)
+    setInterval(() => { if (inited && $('ph-list').offsetParent && !document.hidden) refreshList(); }, 30000);
 
     inited = true;
   }
