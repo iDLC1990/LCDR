@@ -655,6 +655,9 @@
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 10000);
       lvToast(t('phOk', { n: saveName }));
+
+      // Отметка «скачано» для вкладки Photo (таблица photo_downloads). Ошибка отметки не мешает скачиванию
+      try { await sb.rpc('mark_photo_downloaded', { p_name: file.name }); } catch (e) {}
     } catch (e) {
       console.error('photo download:', e);
       lvToast(t('phErr'));
