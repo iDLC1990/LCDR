@@ -132,6 +132,18 @@
     }
   };
 
+  // Надписи для скачивания фото (двойной клик по серийному номеру)
+  Object.assign(I18N.en, { phOk: 'Downloaded: {n}', phNone: 'No photo for {n}', phErr: 'Photo download error', phHint: 'Double-click to download the photo' });
+  Object.assign(I18N.uk, { phOk: 'Завантажено: {n}', phNone: 'Немає фото для {n}', phErr: 'Помилка завантаження фото', phHint: 'Двічі клікніть, щоб завантажити фото' });
+  Object.assign(I18N.ru, { phOk: 'Скачано: {n}', phNone: 'Нет фото для {n}', phErr: 'Ошибка скачивания фото', phHint: 'Двойной клик — скачать фото' });
+  Object.assign(I18N.pl, { phOk: 'Pobrano: {n}', phNone: 'Brak zdjęcia dla {n}', phErr: 'Błąd pobierania zdjęcia', phHint: 'Kliknij dwukrotnie, aby pobrać zdjęcie' });
+  Object.assign(I18N.de, { phOk: 'Heruntergeladen: {n}', phNone: 'Kein Foto für {n}', phErr: 'Fehler beim Foto-Download', phHint: 'Doppelklick zum Herunterladen des Fotos' });
+  Object.assign(I18N.fr, { phOk: 'Téléchargé : {n}', phNone: 'Aucune photo pour {n}', phErr: 'Erreur de téléchargement de la photo', phHint: 'Double-clic pour télécharger la photo' });
+  Object.assign(I18N.es, { phOk: 'Descargado: {n}', phNone: 'No hay foto de {n}', phErr: 'Error al descargar la foto', phHint: 'Doble clic para descargar la foto' });
+  Object.assign(I18N.it, { phOk: 'Scaricato: {n}', phNone: 'Nessuna foto per {n}', phErr: 'Errore di download della foto', phHint: 'Doppio clic per scaricare la foto' });
+  Object.assign(I18N.pt, { phOk: 'Baixado: {n}', phNone: 'Sem foto para {n}', phErr: 'Erro ao baixar a foto', phHint: 'Clique duas vezes para baixar a foto' });
+  Object.assign(I18N.tr, { phOk: 'İndirildi: {n}', phNone: '{n} için fotoğraf yok', phErr: 'Fotoğraf indirme hatası', phHint: 'Fotoğrafı indirmek için çift tıklayın' });
+
   const CSS = `
 #livePage {
   position: relative; display: block; box-sizing: border-box;
@@ -243,6 +255,17 @@
 #livePage .fullscreen-mode .lv-table-wrap { flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; }
 #livePage .fullscreen-mode table { flex-grow: 1; height: 100%; }
 #livePage .fullscreen-mode th, #livePage .fullscreen-mode td { font-size: min(1.2vw, 2.5vh); padding: 0.3vh 1vw; height: 1%; }
+
+/* ----- Серийный номер: двойной клик скачивает фото ----- */
+#livePage td.lv-sn { cursor: pointer; font-family: Consolas, 'Courier New', monospace; }
+#livePage td.lv-sn:hover { color: #4d94ff; }
+.lv-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #111827; color: #F9FAFB; border: 1px solid #374151; padding: 10px 18px;
+  border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 10001;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.lv-toast.show { opacity: 1; }
 
 @media (max-width: 1080px) {
   #livePage .lv-wrap { width: 100%; }
@@ -440,7 +463,7 @@
         <th>${escHtml(t('hOc'))}</th><th>${escHtml(t('hComment'))}</th>
       </tr></thead><tbody>`;
       records.forEach(r => {
-        html += `<tr><td>${escHtml(r.serial || '--')}</td><td>${escHtml(r.type || '--')}</td><td>${escHtml(r.status || '--')}</td><td>${escHtml(r.ocAfterRepair || '--')}</td><td>${escHtml(r.comment || '--')}</td></tr>`;
+        html += `<tr><td class="lv-sn" data-sn="${escHtml(r.serial || '')}" title="${escHtml(t('phHint'))}">${escHtml(r.serial || '--')}</td><td>${escHtml(r.type || '--')}</td><td>${escHtml(r.status || '--')}</td><td>${escHtml(r.ocAfterRepair || '--')}</td><td>${escHtml(r.comment || '--')}</td></tr>`;
       });
       body.innerHTML = html + '</tbody></table>';
     }
@@ -579,6 +602,65 @@
     (bulkMode ? $('bulk-input') : $('search')).focus();
   }
 
+  /* ----- Скачивание фото по двойному клику на серийном номере (бакет photos в Supabase) ----- */
+
+  function lvSb() {
+    if (!window.__lcdrSb) {
+      window.__lcdrSb = window.supabase.createClient(window.APP_CONFIG.SUPABASE_URL, window.APP_CONFIG.SUPABASE_KEY);
+    }
+    return window.__lcdrSb;
+  }
+
+  let toastTimer = null;
+  function lvToast(msg) {
+    let el = document.getElementById('lvToast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'lvToast';
+      el.className = 'lv-toast';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  // Файлы в бакете называются ФАМИЛИЯ__серийный.jpg. Ищем по серийному номеру, самый свежий файл первым
+  async function downloadPhoto(rawSn) {
+    const sn = String(rawSn || '').trim().replace(/[^A-Za-z0-9_-]/g, '');
+    if (!sn) return;
+    const tail = ('__' + sn + '.jpg').toLowerCase();
+    try {
+      const sb = lvSb();
+      const { data, error } = await sb.storage.from('photos').list('', {
+        limit: 1000,
+        sortBy: { column: 'updated_at', order: 'desc' }
+      });
+      if (error) throw error;
+
+      const file = (data || []).find(f => f.name.toLowerCase().endsWith(tail));
+      if (!file) { lvToast(t('phNone', { n: sn })); return; }
+
+      const { data: blob, error: e2 } = await sb.storage.from('photos').download(file.name);
+      if (e2 || !blob) throw e2 || new Error('empty file');
+
+      const saveName = file.name.split('__')[1] || (sn + '.jpg'); // серийный номер.jpg, как он сохранён
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = saveName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      lvToast(t('phOk', { n: saveName }));
+    } catch (e) {
+      console.error('photo download:', e);
+      lvToast(t('phErr'));
+    }
+  }
+
   /* ----- Поиск по номеру части (Panel_pn): детали из базы PN (Supabase, таблица pn_base) ----- */
 
   async function fetchParts(q) {
@@ -686,7 +768,7 @@
           <tbody>
             ${groups[name].map(r => `
               <tr>
-                <td>${escHtml(r.serial)}</td>
+                <td class="lv-sn" data-sn="${escHtml(r.serial)}" title="${escHtml(t('phHint'))}">${escHtml(r.serial)}</td>
                 <td>${escHtml(r.date)}</td>
                 <td>${escHtml(r.status)}</td>
                 <td>${escHtml(r.nameG || ' ')}</td>
@@ -817,6 +899,12 @@
     $('bulk-run').onclick = runBulkSearch;
 
     document.addEventListener('keydown', onGlobalKey, true);
+
+    // Двойной клик по серийному номеру (окно работника, пакетный поиск): скачать фото
+    root.addEventListener('dblclick', (e) => {
+      const td = e.target.closest && e.target.closest('td.lv-sn');
+      if (td && td.dataset.sn) downloadPhoto(td.dataset.sn);
+    });
 
     applyText();
     refreshTitleDate();
