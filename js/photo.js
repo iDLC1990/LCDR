@@ -54,6 +54,7 @@
 #photoPage .ph-table th, #photoPage .ph-table td { padding: 8px 12px; border-bottom: 1px solid #1f2937; font-size: 13px; text-align: left; }
 #photoPage .ph-table th { background: #111827; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; font-size: 11px; }
 #photoPage .ph-table td.acts { display: flex; gap: 8px; justify-content: flex-end; }
+#photoPage .ph-done { color: #4ade80; font-size: 18px; font-weight: 700; text-align: center; }
 #photoPage .ph-empty { color: #6B7280; font-size: 13px; padding: 10px 2px; }
 @media (max-width: 800px) { #photoPage .ph-stage { grid-template-columns: 1fr; } }
 `;
@@ -260,19 +261,37 @@
       .filter(x => x.p);
     listed = items.map(x => x.f.name);
 
-    const rows = items.map(x => `<tr>
+    // Отметки «скачано» (таблица photo_downloads). Если таблицы нет, отметок просто не будет
+    const downloaded = {};
+    if (items.length) {
+      try {
+        const { data: dd } = await sb().from('photo_downloads')
+          .select('file_name, downloaded_at')
+          .in('file_name', listed);
+        (dd || []).forEach(r => { downloaded[r.file_name] = r.downloaded_at; });
+      } catch (e) {}
+    }
+
+    const rows = items.map(x => {
+      // Галочка, если фото скачали уже после того, как оно было снято (повторный снимок сбрасывает отметку)
+      const d = downloaded[x.f.name];
+      const done = d && x.f.updated_at && new Date(d) > new Date(x.f.updated_at);
+      const mark = done ? `<span title="Скачано: ${esc(new Date(d).toLocaleString())}">✔</span>` : '';
+      return `<tr>
         <td>${esc(x.p.worker)}</td>
         <td>${esc(x.p.serial)}.jpg</td>
         <td>${esc(x.f.updated_at ? new Date(x.f.updated_at).toLocaleString() : '')}</td>
+        <td class="ph-done">${mark}</td>
         <td class="acts">
           <button type="button" class="ph-btn ghost" data-dl="${esc(x.f.name)}">⬇ Скачать</button>
           <button type="button" class="ph-btn danger" data-del="${esc(x.f.name)}">🗑 Удалить</button>
         </td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
 
     $('ph-list').innerHTML = rows
       ? `<table class="ph-table">
-          <thead><tr><th>Работник</th><th>Файл</th><th>Снято</th><th></th></tr></thead>
+          <thead><tr><th>Работник</th><th>Файл</th><th>Снято</th><th style="text-align:center">Скачано</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>`
       : '<div class="ph-empty">Сейчас нет фото</div>';
@@ -296,6 +315,8 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     msg(`Скачано: ${fileName}`);
+    try { await sb().rpc('mark_photo_downloaded', { p_name: name }); } catch (e) {}
+    refreshList();
   }
 
   // Удаляет файлы из хранилища. Если ни один файл не удалён, значит, нет политики на удаление
