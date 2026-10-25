@@ -50,7 +50,7 @@
   const AUTO_SUBMIT_CODES = new Set(["OK", "SCR", "WTG"]);
 
   // Коды, при которых после сохранения печатается этикетка (в том числе в связке)
-  const PRINT_CODES = new Set(["OK", "SCR", "B", "WTG"]);
+  const PRINT_CODES = new Set(["OK", "SCR", "WTG"]);
 
   // Полные слова статуса, при которых печатается этикетка
   const PRINT_WORDS = ["OK", "SCRAP", "WAITING"];
