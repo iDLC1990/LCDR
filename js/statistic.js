@@ -1,24 +1,10 @@
-/* Statistic (вкладка «Statistic»): статистика по дням, стиль сайта, без колонки Name.
+/* Statistic (вкладка «Statistic»): статистика за период, стиль сайта, без колонки Name.
    Язык задаёт сайт через window.setStatisticLang(код). Все 10 мов сайту.
-   Підключення: <script src="js/statistic.js"></script> ПІСЛЯ js/app.js.
-   Контейнер: <section id="statsPage">. Дані завантажуються при першому відкритті сторінки. */
+   Підключення: <script src="js/statistic.js"></script> ПІСЛЯ js/config.js, js/diagonals.js і js/app.js.
+   Контейнер: <section id="statsPage">. Дані завантажуються при першому відкритті сторінки.
+   Источник данных: база Supabase, таблица fi_log (её каждую минуту заполняет скрипт из рабочей Google Таблицы). */
 (function () {
-  const SHEET_NAMES = ['FI Station KOVALCHYK Y.', 'FI Station 2 ULANOVYCH.R'];
   const VALID_STATUSES = ['OK', 'NDF'];
-
-  const diagonalMapPrefix = {
-    '3P0':65,'3H0':55,'WP0':65,'WP5':65,'3M0':50,'3Q0':43,'WQ0':43,'3C0':32,'WC0':32,'WH8':55,
-    'WH0':55,'WM0':50,'WC8':32,'WU0':43,'SQ1':43,'WM5':50,'WC7':32,'WP5':65,'WW1':75,'WM6':50
-  };
-  const diagonalMap = {
-    '860':86,'850':85,'750':75,'700':70,'650':65,'580':58,'575':58,
-    '550':55,'545':55,'500':50,'498':50,'495':50,'490':50,
-    '438':43,'435':43,'430':43,'428':43,'425':43,'420':43,
-    '418':43,'415':43,'398':43,'395':43,'390':43,
-    '348':32,'345':32,'340':32,'328':32,'325':32,'320':32,
-    '318':32,'315':32,'278':27,'275':27,'270':27,
-    '248':24,'245':24,'240':24,'238':24,'235':24,'230':24
-  };
 
   /* ===== Переклади (10 мов, як на сайті) ===== */
   const I18N = {
@@ -26,61 +12,71 @@
       from: 'From', to: 'To', workers: 'Workers', all: 'all', selectAll: 'Select all', clearAll: 'Clear all',
       update: 'Update', updating: 'Loading...', noData: 'No data for the selected workers',
       total: 'Total (Sum / OK / NDF)', days: 'Days', scrapTitle: '📊 Scrap / Waiting statistics',
-      scrapNoData: 'No data', totalRow: 'Total', mainTitle: 'Statistics'
+      scrapNoData: 'No data', totalRow: 'Total', mainTitle: 'Statistics',
+      loadErr: 'Failed to load data'
     },
     uk: {
       from: 'Від', to: 'До', workers: 'Працівники', all: 'всі', selectAll: 'Вибрати всіх', clearAll: 'Зняти всіх',
       update: 'Оновити', updating: 'Завантаження...', noData: 'Немає даних для вибраних працівників',
       total: 'Разом (Сума / OK / NDF)', days: 'Днів', scrapTitle: '📊 Статистика Scrap / Waiting',
-      scrapNoData: 'Немає даних', totalRow: 'Разом', mainTitle: 'Статистика'
+      scrapNoData: 'Немає даних', totalRow: 'Разом', mainTitle: 'Статистика',
+      loadErr: 'Не вдалося завантажити дані'
     },
     ru: {
       from: 'С', to: 'По', workers: 'Сотрудники', all: 'все', selectAll: 'Выбрать всех', clearAll: 'Снять всех',
       update: 'Обновить', updating: 'Загрузка...', noData: 'Нет данных для выбранных сотрудников',
       total: 'Итого (Сумма / OK / NDF)', days: 'Дней', scrapTitle: '📊 Статистика Scrap / Waiting',
-      scrapNoData: 'Нет данных', totalRow: 'Итого', mainTitle: 'Статистика'
+      scrapNoData: 'Нет данных', totalRow: 'Итого', mainTitle: 'Статистика',
+      loadErr: 'Не удалось загрузить данные'
     },
     pl: {
       from: 'Od', to: 'Do', workers: 'Pracownicy', all: 'wszyscy', selectAll: 'Zaznacz wszystkich', clearAll: 'Odznacz wszystkich',
       update: 'Aktualizuj', updating: 'Ładowanie...', noData: 'Brak danych dla wybranych pracowników',
       total: 'Razem (Sum / OK / NDF)', days: 'Dni', scrapTitle: '📊 Scrap / Waiting Statistics',
-      scrapNoData: 'Brak danych', totalRow: 'Razem / Total', mainTitle: 'Statystyka'
+      scrapNoData: 'Brak danych', totalRow: 'Razem / Total', mainTitle: 'Statystyka',
+      loadErr: 'Nie udało się wczytać danych'
     },
     de: {
       from: 'Von', to: 'Bis', workers: 'Mitarbeiter', all: 'alle', selectAll: 'Alle auswählen', clearAll: 'Alle abwählen',
       update: 'Aktualisieren', updating: 'Lade...', noData: 'Keine Daten für die gewählten Mitarbeiter',
       total: 'Gesamt (Summe / OK / NDF)', days: 'Tage', scrapTitle: '📊 Scrap-/Waiting-Statistik',
-      scrapNoData: 'Keine Daten', totalRow: 'Gesamt', mainTitle: 'Statistik'
+      scrapNoData: 'Keine Daten', totalRow: 'Gesamt', mainTitle: 'Statistik',
+      loadErr: 'Daten konnten nicht geladen werden'
     },
     fr: {
       from: 'Du', to: 'Au', workers: 'Employés', all: 'tous', selectAll: 'Tout sélectionner', clearAll: 'Tout désélectionner',
       update: 'Actualiser', updating: 'Chargement...', noData: 'Aucune donnée pour les employés sélectionnés',
       total: 'Total (Somme / OK / NDF)', days: 'Jours', scrapTitle: '📊 Statistiques Scrap / Waiting',
-      scrapNoData: 'Aucune donnée', totalRow: 'Total', mainTitle: 'Statistiques'
+      scrapNoData: 'Aucune donnée', totalRow: 'Total', mainTitle: 'Statistiques',
+      loadErr: 'Échec du chargement des données'
     },
     es: {
       from: 'Desde', to: 'Hasta', workers: 'Empleados', all: 'todos', selectAll: 'Seleccionar todos', clearAll: 'Desmarcar todos',
       update: 'Actualizar', updating: 'Cargando...', noData: 'No hay datos de los empleados seleccionados',
       total: 'Total (Suma / OK / NDF)', days: 'Días', scrapTitle: '📊 Estadística Scrap / Waiting',
-      scrapNoData: 'Sin datos', totalRow: 'Total', mainTitle: 'Estadística'
+      scrapNoData: 'Sin datos', totalRow: 'Total', mainTitle: 'Estadística',
+      loadErr: 'No se pudieron cargar los datos'
     },
     it: {
       from: 'Da', to: 'A', workers: 'Dipendenti', all: 'tutti', selectAll: 'Seleziona tutti', clearAll: 'Deseleziona tutti',
       update: 'Aggiorna', updating: 'Caricamento...', noData: 'Nessun dato per i dipendenti selezionati',
       total: 'Totale (Somma / OK / NDF)', days: 'Giorni', scrapTitle: '📊 Statistiche Scrap / Waiting',
-      scrapNoData: 'Nessun dato', totalRow: 'Totale', mainTitle: 'Statistiche'
+      scrapNoData: 'Nessun dato', totalRow: 'Totale', mainTitle: 'Statistiche',
+      loadErr: 'Impossibile caricare i dati'
     },
     pt: {
       from: 'De', to: 'Até', workers: 'Funcionários', all: 'todos', selectAll: 'Selecionar todos', clearAll: 'Desmarcar todos',
       update: 'Atualizar', updating: 'Carregando...', noData: 'Sem dados para os funcionários selecionados',
       total: 'Total (Soma / OK / NDF)', days: 'Dias', scrapTitle: '📊 Estatística Scrap / Waiting',
-      scrapNoData: 'Sem dados', totalRow: 'Total', mainTitle: 'Estatísticas'
+      scrapNoData: 'Sem dados', totalRow: 'Total', mainTitle: 'Estatísticas',
+      loadErr: 'Falha ao carregar os dados'
     },
     tr: {
       from: 'Başlangıç', to: 'Bitiş', workers: 'Çalışanlar', all: 'tümü', selectAll: 'Tümünü seç', clearAll: 'Tümünü kaldır',
       update: 'Güncelle', updating: 'Yükleniyor...', noData: 'Seçilen çalışanlar için veri yok',
       total: 'Toplam (Toplam / OK / NDF)', days: 'Gün', scrapTitle: '📊 Scrap / Waiting istatistikleri',
-      scrapNoData: 'Veri yok', totalRow: 'Toplam', mainTitle: 'İstatistikler'
+      scrapNoData: 'Veri yok', totalRow: 'Toplam', mainTitle: 'İstatistikler',
+      loadErr: 'Veriler yüklenemedi'
     }
   };
 
@@ -167,6 +163,7 @@
 #statsPage .st-okc { color: #4d94ff; }
 #statsPage .st-ndfc { color: #f472b6; }
 #statsPage .st-msg { color: #9CA3AF; text-align: center; padding: 20px; margin: 0; }
+#statsPage .st-warn { color: #F87171; text-align: center; padding: 10px; margin: 0; font-weight: 600; }
 
 /* ----- Scrap / Waiting ----- */
 #statsPage .scrap { color: #f87171; font-weight: 700; }
@@ -233,6 +230,7 @@
   let started = false;
   let loaded = false;
   let busy = false;
+  let loadFailed = false;      // часть данных (или все) не удалось загрузить
   let mainCollapsed = false;
   let lastFilteredData = [];
   let selectedPeople = new Set();
@@ -253,36 +251,49 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-   function getDiagonals(serial) {
+  // Диагонали: общая таблица в js/diagonals.js
+  function getDiagonals(serial) {
     const d = window.LCDR_DIAG.fromSerial(serial);
     return d ? [d] : [];
   }
 
-   async function getData(sheetName) {
-    try {
-      return await window.LCDR_SHEETS.rows(sheetName);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      return [];
+  function sbClient() {
+    if (!window.__lcdrSb) {
+      window.__lcdrSb = window.supabase.createClient(window.APP_CONFIG.SUPABASE_URL, window.APP_CONFIG.SUPABASE_KEY);
     }
+    return window.__lcdrSb;
   }
 
-  async function fetchData() {
-    let combined = [];
-    for (const name of SHEET_NAMES) {
-      const sheetData = await getData(name);
-      if (sheetData.length < 2) continue;
-      const mapped = sheetData.slice(1).map(row => ({
-        date: row[0] || '',
-        serial: row[2] || '',
-        status: (row[4] || '').toUpperCase(),
-        person: row[5] || '',
-        matrixStatus: row[9] || '',
-        description: row[10] || ''
+  // Данные периода из базы (таблица fi_log), включая сегодняшний день
+  async function fetchFromDb(dateFrom, dateTo) {
+    const sb = sbClient();
+    const out = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from('fi_log')
+        .select('day, serial, status, name')
+        .gte('day', dateFrom)
+        .lte('day', dateTo)
+        .order('id')
+        .range(from, from + 999);
+      if (error) throw error;
+      data.forEach(r => out.push({
+        date: r.day || '',
+        serial: r.serial || '',
+        status: String(r.status || '').trim().toUpperCase(),
+        person: String(r.name || '').trim()
       }));
-      combined = combined.concat(mapped);
+      if (data.length < 1000) break;
     }
-    return combined;
+    return out;
+  }
+
+  async function fetchData(dateFrom, dateTo) {
+    try {
+      return { rows: await fetchFromDb(dateFrom, dateTo), failed: false };
+    } catch (err) {
+      console.error('fi_log error:', err);
+      return { rows: [], failed: true };
+    }
   }
 
   function updateDropdownButtonText() {
@@ -333,11 +344,9 @@
     $('st-update').textContent = t('updating');
 
     try {
-      const allData = await fetchData();
-      lastFilteredData = allData.filter(d => {
-        const day = d.date.split(' ')[0];
-        return day >= dateFrom && day <= dateTo;
-      });
+      const result = await fetchData(dateFrom, dateTo);
+      lastFilteredData = result.rows;
+      loadFailed = result.failed;
 
       allPeople = Array.from(new Set(lastFilteredData.map(d => d.person).filter(Boolean))).sort();
       const kept = allPeople.filter(p => selectedPeople.has(p));
@@ -410,6 +419,8 @@
 
   function renderTable(stats) {
     const body = $('st-body');
+    const warn = loadFailed ? `<p class="st-warn">${esc(t('loadErr'))}</p>` : '';
+
     const diagonals = Array.from(new Set(
       Object.values(stats).flatMap(p => Object.keys(p.diagonals).map(Number))
     )).sort((a, b) => b - a);
@@ -419,7 +430,7 @@
     );
 
     if (people.length === 0) {
-      body.innerHTML = `<p class="st-msg">${esc(t('noData'))}</p>`;
+      body.innerHTML = loadFailed ? warn : `<p class="st-msg">${esc(t('noData'))}</p>`;
       return;
     }
 
@@ -446,7 +457,7 @@
 
     const footCells = diagonals.map(d => `<td>${diagTotals[d] || '-'}</td>`).join('');
 
-    body.innerHTML = `
+    body.innerHTML = warn + `
       <div class="st-table-wrap">
         <table>
           <thead>
