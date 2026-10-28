@@ -5,6 +5,6 @@ window.APP_CONFIG = {
   NAME: 'LCDR HUB',
   SUPABASE_URL: 'https://wtqvaeongxncufvpvvge.supabase.co',
   SUPABASE_KEY: 'sb_publishable_9Jfx167Q8LCF1746d1apwA_eWNb_qNb',
-  PNBASE_SYNC_URL: 'https://script.google.com/macros/s/AKfycbzK0IcObez_As3DkSHhWpXQ6B0zTgH0BAahCRYgLi9vU8_z948uIorRyBOFdL-ik1e5/exec',
+  PNBASE_SYNC_URL: 'https://script.google.com/macros/s/AKfycbzpWwuxYNeY7qe3v-XqVnRjk6xUMXuNcjVsw2ML2RXYync0dY-2S0P5_m8uvsBHvlfX/exec',
   SHEET_ID: '10W03bvKlVFlIUcxsHkzP_v_13gtnYRBmnrrO0ujB1bU'
 };
