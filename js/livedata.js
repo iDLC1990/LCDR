@@ -2,13 +2,17 @@
    Язык берётся с сайта через window.setLiveLang(код). Все 10 мов сайту.
    Підключення: <script src="js/livedata.js"></script> ПІСЛЯ js/config.js, js/diagonals.js, js/sheets.js і js/app.js.
    Контейнер: <section id="livePage">. Дані завантажуються при першому відкритті сторінки.
-   Источник данных: база Supabase, таблица fi_log (её каждую минуту заполняет скрипт из рабочей Google Таблицы).
-   Поиск: серийный номер -> история ремонта (fi_log),
-          номер части (Panel_pn) -> детали из базы PN (Supabase, таблица pn_base). */
+   Источник данных: Google Таблицы (читаются без ключа API через js/sheets.js):
+     - журналы станций FI 1 и FI 2 (рабочая таблица);
+     - вкладка 123 таблицы с запчастями: поиск по номеру части (Panel_pn);
+     - вкладка pn (Alt+3): последняя строка.
+   Supabase здесь нужен только для скачивания фото по двойному клику на серийном номере. */
 (function () {
-  // Названия станций в базе -> как они называются в статистике
-  const INSPECTOR = { KOVALCHYK: 'KOVALCHYK Y.', ULANOVYCH: 'ULANOVYCH.R' };
-  const FI_COLS = 'station, date_raw, time_raw, serial, repair_type, status, name, name_final, oc_after, comment';
+  // Таблицы: рабочая (журналы станций), с запчастями (вкладка 123) и со вкладкой pn (Alt+3)
+  const SHEET_ID = window.APP_CONFIG.SHEET_ID;
+  const SHEET_PARTS_ID = '1Ets--Hho-SK_x6J9Xy3oVA7ILtYKx4gscBOwy6t4PTs';
+  const SHEET_PN_ID = '1UWu4bcuHg6NHhK8ZvjDlQAIue6R1FLBlmAlBhHBj-D8';
+  const SHEET_PN_GID = 1460654843;
 
   /* ===== Переклади (10 мов, як на сайті) ===== */
   const I18N = {
@@ -156,6 +160,17 @@
   Object.assign(I18N.it, { loadErr: 'Impossibile caricare i dati' });
   Object.assign(I18N.pt, { loadErr: 'Falha ao carregar os dados' });
   Object.assign(I18N.tr, { loadErr: 'Veriler yüklenemedi' });
+
+  Object.assign(I18N.en, { pnLoading: 'Loading data (pn)...', pnEmpty: 'No data in the pn sheet!', pnCopyHint: 'Click to copy the whole row' });
+  Object.assign(I18N.uk, { pnLoading: 'Завантаження даних (pn)...', pnEmpty: 'На аркуші pn немає даних!', pnCopyHint: 'Натисніть, щоб скопіювати весь рядок' });
+  Object.assign(I18N.ru, { pnLoading: 'Загрузка данных (pn)...', pnEmpty: 'На листе pn нет данных!', pnCopyHint: 'Нажмите, чтобы скопировать всю строку' });
+  Object.assign(I18N.pl, { pnLoading: 'Pobieranie danych (pn)...', pnEmpty: 'Brak danych na arkuszu pn!', pnCopyHint: 'Kliknij, aby skopiować cały wiersz' });
+  Object.assign(I18N.de, { pnLoading: 'Daten werden geladen (pn)...', pnEmpty: 'Keine Daten im Blatt pn!', pnCopyHint: 'Klicken, um die ganze Zeile zu kopieren' });
+  Object.assign(I18N.fr, { pnLoading: 'Chargement des données (pn)...', pnEmpty: 'Aucune donnée dans la feuille pn !', pnCopyHint: 'Cliquez pour copier toute la ligne' });
+  Object.assign(I18N.es, { pnLoading: 'Cargando datos (pn)...', pnEmpty: '¡No hay datos en la hoja pn!', pnCopyHint: 'Haga clic para copiar toda la fila' });
+  Object.assign(I18N.it, { pnLoading: 'Caricamento dati (pn)...', pnEmpty: 'Nessun dato nel foglio pn!', pnCopyHint: "Clicca per copiare l'intera riga" });
+  Object.assign(I18N.pt, { pnLoading: 'Carregando dados (pn)...', pnEmpty: 'Sem dados na planilha pn!', pnCopyHint: 'Clique para copiar a linha inteira' });
+  Object.assign(I18N.tr, { pnLoading: 'Veriler yükleniyor (pn)...', pnEmpty: 'pn sayfasında veri yok!', pnCopyHint: 'Tüm satırı kopyalamak için tıklayın' });
 
   const CSS = `
 #livePage {
@@ -347,10 +362,8 @@
   let combinedDataCache = [];
   let lastFiltered = [];
   let lastDateStr = '';
-  let lastDayFromDb = '';
   let bulkMode = false;
-  let resultMode = null;        // 'single' | 'bulk' | null
-  let searchSeq = 0;            // номер последнего поиска (чтобы старый ответ не затёр новый)
+  let resultMode = null;        // 'single' | 'bulk' | 'pn' | null
   let titleBusy = false;
   let titleTimer = null;
   let clickTimer = null;
@@ -402,34 +415,46 @@
     return window.LCDR_DIAG.fromSerial(serial);
   }
 
-  // Последний день, за который есть данные в базе
-  async function fetchLastDay(sb) {
-    const { data, error } = await sb.from('fi_log').select('day').not('day', 'is', null)
-      .order('day', { ascending: false }).limit(1);
-    if (error) throw error;
-    return data && data.length ? data[0].day : '';
+  // Чтение вкладки Google Таблицы без ключа API (js/sheets.js). При сбое возвращает null
+  async function getData(sheetName, spreadsheetId) {
+    try {
+      return await window.LCDR_SHEETS.rows(sheetName, spreadsheetId);
+    } catch (e) {
+      console.error(`Fetch error ${sheetName}:`, e);
+      return null;
+    }
   }
 
-  // Загружает из базы все строки последнего дня (статистика, окно работника, копирование серийников)
+  // Загружает журналы обеих станций и вкладку 123 (запчасти) в общий кэш
   async function fetchAndCacheData() {
     try {
-      const sb = lvSb();
-      const day = await fetchLastDay(sb);
-      const rows = [];
-      if (day) {
-        for (let from = 0; ; from += 1000) {
-          const { data, error } = await sb.from('fi_log').select(FI_COLS)
-            .eq('day', day).order('time_raw').order('id').range(from, from + 999);
-          if (error) throw error;
-          rows.push(...data);
-          if (data.length < 1000) break;
-        }
-      }
-      lastDayFromDb = day;
-      combinedDataCache = rows.map(dbRowToRecord);
+      const [s1, s2, s4] = await Promise.all([
+        getData('FI Station KOVALCHYK Y.', SHEET_ID),
+        getData('FI Station 2 ULANOVYCH.R', SHEET_ID),
+        getData('123', SHEET_PARTS_ID)
+      ]);
+      if (!s1 && !s2 && !s4) return false;
+
+      const mapR = (r, insp) => ({
+        date: r[0] || '',
+        serial: (r[2] || '').trim(),
+        type: (r[3] || '').trim().toUpperCase(),
+        status: r[4] || '',
+        name: r[5] || '',
+        nameG: r[6] || '',
+        ocAfterRepair: r[9] || '',
+        comment: r[10] || '',
+        inspector: insp
+      });
+
+      combinedDataCache = [
+        ...(s1 ? s1.slice(1) : []).map(r => mapR(r, 'KOVALCHYK Y.')),
+        ...(s2 ? s2.slice(1) : []).map(r => mapR(r, 'ULANOVYCH.R')),
+        ...(s4 ? s4.slice(1) : []).map(r => mapR(r, '123'))
+      ];
       return true;
     } catch (e) {
-      console.error('fi_log load failed:', e);
+      console.error('Buffer update failed:', e);
       return false;
     }
   }
@@ -446,6 +471,11 @@
     return isNaN(parsed) ? null : new Date(parsed);
   }
 
+  function getLastDate(data) {
+    const dates = data.map(r => parseDatePart(r.date)).filter(d => d instanceof Date && !isNaN(d));
+    return dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : new Date();
+  }
+
   function toggleBlock(blockId) {
     $(blockId).classList.toggle('collapsed');
   }
@@ -455,7 +485,7 @@
   }
 
   function openModal(name) {
-    const records = combinedDataCache.filter(r => r.name === name && normDay(r.date) === lastDateStr);
+    const records = combinedDataCache.filter(r => r.name === name && (r.date || '').split(' ')[0] === lastDateStr);
     const body = $('modal-body');
 
     if (!records.length) {
@@ -536,8 +566,8 @@
 
   async function updateStats() {
     if (await fetchAndCacheData()) {
-      lastDateStr = lastDayFromDb;
-      lastFiltered = combinedDataCache.filter(r => normDay(r.date) === lastDateStr);
+      lastDateStr = getLastDate(combinedDataCache).toISOString().split('T')[0];
+      lastFiltered = combinedDataCache.filter(r => (r.date || '').split(' ')[0] === lastDateStr);
       displayCombinedStats(lastFiltered);
       displayDiagonalStats(lastFiltered);
     }
@@ -553,7 +583,8 @@
     const title = $('table-title');
 
     const records = combinedDataCache.filter(r => {
-      const isSameDay = normDay(r.date) === lastDateStr;
+      const recordDate = parseDatePart(r.date);
+      const isSameDay = recordDate && recordDate.toISOString().split('T')[0] === lastDateStr;
       return r.inspector === 'KOVALCHYK Y.' &&
              isSameDay &&
              ['OK', 'NDF', 'SCRAP TTL'].includes(r.status) &&
@@ -600,7 +631,6 @@
     $('bulk-actions').style.display = bulkMode ? 'flex' : 'none';
     $('search-result').innerHTML = '';
     resultMode = null;
-    searchSeq++;
     (bulkMode ? $('bulk-input') : $('search')).focus();
   }
 
@@ -666,168 +696,49 @@
     }
   }
 
-  /* ----- Поиск по номеру части (Panel_pn): детали из базы PN (Supabase, таблица pn_base) ----- */
+  /* ----- Поиск: серийный номер -> история ремонта, номер части (Panel_pn) -> строки вкладки 123 ----- */
 
-  async function fetchParts(q) {
-    const sb = window.__lcdrSb || (window.__lcdrSb = window.supabase.createClient(window.APP_CONFIG.SUPABASE_URL, window.APP_CONFIG.SUPABASE_KEY));
-    const pat = q.replace(/[\\%_]/g, '\\$&');
-    const { data, error } = await sb.from('pn_base')
-      .select('id, panel_pn, data, pn, location, info')
-      .ilike('panel_pn', pat)
-      .order('data', { ascending: false })
-      .limit(200);
-    if (error) throw error;
-    return data;
-  }
+  function runSingleSearch() {
+    const serial = $('search').value.trim().toUpperCase();
+    const output = $('search-result');
+    if (!serial) { output.innerHTML = ''; resultMode = null; return; }
+    resultMode = 'single';
 
-  // 2026-10-12 -> 12.10.2026
-  function fmtDmy(v) {
-    const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    return m ? `${m[3]}.${m[2]}.${m[1]}` : String(v || '');
-  }
+    const matches = combinedDataCache
+      .filter(r => (r.serial || '').trim().toUpperCase() === serial)
+      .sort((a, b) => (parseDatePart(b.date) || 0) - (parseDatePart(a.date) || 0));
 
-  function partsHtml(rows) {
-    return `<table><thead><tr>
-        <th>${escHtml(t('hDate'))}</th><th>PN</th><th>Location</th><th>${escHtml(t('hInfo'))}</th>
+    if (!matches.length) {
+      output.innerHTML = `<p class="lv-msg">${escHtml(t('noInfo'))}</p>`;
+      return;
+    }
+
+    output.innerHTML = `<table><thead><tr>
+        <th>${escHtml(t('hDate'))}</th><th>${escHtml(t('hStatus'))}</th><th>${escHtml(t('hRepairer'))}</th>
+        <th>${escHtml(t('hFinal'))}</th><th>${escHtml(t('hInfo'))}</th>
       </tr></thead>
-      <tbody>${rows.map((r, i) => `
+      <tbody>${matches.map((d, i) => `
         <tr ${i === 0 ? 'class="latest-record"' : ''}>
-          <td>${escHtml(fmtDmy(r.data))}</td><td>${escHtml(r.pn)}</td>
-          <td>${escHtml(r.location)}</td><td>${escHtml(r.info)}</td>
+          <td>${escHtml(d.date)}</td><td>${escHtml(d.status)}</td><td>${escHtml(d.name)}</td>
+          <td>${escHtml(d.nameG)}</td><td>${escHtml(d.comment)}</td>
         </tr>`).join('')}
       </tbody></table>`;
   }
 
-  /* ----- История ремонта из базы fi_log ----- */
-
-  // "2026-10-25 06:09:04" или "25.10.2026" -> "2026-10-25" (иначе пустая строка)
-  function normDay(v) {
-    const first = String(v || '').trim().split(' ')[0];
-    let m = first.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (m) return first;
-    m = first.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-    return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
-  }
-
-  // Строка fi_log -> запись для страницы
-  function dbRowToRecord(r) {
-    return {
-      date: r.date_raw || '',
-      time: (r.time_raw || '').trim(),
-      serial: (r.serial || '').trim(),
-      type: String(r.repair_type || '').toUpperCase(),
-      status: r.status || '',
-      name: r.name || '',
-      nameG: r.name_final || '',
-      ocAfterRepair: r.oc_after || '',
-      comment: r.comment || '',
-      inspector: INSPECTOR[r.station] || r.station || ''
-    };
-  }
-
-  // Самые свежие записи сверху
-  function sortRecords(list) {
-    list.sort((a, b) => {
-      const da = normDay(a.date), db = normDay(b.date);
-      if (da !== db) return da < db ? 1 : -1;
-      return String(b.time || '').localeCompare(String(a.time || ''));
-    });
-    return list;
-  }
-
-  async function fetchHistoryFromDb(serials) {
-    const sb = lvSb();
-    const rows = [];
-    for (let i = 0; i < serials.length; i += 80) {
-      const chunk = serials.slice(i, i + 80);
-      for (let from = 0; ; from += 1000) {
-        const { data, error } = await sb.from('fi_log').select(FI_COLS).in('serial', chunk).order('id').range(from, from + 999);
-        if (error) throw error;
-        rows.push(...data);
-        if (data.length < 1000) break;
-      }
-    }
-    return rows;
-  }
-
-  // История по списку серийных номеров: Map серийный номер -> записи (самые свежие первыми).
-  // При сбое базы возвращает null.
-  async function historyFor(serials) {
-    const map = new Map();
-    serials.forEach(s => map.set(s, []));
-    try {
-      const rows = await fetchHistoryFromDb(serials);
-      rows.forEach(r => {
-        const rec = dbRowToRecord(r);
-        const s = rec.serial.toUpperCase();
-        if (map.has(s)) map.get(s).push(rec);
-      });
-    } catch (e) {
-      console.error('fi_log history:', e);
-      return null;
-    }
-    map.forEach(list => sortRecords(list));
-    return map;
-  }
-
-  async function runSingleSearch() {
-    const serial = $('search').value.trim().toUpperCase();
-    const output = $('search-result');
-    if (!serial) { output.innerHTML = ''; resultMode = null; searchSeq++; return; }
-    resultMode = 'single';
-    const seq = ++searchSeq;
-
-    // 1) серийный номер: история ремонта (база + сегодняшние строки таблицы)
-    const hist = await historyFor([serial]);
-    if (seq !== searchSeq || resultMode !== 'single') return;
-    if (!hist) { output.innerHTML = `<p class="lv-msg">${escHtml(t('loadErr'))}</p>`; return; }
-    const matches = hist.get(serial) || [];
-
-    if (matches.length) {
-      output.innerHTML = `<table><thead><tr>
-          <th>${escHtml(t('hDate'))}</th><th>${escHtml(t('hStatus'))}</th><th>${escHtml(t('hRepairer'))}</th>
-          <th>${escHtml(t('hFinal'))}</th><th>${escHtml(t('hInfo'))}</th>
-        </tr></thead>
-        <tbody>${matches.map((d, i) => `
-          <tr ${i === 0 ? 'class="latest-record"' : ''}>
-            <td>${escHtml(d.date)}</td><td>${escHtml(d.status)}</td><td>${escHtml(d.name)}</td>
-            <td>${escHtml(d.nameG)}</td><td>${escHtml(d.comment)}</td>
-          </tr>`).join('')}
-        </tbody></table>`;
-      return;
-    }
-
-    // 2) номер части (Panel_pn): детали из базы PN
-    let parts = [];
-    try { parts = await fetchParts(serial); } catch (e) { console.error('pn_base:', e); }
-
-    // Пока шёл запрос, пользователь мог начать новый поиск или сменить режим
-    if (seq !== searchSeq || resultMode !== 'single') return;
-
-    output.innerHTML = parts.length
-      ? partsHtml(parts)
-      : `<p class="lv-msg">${escHtml(t('noInfo'))}</p>`;
-  }
-
-  async function runBulkSearch() {
+  function runBulkSearch() {
     const output = $('search-result');
     const snList = $('bulk-input').value.split('\n').map(s => s.trim().toUpperCase()).filter(s => s !== '');
-    if (!snList.length) { output.innerHTML = ''; resultMode = null; searchSeq++; return; }
+    if (!snList.length) { output.innerHTML = ''; resultMode = null; return; }
     resultMode = 'bulk';
-    const seq = ++searchSeq;
-
-    const unique = [...new Set(snList)];
-    const history = await historyFor(unique);
-    if (seq !== searchSeq || resultMode !== 'bulk') return;
-    if (!history) { output.innerHTML = `<p class="lv-msg">${escHtml(t('loadErr'))}</p>`; return; }
 
     const groups = {};
     const notFound = [];
 
     snList.forEach(sn => {
-      const matches = history.get(sn) || [];
+      const matches = combinedDataCache.filter(r => (r.serial || '').trim().toUpperCase() === sn);
       if (matches.length) {
-        const record = matches[0];            // самая свежая запись
+        matches.sort((a, b) => (parseDatePart(b.date) || 0) - (parseDatePart(a.date) || 0));
+        const record = matches[0];
         const wName = record.name || t('unknown');
         if (!groups[wName]) groups[wName] = [];
         groups[wName].push(record);
@@ -872,6 +783,57 @@
     }
 
     output.innerHTML = resHtml || `<p class="lv-msg">${escHtml(t('notFound'))}</p>`;
+  }
+
+  /* ----- Вкладка pn: последняя строка (Alt + 3) ----- */
+  async function refreshPnRecord(showLoader = false) {
+    const output = $('search-result');
+    if (!output) return;
+    resultMode = 'pn';
+    if (showLoader) output.innerHTML = `<p class="lv-msg">${escHtml(t('pnLoading'))}</p>`;
+
+    let rows = null;
+    try {
+      rows = await window.LCDR_SHEETS.rows(null, SHEET_PN_ID, SHEET_PN_GID);
+    } catch (err) {
+      console.error('pn sheet:', err);
+    }
+    if (resultMode !== 'pn') return; // пока шла загрузка, пользователь переключился
+    if (!rows || rows.length === 0) {
+      output.innerHTML = `<p class="lv-msg">${escHtml(t('pnEmpty'))}</p>`;
+      return;
+    }
+
+    const hasHeader = rows.length > 1;
+    const headers = hasHeader ? rows[0] : null;
+    const lastRow = rows[rows.length - 1];
+
+    let html = '<table>';
+    if (headers) html += '<thead><tr>' + headers.map(h => `<th>${escHtml(h)}</th>`).join('') + '</tr></thead>';
+    html += `<tbody><tr class="latest-record" style="cursor:pointer;" title="${escHtml(t('pnCopyHint'))}">` +
+      lastRow.map(v => `<td>${escHtml(v || '--')}</td>`).join('') + '</tr></tbody></table>';
+    output.innerHTML = html;
+
+    const row = output.querySelector('.latest-record');
+    if (row) {
+      row.addEventListener('click', () => {
+        const text = Array.from(row.children).map(td => td.innerText).join('\t');
+        navigator.clipboard.writeText(text);
+        row.style.opacity = '0.6';
+        setTimeout(() => { row.style.opacity = ''; }, 300);
+      });
+    }
+  }
+
+  async function togglePnRecord() {
+    const output = $('search-result');
+    if (!output) return;
+    if (resultMode === 'pn') {
+      output.innerHTML = '';
+      resultMode = null;
+    } else {
+      await refreshPnRecord(true);
+    }
   }
 
   function onSearchKey(e) {
@@ -924,6 +886,10 @@
         $('diag-block').style.display = 'block';
         toggleBlock('diag-block');
       }
+      if (e.code === 'Digit3' || e.key === '3') {
+        e.preventDefault();
+        togglePnRecord();
+      }
     }
     if (e.key === 'Escape') closeOverlays();
   }
@@ -938,6 +904,7 @@
     }
     if (resultMode === 'single') runSingleSearch();
     else if (resultMode === 'bulk') runBulkSearch();
+    else if (resultMode === 'pn') refreshPnRecord(false);
   }
 
   function init() {
@@ -992,6 +959,7 @@
     applyText();
     refreshTitleDate();
     setInterval(refreshTitleDate, 60000);
+    setInterval(() => { if (resultMode === 'pn' && isVisible() && !document.hidden) refreshPnRecord(false); }, 5000);
     initialized = true;
   }
 
