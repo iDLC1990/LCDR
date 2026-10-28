@@ -1,7 +1,7 @@
 /* Чтение вкладок Google Таблицы по имени без ключа API (через gviz CSV).
    Таблица должна быть открыта «всем, у кого есть ссылка» (читатель).
    Подключение: <script src="js/sheets.js"></script> ПОСЛЕ js/config.js и ПЕРЕД livedata.js и statistic.js.
-   window.LCDR_SHEETS.rows('Имя вкладки') -> массив строк, каждая строка массив значений.
+   window.LCDR_SHEETS.rows('Имя вкладки', 'ID таблицы (необязательно)', gid (необязательно)) -> массив строк, каждая строка массив значений.
    Первая строка результата = первая строка вкладки (как в Google Sheets API). */
 (function () {
   const ATTEMPTS = 3;
@@ -26,13 +26,19 @@
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  async function rows(sheetName) {
-    const id = window.APP_CONFIG.SHEET_ID;
+  // rows('Имя вкладки')                          вкладка основной рабочей таблицы
+  // rows('Имя вкладки', 'ID таблицы')            вкладка другой таблицы
+  // rows(null, 'ID таблицы', gid)                вкладка другой таблицы по её gid
+  async function rows(sheetName, spreadsheetId, gid) {
+    const id = spreadsheetId || window.APP_CONFIG.SHEET_ID;
+    const target = (gid !== undefined && gid !== null)
+      ? `gid=${encodeURIComponent(gid)}`
+      : `sheet=${encodeURIComponent(sheetName)}`;
     let lastErr = null;
     for (let i = 0; i < ATTEMPTS; i++) {
       try {
         // headers=1: первая строка вкладки остаётся строкой данных, а не склеивается с заголовком
-        const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(sheetName)}&_nc=${Date.now()}`;
+        const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=1&${target}&_nc=${Date.now()}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
         return parseCSV(await res.text());
