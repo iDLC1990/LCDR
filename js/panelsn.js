@@ -10,10 +10,10 @@
 
   /* ---------- Тексты ---------- */
   const TXT = {
-    en: { download: "Download CSV (for Supabase)", dropTitle: "Click or drop a file here", dropSub: ".xlsx, .xls, .csv — columns: Panel SN, TPV PN, Brand, Process", empty: "Upload a file to see the result", none: "No rows left after filtering", inFile: "In file", afterFilters: "After filters", dupes: "Duplicates removed", marked: "Marked as unneeded", ready: "To export", markTitle: "Mark as unneeded", readError: "Could not read the file" },
-    uk: { download: "Завантажити CSV (для Supabase)", dropTitle: "Натисніть або перетягніть файл", dropSub: ".xlsx, .xls, .csv — колонки: Panel SN, TPV PN, Brand, Process", empty: "Завантажте файл, щоб побачити результат", none: "Після фільтрації рядків не залишилось", inFile: "У файлі", afterFilters: "Після фільтрів", dupes: "Дублікатів прибрано", marked: "Позначено непотрібними", ready: "До вивантаження", markTitle: "Позначити як непотрібне", readError: "Не вдалося прочитати файл" },
-    ru: { download: "Скачать CSV (для Supabase)", dropTitle: "Нажмите или перетащите файл", dropSub: ".xlsx, .xls, .csv — колонки: Panel SN, TPV PN, Brand, Process", empty: "Загрузите файл, чтобы увидеть результат", none: "После фильтрации строк не осталось", inFile: "В файле", afterFilters: "После фильтров", dupes: "Дубликатов убрано", marked: "Отмечено ненужным", ready: "К выгрузке", markTitle: "Отметить как ненужное", readError: "Не удалось прочитать файл" },
-    pl: { download: "Pobierz CSV (dla Supabase)", dropTitle: "Kliknij lub upuść plik", dropSub: ".xlsx, .xls, .csv — kolumny: Panel SN, TPV PN, Brand, Process", empty: "Wgraj plik, aby zobaczyć wynik", none: "Po filtrowaniu nie zostały żadne wiersze", inFile: "W pliku", afterFilters: "Po filtrach", dupes: "Usunięto duplikatów", marked: "Oznaczono jako zbędne", ready: "Do eksportu", markTitle: "Oznacz jako zbędne", readError: "Nie udało się odczytać pliku" }
+    en: { copied: "SQL script copied to clipboard — paste it in the Supabase SQL Editor", copyFail: "Could not copy the SQL script automatically", download: "Download CSV (for Supabase)", dropTitle: "Click or drop a file here", dropSub: ".xlsx, .xls, .csv — columns: Panel SN, TPV PN, Brand, Process", empty: "Upload a file to see the result", none: "No rows left after filtering", inFile: "In file", afterFilters: "After filters", dupes: "Duplicates removed", marked: "Marked as unneeded", ready: "To export", markTitle: "Mark as unneeded", readError: "Could not read the file" },
+    uk: { copied: "SQL-скрипт скопійовано в буфер — вставте його в Supabase SQL Editor", copyFail: "Не вдалося автоматично скопіювати SQL-скрипт", download: "Завантажити CSV (для Supabase)", dropTitle: "Натисніть або перетягніть файл", dropSub: ".xlsx, .xls, .csv — колонки: Panel SN, TPV PN, Brand, Process", empty: "Завантажте файл, щоб побачити результат", none: "Після фільтрації рядків не залишилось", inFile: "У файлі", afterFilters: "Після фільтрів", dupes: "Дублікатів прибрано", marked: "Позначено непотрібними", ready: "До вивантаження", markTitle: "Позначити як непотрібне", readError: "Не вдалося прочитати файл" },
+    ru: { copied: "SQL-скрипт скопирован в буфер — вставьте его в Supabase SQL Editor", copyFail: "Не удалось автоматически скопировать SQL-скрипт", download: "Скачать CSV (для Supabase)", dropTitle: "Нажмите или перетащите файл", dropSub: ".xlsx, .xls, .csv — колонки: Panel SN, TPV PN, Brand, Process", empty: "Загрузите файл, чтобы увидеть результат", none: "После фильтрации строк не осталось", inFile: "В файле", afterFilters: "После фильтров", dupes: "Дубликатов убрано", marked: "Отмечено ненужным", ready: "К выгрузке", markTitle: "Отметить как ненужное", readError: "Не удалось прочитать файл" },
+    pl: { copied: "Skrypt SQL skopiowany do schowka — wklej go w Supabase SQL Editor", copyFail: "Nie udało się automatycznie skopiować skryptu SQL", download: "Pobierz CSV (dla Supabase)", dropTitle: "Kliknij lub upuść plik", dropSub: ".xlsx, .xls, .csv — kolumny: Panel SN, TPV PN, Brand, Process", empty: "Wgraj plik, aby zobaczyć wynik", none: "Po filtrowaniu nie zostały żadne wiersze", inFile: "W pliku", afterFilters: "Po filtrach", dupes: "Usunięto duplikatów", marked: "Oznaczono jako zbędne", ready: "Do eksportu", markTitle: "Oznacz jako zbędne", readError: "Nie udało się odczytać pliku" }
   };
   let lang = "en";
   const tx = (k) => (TXT[lang] || TXT.en)[k] || TXT.en[k] || k;
@@ -30,6 +30,7 @@
       <div id="psStatus" class="ps-status"></div>
       <div class="ps-bar">
         <button id="psDownload" class="rl-add" data-ps="download" disabled></button>
+        <span id="psNote" class="ps-note"></span>
       </div>
     </div>
     <div class="rl-wrap">
@@ -53,6 +54,7 @@
   const body = root.querySelector("#psBody");
   const statusEl = root.querySelector("#psStatus");
   const dlBtn = root.querySelector("#psDownload");
+  const noteEl = root.querySelector("#psNote");
 
   let data = [];
   let sortAsc = null;
@@ -207,6 +209,36 @@
       </tr>`).join("");
   }
 
+  /* ---------- SQL для Supabase (копируется в буфер вместе со скачиванием CSV) ---------- */
+  const SQL_SCRIPT = `BEGIN;
+INSERT INTO televisions (panel_sn, tpv_pn, brand)
+SELECT DISTINCT ON (panel_sn) panel_sn, tpv_pn, brand
+FROM televisions_temp
+ON CONFLICT (panel_sn)
+DO UPDATE SET 
+    tpv_pn = EXCLUDED.tpv_pn,
+    brand = EXCLUDED.brand;
+TRUNCATE TABLE televisions_temp;
+COMMIT;`;
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    // запасной способ, если буфер недоступен
+    return new Promise((resolve, reject) => {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      ok ? resolve() : reject(new Error("copy failed"));
+    });
+  }
+
   /* ---------- Экспорт CSV ---------- */
   dlBtn.addEventListener("click", () => {
     const out = data.filter((r) => !r.excluded);
@@ -222,11 +254,16 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    copyText(SQL_SCRIPT)
+      .then(() => { noteEl.textContent = tx("copied"); noteEl.classList.remove("ps-note-err"); })
+      .catch(() => { noteEl.textContent = tx("copyFail"); noteEl.classList.add("ps-note-err"); });
   });
 
   /* ---------- Язык (вызывается из app.js) ---------- */
   window.setPanelSnLang = function (l) {
     lang = TXT[l] ? l : "en";
+    noteEl.textContent = "";
     applyText();
     render();
   };
