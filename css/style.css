@@ -765,3 +765,17 @@ html, body {
 .ps-bar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .ps-note { color: #86efac; font-size: 0.8rem; }
 .ps-note.ps-note-err { color: #fca5a5; }
+/* Panel SN Filter: сворачиваемые группы */
+.rl-table tbody tr.ps-group { cursor: pointer; background: linear-gradient(90deg, rgba(168, 85, 247, 0.14), transparent 80%); }
+.rl-table tbody tr.ps-group:hover { background: linear-gradient(90deg, rgba(168, 85, 247, 0.3), transparent 80%); }
+.ps-arrow { display: inline-block; width: 1rem; color: var(--text-muted); font-size: 0.7rem; }
+.ps-count {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.18);
+  color: #93c5fd;
+  font-size: 0.72rem;
+}
+.ps-multi { color: #9ca3af; font-style: italic; }
+.rl-table tbody tr.ps-child td:nth-child(2) { padding-left: 2.4rem; }
