@@ -99,9 +99,9 @@
   function esc(s) {
     return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
-  function applyText() {
+  var applyText = function () {
     document.querySelectorAll('#specialPage [data-sp]').forEach(el => { el.textContent = t(el.dataset.sp); });
-  }
+  };
 
   function printInFrame(html) {
     const old = document.getElementById('spPrintFrame');
@@ -204,6 +204,175 @@
     };
     img.onerror = () => { iconUrl = ''; };
     img.src = url;
+  }
+
+  // ===== RDL400FY: пісочниця етикетки 76x40 мм на аркуші 130x76 мм (Code128 + підпис з номера) =====
+  function initRdl(host) {
+    const KEY = 'spRdl_v1';
+    const SET = ['aw','ah','preset','pw','ph','ox','oy','dw','dpi','mode','thr','guide','gap','thick'];
+    const DEF = [
+      { id: 'model', name: 'Model', text: 'RDL400FY', x: 48, y: 3, size: 3.2, bold: true, serif: false },
+      { id: 'rev', name: 'Rev', text: '(QW0-003) Rev. 00', x: 45, y: 7.2, size: 2.8, bold: false, serif: false },
+      { id: 'bc', name: 'Barcode + caption', text: 'WU0E02S2449F01000520', x: 5, y: 12, size: 12, mw: 2, capSize: 3.6, capGap: 1.2, capBold: true, capSerif: false, type: 'barcode' },
+      { id: 'code', name: 'N012301-010205-002', text: 'N012301-010205-002', x: 5, y: 31, size: 3.2, bold: true, serif: false, fmt: true },
+      { id: 'rohs', name: 'RoHS', text: 'RoHS', x: 62, y: 31, size: 2.8, bold: true, serif: false }
+    ];
+    let F; try { F = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    if (!F) F = JSON.parse(JSON.stringify(DEF));
+    let S0 = {}; try { S0 = JSON.parse(localStorage.getItem(KEY + '_s') || '{}'); } catch (e) {}
+
+    const st = document.createElement('style');
+    st.textContent = `
+#spRdl .rd-prev{display:flex;justify-content:center;padding:14px;overflow:auto;background:#000;border-radius:10px;margin-bottom:.8rem}
+#spRdl #rdCv{background:#fff;border-radius:3px;flex:none;max-width:none}
+#spRdl .rd-cfg{display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;margin-bottom:.8rem}
+#spRdl .rd-cfg label{font-size:.7rem;opacity:.75;display:flex;flex-direction:column;gap:2px}
+#spRdl .rd-cfg input,#spRdl .rd-cfg select{width:5.2rem}
+#spRdl .rd-cfg select{width:auto}
+#spRdl .rd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.7rem}
+#spRdl .rd-mod{border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:.6rem;display:flex;flex-direction:column;gap:.4rem}
+#spRdl .rd-mod h4{margin:0;font-size:.7rem;opacity:.6;font-weight:400}
+#spRdl .rd-nums{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+#spRdl .rd-mod input[type=text],#spRdl .rd-nums input{width:100%;box-sizing:border-box}
+#spRdl .rd-chk{display:flex;gap:.8rem;font-size:.8rem;align-items:center}
+`;
+    document.head.appendChild(st);
+
+    host.insertAdjacentHTML('beforeend', `
+<div class="manual-input-card" id="spRdl">
+  <div class="rd-prev"><canvas id="rdCv"></canvas></div>
+  <div class="rd-cfg">
+    <label>Area W<input class="form-input" type="number" id="rd_aw" value="76" step="0.5"></label>
+    <label>Area H<input class="form-input" type="number" id="rd_ah" value="40" step="0.5"></label>
+    <label>Sheet<select class="form-input" id="rd_preset"><option>130×76 mm</option><option>100×76 mm</option><option>76×40 mm</option></select></label>
+    <label>W<input class="form-input" type="number" id="rd_pw" value="130"></label>
+    <label>H<input class="form-input" type="number" id="rd_ph" value="76"></label>
+    <label>X mm<input class="form-input" type="number" id="rd_ox" value="27" step="0.1"></label>
+    <label>Y mm<input class="form-input" type="number" id="rd_oy" value="18" step="0.1"></label>
+    <label>Dash px<input class="form-input" type="number" id="rd_dw" value="1" step="0.5"></label>
+    <label>DPI<input class="form-input" type="number" id="rd_dpi" value="203"></label>
+    <label>Mode<select class="form-input" id="rd_mode"><option value="bw">1-bit raster (recommended)</option><option value="gray">Grayscale</option></select></label>
+    <label>Threshold<input class="form-input" type="number" id="rd_thr" value="165"></label>
+    <label>Guides<select class="form-input" id="rd_guide"><option value="marks">Corner marks</option><option value="dash">Dashed only</option><option value="none">None</option></select></label>
+    <label>Mark gap<input class="form-input" type="number" id="rd_gap" value="1.5" step="0.1"></label>
+    <label>Mark thick<input class="form-input" type="number" id="rd_thick" value="0.5" step="0.1"></label>
+    <button class="btn btn-brand" id="rdPrint" style="margin-left:auto"></button>
+    <button class="btn" id="rdReset">↺</button>
+  </div>
+  <div class="rd-grid" id="rdMods"></div>
+</div>`);
+
+    const $ = (id) => document.getElementById(id);
+    const g = (k) => $('rd_' + k);
+    $('rdPrint').textContent = t('print');
+    const prevApply = applyText;
+    applyText = function () { prevApply(); const b = $('rdPrint'); if (b) b.textContent = t('print'); };
+
+    // SPN012301010205002 / N012301010205002 -> N012301-010205-002
+    function fmtCode(s) {
+      const v = String(s).toUpperCase().replace(/[\s_-]/g, '').replace(/^SP(?=N)/, '');
+      const m = v.match(/^N(\d{6})(\d{6})(\d{3})$/);
+      return m ? 'N' + m[1] + '-' + m[2] + '-' + m[3] : null;
+    }
+    function save() {
+      const s = {}; SET.forEach(k => s[k] = g(k).value);
+      try { localStorage.setItem(KEY, JSON.stringify(F)); localStorage.setItem(KEY + '_s', JSON.stringify(s)); } catch (e) {}
+    }
+    SET.forEach(k => {
+      if (S0[k] !== undefined) g(k).value = S0[k];
+      g(k).oninput = () => {
+        if (k === 'preset') { const p = g(k).value.split(' ')[0].split('×'); g('pw').value = p[0]; g('ph').value = p[1]; }
+        save(); draw();
+      };
+    });
+
+    function build() {
+      const box = $('rdMods'); box.innerHTML = '';
+      F.forEach(f => {
+        const B = f.type === 'barcode';
+        const d = document.createElement('div'); d.className = 'rd-mod';
+        d.innerHTML = `<h4>${esc(f.name)}</h4><input type="text" class="form-input code-text" value="${esc(f.text)}">
+          <div class="rd-nums">
+            <input class="form-input" type="number" step="0.1" value="${f.x}" title="X mm">
+            <input class="form-input" type="number" step="0.1" value="${f.y}" title="Y mm">
+            <input class="form-input" type="number" step="0.1" value="${f.size}" title="${B ? 'Barcode height mm' : 'Font size mm'}">
+            ${B ? `<input class="form-input" type="number" step="1" min="1" value="${f.mw}" title="Module, dots">
+            <input class="form-input" type="number" step="0.1" value="${f.capSize}" title="Caption size mm">
+            <input class="form-input" type="number" step="0.1" value="${f.capGap}" title="Caption gap mm">` : ''}
+          </div>
+          <div class="rd-chk"><label><input type="checkbox" ${(B ? f.capBold : f.bold) ? 'checked' : ''}> bold</label>
+          <label><input type="checkbox" ${(B ? f.capSerif : f.serif) ? 'checked' : ''}> serif</label></div>`;
+        const tx = d.querySelector('input[type=text]'), n = d.querySelectorAll('.rd-nums input'), c = d.querySelectorAll('.rd-chk input');
+        tx.oninput = () => { if (f.fmt) { const r = fmtCode(tx.value); if (r) tx.value = r; } f.text = tx.value; save(); draw(); };
+        (B ? ['x','y','size','mw','capSize','capGap'] : ['x','y','size']).forEach((k, j) => {
+          n[j].oninput = () => { f[k] = k === 'mw' ? Math.max(1, parseInt(n[j].value, 10) || 1) : +n[j].value; save(); draw(); };
+        });
+        c[0].onchange = () => { f[B ? 'capBold' : 'bold'] = c[0].checked; save(); draw(); };
+        c[1].onchange = () => { f[B ? 'capSerif' : 'serif'] = c[1].checked; save(); draw(); };
+        box.appendChild(d);
+      });
+    }
+    const font = (sz, b, s) => (b ? 'bold ' : '') + sz + 'px ' + (s ? '"Times New Roman",serif' : 'Arial,Helvetica,sans-serif');
+
+    function render(forPrint) {
+      const dpi = +g('dpi').value || 203, mm = (v) => Math.round(v * dpi / 25.4);
+      const cv = document.createElement('canvas'); cv.width = mm(+g('pw').value); cv.height = mm(+g('ph').value);
+      const x = cv.getContext('2d', { willReadFrequently: true });
+      x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height);
+      const ox = +g('ox').value, oy = +g('oy').value;
+      x.fillStyle = '#000'; x.textBaseline = 'top';
+      F.forEach(f => {
+        const px = mm(ox + f.x), py = mm(oy + f.y);
+        if (f.type === 'barcode') {
+          if (!f.text) return;
+          const b = document.createElement('canvas');
+          try {
+            JsBarcode(b, f.text, { format: 'CODE128', displayValue: false, margin: 0, width: f.mw, height: mm(f.size) });
+            x.drawImage(b, px, py);
+          } catch (e) {}
+          x.font = font(mm(f.capSize), f.capBold, f.capSerif);
+          x.fillText(f.text, px, py + mm(f.size + f.capGap));
+        } else { x.font = font(mm(f.size), f.bold, f.serif); x.fillText(f.text, px, py); }
+      });
+      if (g('mode').value === 'bw') {
+        const im = x.getImageData(0, 0, cv.width, cv.height), d = im.data, th = +g('thr').value;
+        for (let i = 0; i < d.length; i += 4) {
+          const v = (d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11) < th ? 0 : 255;
+          d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+        }
+        x.putImageData(im, 0, 0);
+      }
+      if (!forPrint && g('guide').value !== 'none') {
+        const aw = mm(+g('aw').value), ah = mm(+g('ah').value), X = mm(ox), Y = mm(oy);
+        x.strokeStyle = '#aaa'; x.lineWidth = (+g('dw').value || 1) * dpi / 96; x.setLineDash([mm(1.5), mm(1)]);
+        x.strokeRect(X, Y, aw, ah);
+        if (g('guide').value === 'marks') {
+          const gp = mm(+g('gap').value), L = mm(6), T = Math.max(1, mm(+g('thick').value));
+          x.setLineDash([]); x.fillStyle = '#000';
+          const x0 = X - gp, y0 = Y - gp, x1 = X + aw + gp, y1 = Y + ah + gp;
+          [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]].forEach(([cx, cy, sx, sy]) => {
+            x.fillRect(sx > 0 ? cx - T : cx, sy > 0 ? cy - T : cy, sx > 0 ? L + T : -(L + T), T);
+            x.fillRect(sx > 0 ? cx - T : cx, sy > 0 ? cy - T : cy, T, sy > 0 ? L + T : -(L + T));
+          });
+        }
+      }
+      return cv;
+    }
+    function draw() {
+      const r = render(false), c = $('rdCv');
+      c.width = r.width; c.height = r.height; c.getContext('2d').drawImage(r, 0, 0);
+      c.style.width = g('pw').value + 'mm'; c.style.height = g('ph').value + 'mm'; // фізичний розмір
+    }
+    $('rdPrint').onclick = () => {
+      const r = render(true), url = r.toDataURL('image/png'), w = g('pw').value, h = g('ph').value;
+      printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        @page { size: ${w}mm ${h}mm; margin: 0; }
+        html, body { margin: 0; padding: 0; background: #fff; }
+        img { display: block; width: ${w}mm; height: ${h}mm; image-rendering: pixelated; }
+      </style></head><body><img src="${url}" alt=""></body></html>`);
+    };
+    $('rdReset').onclick = () => { F = JSON.parse(JSON.stringify(DEF)); save(); build(); draw(); };
+    build(); draw();
   }
 
   function init() {
@@ -338,6 +507,7 @@
 
     loadIcon();
     applyText();
+    initRdl(host);
   }
 
   // Язык передаёт сайт (app.js)
