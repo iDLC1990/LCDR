@@ -209,7 +209,7 @@
   // ===== RDL400FY: пісочниця етикетки 76x40 мм на аркуші 130x76 мм (Code128 + підпис з номера) =====
   function initRdl(host) {
     const KEY = 'spRdl_v1';
-    const SET = ['aw','ah','preset','pw','ph','ox','oy','dw','dpi','mode','thr','guide','gap','thick'];
+    const SET = ['aw','ah','preset','pw','ph','ox','oy','dw','dpi','mode','thr','guide','pm','gap','thick'];
     const DEF = [
       { id: 'model', name: 'Model', text: 'RDL400FY', x: 48, y: 3, size: 3.2, bold: true, serif: false },
       { id: 'rev', name: 'Rev', text: '(QW0-003) Rev. 00', x: 45, y: 7.2, size: 2.8, bold: false, serif: false },
@@ -253,7 +253,8 @@
     <label>DPI<input class="form-input" type="number" id="rd_dpi" value="203"></label>
     <label>Mode<select class="form-input" id="rd_mode"><option value="bw">1-bit raster (recommended)</option><option value="gray">Grayscale</option></select></label>
     <label>Threshold<input class="form-input" type="number" id="rd_thr" value="165"></label>
-    <label>Guides<select class="form-input" id="rd_guide"><option value="marks">Corner marks</option><option value="dash">Dashed only</option><option value="none">None</option></select></label>
+    <label>Guides<select class="form-input" id="rd_guide"><option value="marks">Corner marks</option><option value="frame">Frame</option><option value="dash">Dashed only</option><option value="none">None</option></select></label>
+    <label>Print marks<select class="form-input" id="rd_pm"><option value="1">Yes</option><option value="0">No</option></select></label>
     <label>Mark gap<input class="form-input" type="number" id="rd_gap" value="1.5" step="0.1"></label>
     <label>Mark thick<input class="form-input" type="number" id="rd_thick" value="0.5" step="0.1"></label>
     <button class="btn btn-brand" id="rdPrint" style="margin-left:auto"></button>
@@ -342,14 +343,23 @@
         }
         x.putImageData(im, 0, 0);
       }
-      if (!forPrint && g('guide').value !== 'none') {
-        const aw = mm(+g('aw').value), ah = mm(+g('ah').value), X = mm(ox), Y = mm(oy);
+      const gm = g('guide').value;
+      const aw = mm(+g('aw').value), ah = mm(+g('ah').value), X = mm(ox), Y = mm(oy);
+      if (!forPrint && gm !== 'none') {
         x.strokeStyle = '#aaa'; x.lineWidth = (+g('dw').value || 1) * dpi / 96; x.setLineDash([mm(1.5), mm(1)]);
-        x.strokeRect(X, Y, aw, ah);
-        if (g('guide').value === 'marks') {
-          const gp = mm(+g('gap').value), L = mm(6), T = Math.max(1, mm(+g('thick').value));
-          x.setLineDash([]); x.fillStyle = '#000';
-          const x0 = X - gp, y0 = Y - gp, x1 = X + aw + gp, y1 = Y + ah + gp;
+        x.strokeRect(X, Y, aw, ah); x.setLineDash([]);
+      }
+      if ((gm === 'marks' || gm === 'frame') && (!forPrint || g('pm').value === '1')) {
+        const gp = mm(+g('gap').value), T = Math.max(1, mm(+g('thick').value));
+        const x0 = X - gp, y0 = Y - gp, x1 = X + aw + gp, y1 = Y + ah + gp;
+        x.fillStyle = '#000';
+        if (gm === 'frame') {
+          x.fillRect(x0 - T, y0 - T, x1 - x0 + 2 * T, T);   // верх
+          x.fillRect(x0 - T, y1, x1 - x0 + 2 * T, T);       // низ
+          x.fillRect(x0 - T, y0, T, y1 - y0);               // лево
+          x.fillRect(x1, y0, T, y1 - y0);                   // право
+        } else {
+          const L = mm(6);
           [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]].forEach(([cx, cy, sx, sy]) => {
             x.fillRect(sx > 0 ? cx - T : cx, sy > 0 ? cy - T : cy, sx > 0 ? L + T : -(L + T), T);
             x.fillRect(sx > 0 ? cx - T : cx, sy > 0 ? cy - T : cy, T, sy > 0 ? L + T : -(L + T));
