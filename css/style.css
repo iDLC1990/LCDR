@@ -762,3 +762,6 @@ html, body {
 .ps-check { accent-color: #a855f7; cursor: pointer; width: 15px; height: 15px; }
 .rl-table tbody tr.ps-excluded { opacity: 0.4; --row-color: #ef4444; }
 .rl-table tbody tr.ps-excluded td { text-decoration: line-through; }
+.ps-bar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.ps-note { color: #86efac; font-size: 0.8rem; }
+.ps-note.ps-note-err { color: #fca5a5; }
