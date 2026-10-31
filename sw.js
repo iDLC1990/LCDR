@@ -4,7 +4,7 @@
 const CACHE = 'lcdr-hub-v1';
 const CORE = [
   './', 'index.html', 'css/style.css', 'icon.jpg',
-  'js/config.js', 'js/diagonals.js', 'js/app.js', 'js/final1.js', 'js/final2.js', 'js/manual.js',
+  'js/config.js', 'js/diagonals.js', 'js/app.js', 'js/final.js', 'js/manual.js',
   'js/label.js', 'js/pnbase.js', 'js/special.js', 'js/sheets.js', 'js/livedata.js', 'js/statistic.js',
   'js/collapse.js', 'js/repairlog.js', 'js/photo.js', 'js/panelsn.js',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
