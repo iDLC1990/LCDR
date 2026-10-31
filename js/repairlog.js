@@ -78,7 +78,7 @@
       clear: "Clear status", errLoad: "Load error: ", errSave: "Save error: ",
       noPn: "PN not found in the database. Label not printed.",
       noPrinter: "Label printing is not available on this page.",
-      offline: "No connection. Records are saved on this device and will be sent automatically.", pending: " Waiting to send: ", sent: "Sent: ", labelsLeft: "Connection restored, records sent. Labels were NOT printed for:\n", sendErr: " Send error: "
+      offline: "No connection. Records are saved on this device and will be sent automatically.", pending: " Waiting to send: ", sent: "Sent: ", labelsLeft: "Connection restored, records sent. Labels were NOT printed for:\n", sendErr: " Send error: ", baseInfo: "PN base on this device: ", baseRows: " rows, updated ", baseLoading: "not loaded yet"
     },
     ru: {
       title: "Журнал ремонта", sn: "Серийный номер", date: "Дата", time: "Время", status: "Статус",
@@ -87,7 +87,7 @@
       clear: "Очистить статус", errLoad: "Ошибка загрузки: ", errSave: "Ошибка сохранения: ",
       noPn: "PN не найден в базе. Этикетка не напечатана.",
       noPrinter: "Печать этикеток недоступна на этой странице.",
-      offline: "Нет связи с базой. Записи сохранены на этом устройстве и отправятся сами.", pending: " Ждут отправки: ", sent: "Отправлено: ", labelsLeft: "Связь восстановлена, записи отправлены. Этикетки НЕ напечатаны для:\n", sendErr: " Ошибка отправки: "
+      offline: "Нет связи с базой. Записи сохранены на этом устройстве и отправятся сами.", pending: " Ждут отправки: ", sent: "Отправлено: ", labelsLeft: "Связь восстановлена, записи отправлены. Этикетки НЕ напечатаны для:\n", sendErr: " Ошибка отправки: ", baseInfo: "База PN на устройстве: ", baseRows: " строк, обновлена ", baseLoading: "ещё не загружена"
     },
     uk: {
       title: "Журнал ремонту", sn: "Серійний номер", date: "Дата", time: "Час", status: "Статус",
@@ -96,7 +96,7 @@
       clear: "Очистити статус", errLoad: "Помилка завантаження: ", errSave: "Помилка збереження: ",
       noPn: "PN не знайдено в базі. Етикетку не надруковано.",
       noPrinter: "Друк етикеток недоступний на цій сторінці.",
-      offline: "Немає зв'язку з базою. Записи збережено на цьому пристрої й відправляться самі.", pending: " Чекають відправки: ", sent: "Відправлено: ", labelsLeft: "Зв'язок відновлено, записи відправлено. Етикетки НЕ надруковано для:\n", sendErr: " Помилка відправки: "
+      offline: "Немає зв'язку з базою. Записи збережено на цьому пристрої й відправляться самі.", pending: " Чекають відправки: ", sent: "Відправлено: ", labelsLeft: "Зв'язок відновлено, записи відправлено. Етикетки НЕ надруковано для:\n", sendErr: " Помилка відправки: ", baseInfo: "База PN на пристрої: ", baseRows: " рядків, оновлена ", baseLoading: "ще не завантажена"
     },
     pl: {
       title: "Dziennik napraw", sn: "Numer seryjny", date: "Data", time: "Czas", status: "Status",
@@ -105,7 +105,7 @@
       clear: "Wyczyść status", errLoad: "Błąd ładowania: ", errSave: "Błąd zapisu: ",
       noPn: "Nie znaleziono PN w bazie. Etykieta nie została wydrukowana.",
       noPrinter: "Drukowanie etykiet jest niedostępne na tej stronie.",
-      offline: "Brak połączenia z bazą. Wpisy są zapisane na tym urządzeniu i zostaną wysłane automatycznie.", pending: " Czeka na wysłanie: ", sent: "Wysłano: ", labelsLeft: "Połączenie przywrócone, wpisy wysłane. Etykiety NIE zostały wydrukowane dla:\n", sendErr: " Błąd wysyłania: "
+      offline: "Brak połączenia z bazą. Wpisy są zapisane na tym urządzeniu i zostaną wysłane automatycznie.", pending: " Czeka na wysłanie: ", sent: "Wysłano: ", labelsLeft: "Połączenie przywrócone, wpisy wysłane. Etykiety NIE zostały wydrukowane dla:\n", sendErr: " Błąd wysyłania: ", baseInfo: "Baza PN na urządzeniu: ", baseRows: " wierszy, zaktualizowana ", baseLoading: "jeszcze nie wczytana"
     }
   };
 
@@ -208,6 +208,8 @@
   font-size: 0.8rem;
   white-space: nowrap;
 }
+
+#secretPage .rl-base { margin: 0 0 0.5rem 0; font-size: 0.78rem; opacity: 0.6; }
 
 #secretPage .rl-net {
   margin: 0 0 0.75rem 0;
@@ -347,6 +349,7 @@
     <div class="rl-wrap">
       <h2 id="rlTitle"></h2>
       <div id="rlNet" class="rl-net" style="display:none"></div>
+      <div id="rlBase" class="rl-base"></div>
       <div class="rl-top">
         <div class="rl-left">
           <form id="rlForm" class="rl-form">
@@ -383,6 +386,7 @@
   const codesBox = page.querySelector("#rlCodes");
   const body = page.querySelector("#rlBody");
   const netBox = page.querySelector("#rlNet");
+  const baseBox = page.querySelector("#rlBase");
 
   // Мгновенная подсказка вместо стандартного title
   const tip = document.createElement("div");
@@ -442,6 +446,7 @@
     page.querySelector("#thStatus").textContent = t.status;
     render();
     updateNet();
+    updateBaseInfo();
   }
 
   // Записи из очереди (ещё не отправлены) показываются сверху с пометкой ⏳ (🖨✕ = этикетка не напечатана)
@@ -465,6 +470,14 @@
         <td class="col-time">${esc(r.repair_time)}</td>
         <td class="col-status">${esc(r.status)}${r._p ? " ⏳" : ""}${r._nl ? " 🖨✕" : ""}</td>
       </tr>`).join("");
+  }
+
+  // Серая строка: сколько серийников в базе PN на этом устройстве (для печати без интернета)
+  function updateBaseInfo() {
+    const i = window.lcdrPnBaseInfo ? window.lcdrPnBaseInfo() : null;
+    if (!i || !i.rows) { baseBox.textContent = tr().baseInfo + tr().baseLoading; return; }
+    const d = i.lastSync ? new Date(i.lastSync) : null;
+    baseBox.textContent = tr().baseInfo + i.rows + tr().baseRows + (d ? d.toLocaleString() : "-");
   }
 
   // Жёлтая полоска сверху: сколько записей ждут отправки
@@ -622,7 +635,7 @@
       if (skipNet || isNetErr(lastErr)) {
         // Нет связи: в очередь
         let labelNow = false;
-        if (wantPrint && isTbvTov(sn) && typeof window.printFinal2BySn === "function") {
+        if (wantPrint && typeof window.printFinal2BySn === "function") {
           try { labelNow = !!(await window.printFinal2BySn(sn, true)); } catch (e) {}
         }
         rec.noLabel = wantPrint && !labelNow;
