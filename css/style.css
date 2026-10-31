@@ -779,3 +779,4 @@ html, body {
 }
 .ps-multi { color: #9ca3af; font-style: italic; }
 .rl-table tbody tr.ps-child td:nth-child(2) { padding-left: 2.4rem; }
+.ps-dropped { flex-basis: 100%; color: #9ca3af; font-size: 0.75rem; font-family: Consolas, monospace; }
