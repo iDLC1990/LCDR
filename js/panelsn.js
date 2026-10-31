@@ -10,10 +10,10 @@
 
   /* ---------- Тексты ---------- */
   const TXT = {
-    en: { droppedPrefix: "Not in the list", droppedList: "Prefixes not in the list", expandAll: "Expand all", collapseAll: "Collapse all", copied: "SQL script copied to clipboard — paste it in the Supabase SQL Editor", copyFail: "Could not copy the SQL script automatically", download: "Download CSV (for Supabase)", dropTitle: "Click or drop a file here", dropSub: ".xlsx, .xls, .csv — columns: Panel SN, TPV PN, Brand, Process", empty: "Upload a file to see the result", none: "No rows left after filtering", inFile: "In file", afterFilters: "After filters", dupes: "Duplicates removed", marked: "Marked as unneeded", ready: "To export", markTitle: "Mark as unneeded", readError: "Could not read the file" },
-    uk: { droppedPrefix: "Не зі списку", droppedList: "Префікси не зі списку", expandAll: "Розгорнути все", collapseAll: "Згорнути все", copied: "SQL-скрипт скопійовано в буфер — вставте його в Supabase SQL Editor", copyFail: "Не вдалося автоматично скопіювати SQL-скрипт", download: "Завантажити CSV (для Supabase)", dropTitle: "Натисніть або перетягніть файл", dropSub: ".xlsx, .xls, .csv — колонки: Panel SN, TPV PN, Brand, Process", empty: "Завантажте файл, щоб побачити результат", none: "Після фільтрації рядків не залишилось", inFile: "У файлі", afterFilters: "Після фільтрів", dupes: "Дублікатів прибрано", marked: "Позначено непотрібними", ready: "До вивантаження", markTitle: "Позначити як непотрібне", readError: "Не вдалося прочитати файл" },
-    ru: { droppedPrefix: "Не из списка", droppedList: "Префиксы не из списка", expandAll: "Раскрыть все", collapseAll: "Свернуть все", copied: "SQL-скрипт скопирован в буфер — вставьте его в Supabase SQL Editor", copyFail: "Не удалось автоматически скопировать SQL-скрипт", download: "Скачать CSV (для Supabase)", dropTitle: "Нажмите или перетащите файл", dropSub: ".xlsx, .xls, .csv — колонки: Panel SN, TPV PN, Brand, Process", empty: "Загрузите файл, чтобы увидеть результат", none: "После фильтрации строк не осталось", inFile: "В файле", afterFilters: "После фильтров", dupes: "Дубликатов убрано", marked: "Отмечено ненужным", ready: "К выгрузке", markTitle: "Отметить как ненужное", readError: "Не удалось прочитать файл" },
-    pl: { droppedPrefix: "Spoza listy", droppedList: "Prefiksy spoza listy", expandAll: "Rozwiń wszystko", collapseAll: "Zwiń wszystko", copied: "Skrypt SQL skopiowany do schowka — wklej go w Supabase SQL Editor", copyFail: "Nie udało się automatycznie skopiować skryptu SQL", download: "Pobierz CSV (dla Supabase)", dropTitle: "Kliknij lub upuść plik", dropSub: ".xlsx, .xls, .csv — kolumny: Panel SN, TPV PN, Brand, Process", empty: "Wgraj plik, aby zobaczyć wynik", none: "Po filtrowaniu nie zostały żadne wiersze", inFile: "W pliku", afterFilters: "Po filtrach", dupes: "Usunięto duplikatów", marked: "Oznaczono jako zbędne", ready: "Do eksportu", markTitle: "Oznacz jako zbędne", readError: "Nie udało się odczytać pliku" }
+    en: { downloadDropped: "Download dropped", droppedPrefix: "Not in the list", droppedList: "Prefixes not in the list", expandAll: "Expand all", collapseAll: "Collapse all", copied: "SQL script copied to clipboard — paste it in the Supabase SQL Editor", copyFail: "Could not copy the SQL script automatically", download: "Download CSV (for Supabase)", dropTitle: "Click or drop a file here", dropSub: ".xlsx, .xls, .csv — columns: Panel SN, TPV PN, Brand, Process", empty: "Upload a file to see the result", none: "No rows left after filtering", inFile: "In file", afterFilters: "After filters", dupes: "Duplicates removed", marked: "Marked as unneeded", ready: "To export", markTitle: "Mark as unneeded", readError: "Could not read the file" },
+    uk: { downloadDropped: "Завантажити відсіяні", droppedPrefix: "Не зі списку", droppedList: "Префікси не зі списку", expandAll: "Розгорнути все", collapseAll: "Згорнути все", copied: "SQL-скрипт скопійовано в буфер — вставте його в Supabase SQL Editor", copyFail: "Не вдалося автоматично скопіювати SQL-скрипт", download: "Завантажити CSV (для Supabase)", dropTitle: "Натисніть або перетягніть файл", dropSub: ".xlsx, .xls, .csv — колонки: Panel SN, TPV PN, Brand, Process", empty: "Завантажте файл, щоб побачити результат", none: "Після фільтрації рядків не залишилось", inFile: "У файлі", afterFilters: "Після фільтрів", dupes: "Дублікатів прибрано", marked: "Позначено непотрібними", ready: "До вивантаження", markTitle: "Позначити як непотрібне", readError: "Не вдалося прочитати файл" },
+    ru: { downloadDropped: "Скачать отсеянные", droppedPrefix: "Не из списка", droppedList: "Префиксы не из списка", expandAll: "Раскрыть все", collapseAll: "Свернуть все", copied: "SQL-скрипт скопирован в буфер — вставьте его в Supabase SQL Editor", copyFail: "Не удалось автоматически скопировать SQL-скрипт", download: "Скачать CSV (для Supabase)", dropTitle: "Нажмите или перетащите файл", dropSub: ".xlsx, .xls, .csv — колонки: Panel SN, TPV PN, Brand, Process", empty: "Загрузите файл, чтобы увидеть результат", none: "После фильтрации строк не осталось", inFile: "В файле", afterFilters: "После фильтров", dupes: "Дубликатов убрано", marked: "Отмечено ненужным", ready: "К выгрузке", markTitle: "Отметить как ненужное", readError: "Не удалось прочитать файл" },
+    pl: { downloadDropped: "Pobierz odrzucone", droppedPrefix: "Spoza listy", droppedList: "Prefiksy spoza listy", expandAll: "Rozwiń wszystko", collapseAll: "Zwiń wszystko", copied: "Skrypt SQL skopiowany do schowka — wklej go w Supabase SQL Editor", copyFail: "Nie udało się automatycznie skopiować skryptu SQL", download: "Pobierz CSV (dla Supabase)", dropTitle: "Kliknij lub upuść plik", dropSub: ".xlsx, .xls, .csv — kolumny: Panel SN, TPV PN, Brand, Process", empty: "Wgraj plik, aby zobaczyć wynik", none: "Po filtrowaniu nie zostały żadne wiersze", inFile: "W pliku", afterFilters: "Po filtrach", dupes: "Usunięto duplikatów", marked: "Oznaczono jako zbędne", ready: "Do eksportu", markTitle: "Oznacz jako zbędne", readError: "Nie udało się odczytać pliku" }
   };
   let lang = "en";
   const tx = (k) => (TXT[lang] || TXT.en)[k] || TXT.en[k] || k;
@@ -30,6 +30,7 @@
       <div id="psStatus" class="ps-status"></div>
       <div class="ps-bar">
         <button id="psDownload" class="rl-add" data-ps="download" disabled></button>
+        <button id="psDownloadDropped" class="rl-add" disabled></button>
         <button id="psExpand" class="rl-code" data-ps="expandAll"></button>
         <button id="psCollapse" class="rl-code" data-ps="collapseAll"></button>
         <span id="psNote" class="ps-note"></span>
@@ -57,6 +58,7 @@
   const statusEl = root.querySelector("#psStatus");
   const dlBtn = root.querySelector("#psDownload");
   const noteEl = root.querySelector("#psNote");
+  const dlDroppedBtn = root.querySelector("#psDownloadDropped");
 
   let data = [];
   let sortAsc = null;
@@ -68,6 +70,14 @@
   // Группировка: строки с одинаковыми первыми символами Panel SN сворачиваются в один список
   const GROUP_LEN = 3;
   let openGroups = new Set();
+  let droppedData = [];   // строки, отсеянные по префиксу (для отдельного CSV)
+
+  // В файл «отсеянные» не попадают номера, начинающиеся на эти буквы (Panel SN или TPV PN)
+  const DROPPED_SKIP = ["TOV", "TBV"];
+  const isSkipped = (v) => {
+    const t = String(v).trim().toUpperCase();
+    return DROPPED_SKIP.some((p) => t.startsWith(p) || new RegExp("^\\d{3}" + p).test(t));
+  };
 
   // Разрешённые префиксы Panel SN (первые GROUP_LEN символов). Остальные строки отсеиваются.
   // Нужен новый префикс — просто допишите его в список.
@@ -117,9 +127,22 @@
     return "";
   }
 
+  function dedupe(list) {
+    const hasBrand = (r) => { const b = (r.brand || "").trim(); return b !== "" && b !== "-"; };
+    const map = new Map();
+    list.forEach((r) => {
+      const key = String(r.panel_sn).trim().toUpperCase();
+      if (!key) return;
+      if (!map.has(key)) map.set(key, r);
+      else if (!hasBrand(map.get(key)) && hasBrand(r)) map.set(key, r);
+    });
+    return map;
+  }
+
   function applyFilters(rows) {
     const kept = [];
     const droppedMap = new Map();
+    const droppedRaw = [];
     rows.forEach((row) => {
       const proc  = String(find(row, ["Process", "process"])).trim().toUpperCase();
       const tpv   = String(find(row, ["TPV PN", "TPV_PN", "tpv_pn", "TPVPN"])).trim().toUpperCase();
@@ -132,7 +155,13 @@
 
       const prefix = sn.slice(0, GROUP_LEN);
       if (sn && !ALLOWED_PREFIXES.has(prefix)) {
+        if (isSkipped(sn) || isSkipped(tpv)) return;   // TOV / TBV — совсем выбрасываем
         droppedMap.set(prefix, (droppedMap.get(prefix) || 0) + 1);
+        droppedRaw.push({
+          panel_sn: find(row, ["Panel SN", "PANEL_SN", "panel_sn", "PanelSN"]),
+          tpv_pn: find(row, ["TPV PN", "TPV_PN", "tpv_pn", "TPVPN"]),
+          brand
+        });
         return;
       }
 
@@ -144,14 +173,8 @@
     });
 
     // Дубликаты по panel_sn: остаётся строка с заполненным brand
-    const hasBrand = (r) => { const b = (r.brand || "").trim(); return b !== "" && b !== "-"; };
-    const map = new Map();
-    kept.forEach((r) => {
-      const key = String(r.panel_sn).trim().toUpperCase();
-      if (!key) return;
-      if (!map.has(key)) map.set(key, r);
-      else if (!hasBrand(map.get(key)) && hasBrand(r)) map.set(key, r);
-    });
+    const map = dedupe(kept);
+    droppedData = [...dedupe(droppedRaw).values()];
 
     data = [];
     let id = 0;
@@ -242,6 +265,8 @@
   }
 
   function render() {
+    dlDroppedBtn.textContent = tx("downloadDropped") + (droppedData.length ? " (" + droppedData.length + ")" : "");
+    dlDroppedBtn.disabled = droppedData.length === 0;
     root.querySelector("#psSortIcon").textContent = sortAsc === true ? "▲" : sortAsc === false ? "▼" : "⇅";
 
     if (errorMsg) {
@@ -346,24 +371,35 @@ COMMIT;`;
   }
 
   /* ---------- Экспорт CSV ---------- */
-  dlBtn.addEventListener("click", () => {
-    const out = data.filter((r) => !r.excluded);
-    if (!out.length) return;
+  function saveCsv(rows, filename) {
     const q = (v) => '"' + String(v).replace(/"/g, '""') + '"';
     const csv = "panel_sn,tpv_pn,brand\n" +
-      out.map((r) => q(r.panel_sn) + "," + q(r.tpv_pn) + "," + q(r.brand)).join("\n") + "\n";
+      rows.map((r) => q(r.panel_sn) + "," + q(r.tpv_pn) + "," + q(r.brand)).join("\n") + "\n";
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "supabase_panel_sn_export.csv";
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  dlBtn.addEventListener("click", () => {
+    const out = data.filter((r) => !r.excluded);
+    if (!out.length) return;
+    saveCsv(out, "supabase_panel_sn_export.csv");
 
     copyText(SQL_SCRIPT)
       .then(() => { noteEl.textContent = tx("copied"); noteEl.classList.remove("ps-note-err"); })
       .catch(() => { noteEl.textContent = tx("copyFail"); noteEl.classList.add("ps-note-err"); });
+  });
+
+  // Отсеянные по префиксу строки: без номеров на TOV / TBV, SQL в буфер не копируется
+  dlDroppedBtn.addEventListener("click", () => {
+    if (!droppedData.length) return;
+    droppedData.sort((a, b) => String(a.panel_sn).localeCompare(String(b.panel_sn)));
+    saveCsv(droppedData, "panel_sn_dropped.csv");
   });
 
   /* ---------- Язык (вызывается из app.js) ---------- */
