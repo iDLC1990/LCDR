@@ -64,10 +64,6 @@
           <span class="label" data-i18n="repairBase">LCD Repair Center Base</span>
         </a>
 
-        <a href="#" class="nav-item" data-page="panelsn">
-          <span class="label" data-i18n="panelsn">Filter</span>
-        </a>
-
         <a href="#" class="nav-item" data-page="photo">
           <span class="label" data-i18n="photo">Photo</span>
         </a>
@@ -87,7 +83,6 @@
       <section class="label-page" id="final2Page" style="display:none"></section>
       <section class="label-page" id="secretPage" style="display:none"></section>
       <section class="label-page" id="photoPage" style="display:none"></section>
-      <section class="label-page" id="panelsnPage" style="display:none"></section>
     </main>
 
   </div>
@@ -95,7 +90,6 @@
   <!-- Библиотеки: Supabase и штрихкоды -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script src="js/config.js"></script>
   <script src="js/diagonals.js"></script>
@@ -113,7 +107,13 @@
   <script src="js/collapse.js"></script>
   <script src="js/repairlog.js"></script>
   <script src="js/photo.js"></script>
-  <script src="js/panelsn.js"></script>
+
+  <!-- Работа без интернета: сохраняет сайт на устройстве -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
 
   <!-- Показ скрытой вкладки по Alt+Q -->
   <script>
