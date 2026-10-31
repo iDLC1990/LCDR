@@ -6,9 +6,10 @@ const CORE = [
   './', 'index.html', 'css/style.css', 'icon.jpg',
   'js/config.js', 'js/diagonals.js', 'js/app.js', 'js/final1.js', 'js/final2.js', 'js/manual.js',
   'js/label.js', 'js/pnbase.js', 'js/special.js', 'js/sheets.js', 'js/livedata.js', 'js/statistic.js',
-  'js/collapse.js', 'js/repairlog.js', 'js/photo.js',
+  'js/collapse.js', 'js/repairlog.js', 'js/photo.js', 'js/panelsn.js',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
-  'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js'
+  'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js',
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
 ];
 
 self.addEventListener('install', (e) => {
