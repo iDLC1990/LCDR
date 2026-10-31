@@ -206,6 +206,105 @@ html,body{margin:0;padding:0;background:#fff}
     return window.__lcdrSb;
   }
 
+  // ===== База PN на устройстве (для печати без интернета) =====
+  // Вся таблица televisions (серийник -> PN, бренд) хранится в IndexedDB этого устройства.
+  // Обновляется в фоне раз в 6 часов; кроме того, запоминается каждый PN, найденный при обычной работе.
+  const PNB_DB = 'lcdr-pnbase', PNB_STORE = 'kv', PNB_KEY = 'pnmap';
+  const PNB_FULL_MS = 6 * 3600 * 1000, PNB_PAGE = 1000;
+  const PNB = { map: new Map(), lastSync: 0, syncing: false, saveTimer: null, dbp: null };
+
+  function pnbIdb() {
+    if (!PNB.dbp) {
+      PNB.dbp = new Promise((res, rej) => {
+        try {
+          const r = indexedDB.open(PNB_DB, 1);
+          r.onupgradeneeded = () => r.result.createObjectStore(PNB_STORE);
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        } catch (e) { rej(e); }
+      });
+    }
+    return PNB.dbp;
+  }
+  async function pnbGet() {
+    try {
+      const d = await pnbIdb();
+      return await new Promise((res, rej) => {
+        const q = d.transaction(PNB_STORE).objectStore(PNB_STORE).get(PNB_KEY);
+        q.onsuccess = () => res(q.result);
+        q.onerror = () => rej(q.error);
+      });
+    } catch (e) { return null; }
+  }
+  async function pnbPut() {
+    try {
+      const d = await pnbIdb();
+      await new Promise((res, rej) => {
+        const tx = d.transaction(PNB_STORE, 'readwrite');
+        tx.objectStore(PNB_STORE).put({ t: PNB.lastSync, map: PNB.map }, PNB_KEY);
+        tx.oncomplete = res;
+        tx.onerror = () => rej(tx.error);
+      });
+    } catch (e) {}
+  }
+  async function pnbLoad() {
+    const v = await pnbGet();
+    if (v && v.map instanceof Map) { PNB.map = v.map; PNB.lastSync = v.t || 0; }
+  }
+
+  // Найденный в базе PN запоминаем (сохранение на диск с задержкой, чтобы не писать на каждый серийник)
+  function pnbRemember(sn, pn, brand) {
+    if (!sn || !pn || pn === 'N/A') return;
+    const k = String(sn).trim().toUpperCase();
+    const cur = PNB.map.get(k);
+    if (cur && cur[0] === pn && cur[1] === (brand || '-')) return;
+    PNB.map.set(k, [pn, brand || '-']);
+    clearTimeout(PNB.saveTimer);
+    PNB.saveTimer = setTimeout(pnbPut, 20000);
+  }
+
+  function fromBase(sn) {
+    const v = PNB.map.get(String(sn || '').trim().toUpperCase());
+    return v ? { pn: v[0], brand: v[1] || '-' } : null;
+  }
+
+  // Полная загрузка таблицы страницами по 1000 строк
+  async function pnbSync() {
+    if (PNB.syncing || navigator.onLine === false) return;
+    PNB.syncing = true;
+    try {
+      const map = new Map();
+      for (let from = 0; ; from += PNB_PAGE) {
+        const res = await Promise.race([
+          sb().from(TABLE).select(`${COL_SN},${COL_PN},${COL_BRAND}`)
+            .order(COL_SN, { ascending: true }).range(from, from + PNB_PAGE - 1),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('network timeout')), 20000))
+        ]);
+        if (res.error) throw res.error;
+        const d = res.data || [];
+        d.forEach(r => {
+          if (r[COL_SN] && r[COL_PN]) map.set(String(r[COL_SN]).trim().toUpperCase(), [r[COL_PN], r[COL_BRAND] || '-']);
+        });
+        if (d.length < PNB_PAGE) break;
+      }
+      // то, что запомнили отдельно и чего нет в свежей загрузке, не теряем
+      PNB.map.forEach((v, k) => { if (!map.has(k)) map.set(k, v); });
+      PNB.map = map;
+      PNB.lastSync = Date.now();
+      await pnbPut();
+    } catch (e) {
+      // связи нет или сбой: попробуем позже
+    } finally {
+      PNB.syncing = false;
+    }
+  }
+  function pnbDue(ms) { return Date.now() - PNB.lastSync > ms; }
+
+  // Для страницы Repair Log: сколько строк в базе на устройстве и когда она обновлялась
+  window.lcdrPnBaseInfo = function () {
+    return { rows: PNB.map.size, lastSync: PNB.lastSync };
+  };
+
   // Возвращает { pn, brand }. pn = null, если PN не найден
   // PN для TBV и TOV собирается по самому номеру, база не нужна (работает и без интернета)
   function localPn(sn) {
@@ -222,7 +321,7 @@ html,body{margin:0;padding:0;background:#fff}
     if (c && (c.ok || now - c.t < RETRY_MS)) return c.data;
 
     if (offline || navigator.onLine === false) {
-      const lp = localPn(sn);
+      const lp = fromBase(sn) || localPn(sn);
       if (lp) return lp;
     }
 
@@ -234,6 +333,7 @@ html,body{margin:0;padding:0;background:#fff}
       ]);
       if (!error && data && data.length) {
         const d = { pn: data[0][COL_PN] || 'N/A', brand: data[0][COL_BRAND] || '-' };
+        pnbRemember(sn, d.pn, d.brand);
         dbCache.set(sn, { ok: true, data: d, t: now });
         return d;
       }
@@ -241,12 +341,12 @@ html,body{margin:0;padding:0;background:#fff}
         const fb = localPn(sn);
         if (fb) { dbCache.set(sn, { ok: true, data: fb, t: now }); return fb; }
       } else {
-        // ошибка связи: TBV и TOV всё равно получают PN (в кэш не кладём, чтобы потом взять настоящий из базы)
-        const fb = localPn(sn);
+        // ошибка связи: PN из базы на устройстве, для TBV и TOV ещё и по номеру (в кэш не кладём, чтобы потом взять настоящий из базы)
+        const fb = fromBase(sn) || localPn(sn);
         if (fb) return fb;
       }
     } catch (e) {
-      const fb = localPn(sn);
+      const fb = fromBase(sn) || localPn(sn);
       if (fb) return fb;
     }
 
@@ -668,4 +768,11 @@ html,body{margin:0;padding:0;background:#fff}
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+
+  // База PN на устройстве: загрузка при старте, обновление раз в 6 часов и при возвращении связи
+  pnbLoad().then(() => {
+    setTimeout(() => { if (pnbDue(PNB_FULL_MS)) pnbSync(); }, 5000);
+  });
+  setInterval(() => { if (pnbDue(PNB_FULL_MS)) pnbSync(); }, 30 * 60 * 1000);
+  window.addEventListener('online', () => { if (pnbDue(3600 * 1000)) pnbSync(); });
 })();
