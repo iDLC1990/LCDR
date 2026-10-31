@@ -207,26 +207,48 @@ html,body{margin:0;padding:0;background:#fff}
   }
 
   // Возвращает { pn, brand }. pn = null, если PN не найден
-  async function getPn(sn) {
+  // PN для TBV и TOV собирается по самому номеру, база не нужна (работает и без интернета)
+  function localPn(sn) {
+    const u = String(sn || '').toUpperCase();
+    if (u.startsWith('TBV') && u.length >= 11) return { pn: `750${u.substring(0, 11)}N000`, brand: 'PHP[PHP]' };
+    if (u.startsWith('TOV') && u.length >= 11) return { pn: `730${u.substring(0, 11)}N000`, brand: 'PHP[PHP]' };
+    return null;
+  }
+
+  // offline = true: связи нет, для TBV и TOV базу не спрашиваем
+  async function getPn(sn, offline) {
     const now = Date.now();
     const c = dbCache.get(sn);
     if (c && (c.ok || now - c.t < RETRY_MS)) return c.data;
 
+    if (offline || navigator.onLine === false) {
+      const lp = localPn(sn);
+      if (lp) return lp;
+    }
+
     try {
-      const { data, error } = await sb().from(TABLE).select(`${COL_PN}, ${COL_BRAND}`).eq(COL_SN, sn).limit(1);
+      const lookup = sb().from(TABLE).select(`${COL_PN}, ${COL_BRAND}`).eq(COL_SN, sn).limit(1);
+      const { data, error } = await Promise.race([
+        lookup,
+        new Promise((_, rej) => setTimeout(() => rej(new Error('network timeout')), 8000))
+      ]);
       if (!error && data && data.length) {
         const d = { pn: data[0][COL_PN] || 'N/A', brand: data[0][COL_BRAND] || '-' };
         dbCache.set(sn, { ok: true, data: d, t: now });
         return d;
       }
       if (!error) {
-        const u = sn.toUpperCase();
-        let fb = null;
-        if (u.startsWith('TBV') && u.length >= 11) fb = { pn: `750${u.substring(0, 11)}N000`, brand: 'PHP[PHP]' };
-        else if (u.startsWith('TOV') && u.length >= 11) fb = { pn: `730${u.substring(0, 11)}N000`, brand: 'PHP[PHP]' };
+        const fb = localPn(sn);
         if (fb) { dbCache.set(sn, { ok: true, data: fb, t: now }); return fb; }
+      } else {
+        // ошибка связи: TBV и TOV всё равно получают PN (в кэш не кладём, чтобы потом взять настоящий из базы)
+        const fb = localPn(sn);
+        if (fb) return fb;
       }
-    } catch (e) {}
+    } catch (e) {
+      const fb = localPn(sn);
+      if (fb) return fb;
+    }
 
     const nf = { pn: null, brand: '-' };
     dbCache.set(sn, { ok: false, data: nf, t: now });
@@ -463,10 +485,10 @@ html,body{margin:0;padding:0;background:#fff}
   // Печать по SN для журнала ремонта (вызывается из repairlog.js при статусе OK).
   // Формат берётся из переключателя этой вкладки: 100×78 или 130×76.
   // Возвращает false, если PN по SN не найден в базе.
-  window.printFinal2BySn = async function (sn) {
+  window.printFinal2BySn = async function (sn, offline) {
     const clean = String(sn || '').trim().toUpperCase();
     if (!clean) return false;
-    const d = await getPn(clean);
+    const d = await getPn(clean, offline);
     if (!d.pn) return false;
 
     let m = mode;
