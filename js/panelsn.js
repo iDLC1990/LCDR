@@ -79,14 +79,18 @@
     return DROPPED_SKIP.some((p) => t.startsWith(p) || new RegExp("^\\d{3}" + p).test(t));
   };
 
-  // Разрешённые префиксы Panel SN (первые GROUP_LEN символов). Остальные строки отсеиваются.
-  // Нужен новый префикс — просто допишите его в список.
+  // Разрешённые префиксы Panel SN. Остальные строки отсеиваются.
+  // Обычный префикс — 3 первых символа (WW1). Более длинный (236W) тоже работает:
+  // такие номера собираются в отдельную группу. Нужен новый префикс — допишите его в список.
   const ALLOWED_PREFIXES = new Set([
     "3C0", "3H0", "3M0", "3P0", "3Q0", "3U0",
     "CLC", "CLJ", "CMA", "CMS", "CRJ", "CRP", "CRZ", "CTH", "CUK",
     "GBV", "GOV", "JBV", "SQ1",
-    "WC0", "WC7", "WC8", "WH0", "WH8", "WM0", "WM5", "WM6", "WP0", "WP5", "WQ0", "WU0", "WW1"
+    "WC0", "WC7", "WC8", "WH0", "WH8", "WM0", "WM5", "WM6", "WP0", "WP5", "WQ0", "WU0", "WW1",
+    "236W", "238C", "238L"
   ]);
+  const LONG_PREFIXES = [...ALLOWED_PREFIXES].filter((p) => p.length > GROUP_LEN);
+  const prefixOf = (sn) => LONG_PREFIXES.find((p) => sn.startsWith(p)) || sn.slice(0, GROUP_LEN);
 
   /* ---------- Загрузка файла ---------- */
   drop.addEventListener("click", () => fileInput.click());
@@ -153,7 +157,7 @@
       if (INVALID_TPV.some((p) => tpv.startsWith(p))) return;
       if (sn.startsWith("LCM")) return;
 
-      const prefix = sn.slice(0, GROUP_LEN);
+      const prefix = prefixOf(sn);
       if (sn && !ALLOWED_PREFIXES.has(prefix)) {
         if (isSkipped(sn) || isSkipped(tpv)) return;   // TOV / TBV — совсем выбрасываем
         droppedMap.set(prefix, (droppedMap.get(prefix) || 0) + 1);
@@ -213,7 +217,7 @@
     render();
   });
 
-  const groupKey = (r) => String(r.panel_sn).trim().toUpperCase().slice(0, GROUP_LEN);
+  const groupKey = (r) => prefixOf(String(r.panel_sn).trim().toUpperCase());
 
   body.addEventListener("change", (e) => {
     const t = e.target;
