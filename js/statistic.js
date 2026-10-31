@@ -264,6 +264,63 @@
     return window.__lcdrSb;
   }
 
+  // Один человек может быть записан по-разному: «STAROZHYLOVA A.», «ANNA STAROZHYLOVA», «Kuca J.» и «KUCA J.».
+  // Объединяем такие записи под одним именем в виде «ФАМИЛИЯ И.». Чтобы понять, какое слово фамилия, нужна форма
+  // «ФАМИЛИЯ И.»: она берётся из самих данных и из этого списка. Если человек записан полным именем, а в данных
+  // за период его краткой формы нет, добавьте её сюда. Остальные имена остаются как есть (только заглавными).
+  const KNOWN_PEOPLE = [
+    'STAROZHYLOVA A.', 'ZAHUMENOVA H.', 'HRYSHCHUK O.', 'KUCA J.',
+    'PARYTSKA O.', 'ISAŃSKA M.', 'BAKAREVA N.'
+  ];
+
+  function normName(s) {
+    return String(s || '').replace(/\./g, ' ').replace(/\s+/g, ' ').trim().toUpperCase();
+  }
+
+  // Для сравнения: без точек, регистра и диакритики (ISAŃSKA = ISANSKA)
+  function foldName(s) {
+    return normName(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/Ł/g, 'L');
+  }
+
+  function mergeNames(rows) {
+    const known = new Map(); // «ФАМИЛИЯ|И» (для сравнения) -> «ФАМИЛИЯ И.» (как показываем)
+    function addKnown(display) {
+      const f = foldName(display).split(' ');
+      if (f.length === 2 && f[1].length === 1) {
+        const k = f[0] + '|' + f[1];
+        if (!known.has(k)) {
+          const n = normName(display).split(' ');
+          known.set(k, n[0] + ' ' + n[1] + '.');
+        }
+      }
+    }
+    KNOWN_PEOPLE.forEach(addKnown);
+    rows.forEach(r => addKnown(r.person));
+
+    const cache = new Map();
+    function canon(raw) {
+      if (cache.has(raw)) return cache.get(raw);
+      const n = normName(raw);
+      const p = foldName(raw).split(' ');
+      let res = n;
+      if (p.length === 2) {
+        if (p[1].length === 1) {
+          res = known.get(p[0] + '|' + p[1]) || n;               // уже «ФАМИЛИЯ И.»
+        } else {
+          const a = known.get(p[0] + '|' + p[1][0]);            // «ФАМИЛИЯ ИМЯ»
+          const b = known.get(p[1] + '|' + p[0][0]);            // «ИМЯ ФАМИЛИЯ»
+          if (a && !b) res = a;
+          else if (b && !a) res = b;
+        }
+      }
+      cache.set(raw, res);
+      return res;
+    }
+
+    rows.forEach(r => { r.person = canon(r.person); });
+    return rows;
+  }
+
   // Данные периода из базы (таблица fi_log), включая сегодняшний день
   async function fetchFromDb(dateFrom, dateTo) {
     const sb = sbClient();
@@ -284,7 +341,7 @@
       }));
       if (data.length < 1000) break;
     }
-    return out;
+    return mergeNames(out);
   }
 
   async function fetchData(dateFrom, dateTo) {
