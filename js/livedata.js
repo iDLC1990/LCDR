@@ -172,6 +172,17 @@
   Object.assign(I18N.pt, { pnLoading: 'Carregando dados (pn)...', pnEmpty: 'Sem dados na planilha pn!', pnCopyHint: 'Clique para copiar a linha inteira' });
   Object.assign(I18N.tr, { pnLoading: 'Veriler yükleniyor (pn)...', pnEmpty: 'pn sayfasında veri yok!', pnCopyHint: 'Tüm satırı kopyalamak için tıklayın' });
 
+  Object.assign(I18N.en, { bulkCopyHint: 'Click to copy the serial numbers of this worker' });
+  Object.assign(I18N.uk, { bulkCopyHint: 'Натисніть, щоб скопіювати серійні номери цього працівника' });
+  Object.assign(I18N.ru, { bulkCopyHint: 'Нажмите, чтобы скопировать серийные номера этого работника' });
+  Object.assign(I18N.pl, { bulkCopyHint: 'Kliknij, aby skopiować numery seryjne tego pracownika' });
+  Object.assign(I18N.de, { bulkCopyHint: 'Klicken, um die Seriennummern dieses Mitarbeiters zu kopieren' });
+  Object.assign(I18N.fr, { bulkCopyHint: 'Cliquez pour copier les numéros de série de cet employé' });
+  Object.assign(I18N.es, { bulkCopyHint: 'Haga clic para copiar los números de serie de este empleado' });
+  Object.assign(I18N.it, { bulkCopyHint: 'Clicca per copiare i numeri di serie di questo operatore' });
+  Object.assign(I18N.pt, { bulkCopyHint: 'Clique para copiar os números de série deste funcionário' });
+  Object.assign(I18N.tr, { bulkCopyHint: 'Bu çalışanın seri numaralarını kopyalamak için tıklayın' });
+
   const CSS = `
 #livePage {
   position: relative; display: block; box-sizing: border-box;
@@ -256,6 +267,20 @@
 }
 #livePage details.bulk-missing summary { color: #F87171; }
 #livePage .bulk-missing-list { padding: 10px 14px; color: #F87171; word-break: break-word; }
+
+/* ----- Результат пакетного поиска: таблица с раскрывающимися строками ----- */
+#livePage .bulk-table .bulk-th-name { text-align: left; }
+#livePage .bulk-table .bulk-row { cursor: pointer; user-select: none; }
+#livePage .bulk-table .bulk-row:hover td { background: rgba(255,255,255,0.04); }
+#livePage .bulk-table td.bulk-name { text-align: left; font-weight: 600; color: #fff; }
+#livePage .bulk-table .bulk-arrow { display: inline-block; width: 1.1em; color: #9CA3AF; font-size: 11px; transition: transform 0.15s; }
+#livePage .bulk-table .bulk-row.open .bulk-arrow { transform: rotate(90deg); }
+#livePage .bulk-table .bulk-detail > td { padding: 0; background: #0a0a0a; }
+#livePage .bulk-table .bulk-detail table { margin: 0; border: 0; border-radius: 0; }
+#livePage .bulk-table .bulk-detail th.bulk-copy { cursor: pointer; color: #4d94ff; }
+#livePage .bulk-table .bulk-detail th.bulk-copy:hover { color: #fff; }
+#livePage .bulk-table .bulk-missing-row td.bulk-name { color: #F87171; }
+#livePage .bulk-table tfoot td:first-child { text-align: left; }
 
 /* ----- Модальное окно ----- */
 #livePage #modal {
@@ -367,6 +392,9 @@
   let titleBusy = false;
   let titleTimer = null;
   let clickTimer = null;
+  const bulkOpen = new Set();   // у каких работников список развёрнут (сохраняется при повторном показе результата)
+  let bulkGroups = {};          // последний результат пакетного поиска: работник -> записи (нужно для копирования)
+  let lastBulkText = null;
 
   function t(key, vars) {
     const dict = I18N[lvLang] || I18N.en;
@@ -727,9 +755,11 @@
 
   function runBulkSearch() {
     const output = $('search-result');
-    const snList = $('bulk-input').value.split('\n').map(s => s.trim().toUpperCase()).filter(s => s !== '');
+    const raw = $('bulk-input').value;
+    const snList = raw.split('\n').map(s => s.trim().toUpperCase()).filter(s => s !== '');
     if (!snList.length) { output.innerHTML = ''; resultMode = null; return; }
     resultMode = 'bulk';
+    if (raw !== lastBulkText) { bulkOpen.clear(); lastBulkText = raw; } // новый список: все строки свёрнуты
 
     const groups = {};
     const notFound = [];
@@ -746,43 +776,89 @@
         notFound.push(sn);
       }
     });
+    bulkGroups = groups;
 
     const sortedNames = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
-    let resHtml = '';
+    const foundTotal = sortedNames.reduce((n, name) => n + groups[name].length, 0);
+    let rows = '';
 
+    // Первый уровень: работник и количество. Второй уровень: список его серийных номеров
     sortedNames.forEach(name => {
-      resHtml += `
-      <details class="bulk-group">
-        <summary><span class="${getUserCustomClass(name)}">${escHtml(name)}</span> — [${groups[name].length}]</summary>
-        <table>
-          <thead><tr>
-            <th>${escHtml(t('hSerial'))}</th><th>${escHtml(t('hDate'))}</th><th>${escHtml(t('hStatus'))}</th>
-            <th>${escHtml(t('hFinal'))}</th><th>${escHtml(t('hOc'))}</th><th>${escHtml(t('hInfo'))}</th>
-          </tr></thead>
-          <tbody>
-            ${groups[name].map(r => `
-              <tr>
-                <td class="lv-sn" data-sn="${escHtml(r.serial)}" title="${escHtml(t('phHint'))}">${escHtml(r.serial)}</td>
-                <td>${escHtml(r.date)}</td>
-                <td>${escHtml(r.status)}</td>
-                <td>${escHtml(r.nameG || ' ')}</td>
-                <td>${escHtml(r.ocAfterRepair || ' ')}</td>
-                <td>${escHtml(r.comment)}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </details>`;
+      const key = 'w:' + name;
+      const open = bulkOpen.has(key);
+      rows += `
+        <tr class="bulk-row${open ? ' open' : ''}" data-key="${escHtml(key)}">
+          <td class="bulk-name"><span class="bulk-arrow">▶</span><span class="${getUserCustomClass(name)}">${escHtml(name)}</span></td>
+          <td class="sum-col">${groups[name].length}</td>
+        </tr>
+        <tr class="bulk-detail" style="display:${open ? 'table-row' : 'none'}"><td colspan="2">
+          <table>
+            <thead><tr>
+              <th class="bulk-copy" data-key="${escHtml(key)}" title="${escHtml(t('bulkCopyHint'))}">${escHtml(t('hSerial'))}</th>
+              <th>${escHtml(t('hDate'))}</th><th>${escHtml(t('hStatus'))}</th>
+              <th>${escHtml(t('hFinal'))}</th><th>${escHtml(t('hOc'))}</th><th>${escHtml(t('hInfo'))}</th>
+            </tr></thead>
+            <tbody>
+              ${groups[name].map(r => `
+                <tr>
+                  <td class="lv-sn" data-sn="${escHtml(r.serial)}" title="${escHtml(t('phHint'))}">${escHtml(r.serial)}</td>
+                  <td>${escHtml(r.date)}</td>
+                  <td>${escHtml(r.status)}</td>
+                  <td>${escHtml(r.nameG || ' ')}</td>
+                  <td>${escHtml(r.ocAfterRepair || ' ')}</td>
+                  <td>${escHtml(r.comment)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </td></tr>`;
     });
 
     if (notFound.length) {
-      resHtml += `
-      <details class="bulk-group bulk-missing">
-        <summary>${escHtml(t('notFoundCount', { n: notFound.length }))}</summary>
-        <div class="bulk-missing-list">${escHtml(notFound.join(', '))}</div>
-      </details>`;
+      const open = bulkOpen.has('missing');
+      rows += `
+        <tr class="bulk-row bulk-missing-row${open ? ' open' : ''}" data-key="missing">
+          <td class="bulk-name"><span class="bulk-arrow">▶</span>${escHtml(t('notFoundCount', { n: notFound.length }))}</td>
+          <td></td>
+        </tr>
+        <tr class="bulk-detail" style="display:${open ? 'table-row' : 'none'}"><td colspan="2">
+          <div class="bulk-missing-list">${escHtml(notFound.join(', '))}</div>
+        </td></tr>`;
     }
 
-    output.innerHTML = resHtml || `<p class="lv-msg">${escHtml(t('notFound'))}</p>`;
+    output.innerHTML = rows
+      ? `<div class="lv-table-wrap"><table class="bulk-table">
+          <thead><tr><th class="bulk-th-name">${escHtml(t('name'))}</th><th>${escHtml(t('sum'))}</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr class="total-row"><td>${escHtml(t('total'))}</td><td>${foundTotal}</td></tr></tfoot>
+        </table></div>`
+      : `<p class="lv-msg">${escHtml(t('notFound'))}</p>`;
+  }
+
+  // Клик по строке работника: развернуть или свернуть его список. Клик по надписи Serial: скопировать его серийные номера
+  function onBulkClick(e) {
+    const th = e.target.closest && e.target.closest('th.bulk-copy');
+    if (th) { copyBulkGroup(th); return; }
+    const row = e.target.closest && e.target.closest('tr.bulk-row');
+    if (!row) return;
+    const open = !row.classList.contains('open');
+    row.classList.toggle('open', open);
+    const detail = row.nextElementSibling;
+    if (detail) detail.style.display = open ? 'table-row' : 'none';
+    if (open) bulkOpen.add(row.dataset.key); else bulkOpen.delete(row.dataset.key);
+  }
+
+  function copyBulkGroup(th) {
+    const name = String(th.dataset.key || '').replace(/^w:/, '');
+    const list = bulkGroups[name] || [];
+    if (!list.length) return;
+    const done = (msg) => {
+      th.textContent = msg;
+      clearTimeout(th._t);
+      th._t = setTimeout(() => { th.textContent = t('hSerial'); }, 1500);
+    };
+    navigator.clipboard.writeText(list.map(r => r.serial).join('\n'))
+      .then(() => done(t('copyOk', { n: list.length })))
+      .catch(() => done(t('copyErr')));
   }
 
   /* ----- Вкладка pn: последняя строка (Alt + 3) ----- */
@@ -947,6 +1023,7 @@
     $('search').addEventListener('keydown', onSearchKey);
     $('bulk-input').addEventListener('keydown', onBulkKey);
     $('bulk-run').onclick = runBulkSearch;
+    $('search-result').addEventListener('click', onBulkClick);
 
     document.addEventListener('keydown', onGlobalKey, true);
 
