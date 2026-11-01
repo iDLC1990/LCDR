@@ -268,19 +268,15 @@
 #livePage details.bulk-missing summary { color: #F87171; }
 #livePage .bulk-missing-list { padding: 10px 14px; color: #F87171; word-break: break-word; }
 
-/* ----- Результат пакетного поиска: таблица с раскрывающимися строками ----- */
+/* ----- Результат пакетного поиска: таблица, клик по работнику открывает окно ----- */
 #livePage .bulk-table .bulk-th-name { text-align: left; }
-#livePage .bulk-table .bulk-row { cursor: pointer; user-select: none; }
-#livePage .bulk-table .bulk-row:hover td { background: rgba(255,255,255,0.04); }
-#livePage .bulk-table td.bulk-name { text-align: left; font-weight: 600; color: #fff; }
-#livePage .bulk-table .bulk-arrow { display: inline-block; width: 1.1em; color: #9CA3AF; font-size: 11px; transition: transform 0.15s; }
-#livePage .bulk-table .bulk-row.open .bulk-arrow { transform: rotate(90deg); }
-#livePage .bulk-table .bulk-detail > td { padding: 0; background: #0a0a0a; }
-#livePage .bulk-table .bulk-detail table { margin: 0; border: 0; border-radius: 0; }
-#livePage .bulk-table .bulk-detail th.bulk-copy { cursor: pointer; color: #4d94ff; }
-#livePage .bulk-table .bulk-detail th.bulk-copy:hover { color: #fff; }
+#livePage .bulk-table .bulk-row { cursor: pointer; }
+#livePage .bulk-table td.bulk-name { cursor: pointer; text-align: left; color: #fff; font-weight: 600; }
+#livePage .bulk-table .bulk-row:hover td.bulk-name { color: #4d94ff; }
 #livePage .bulk-table .bulk-missing-row td.bulk-name { color: #F87171; }
 #livePage .bulk-table tfoot td:first-child { text-align: left; }
+#livePage #modal th.bulk-copy { cursor: pointer; color: #4d94ff; }
+#livePage #modal th.bulk-copy:hover { color: #fff; }
 
 /* ----- Модальное окно ----- */
 #livePage #modal {
@@ -392,9 +388,9 @@
   let titleBusy = false;
   let titleTimer = null;
   let clickTimer = null;
-  const bulkOpen = new Set();   // у каких работников список развёрнут (сохраняется при повторном показе результата)
-  let bulkGroups = {};          // последний результат пакетного поиска: работник -> записи (нужно для копирования)
-  let lastBulkText = null;
+  let bulkGroups = {};          // последний результат пакетного поиска: работник -> записи
+  let bulkNotFound = [];        // серийники, которых нет в данных
+  let bulkModalList = null;     // записи работника, показанные сейчас в окне (для копирования по клику на Serial)
 
   function t(key, vars) {
     const dict = I18N[lvLang] || I18N.en;
@@ -512,21 +508,42 @@
     $('modal').classList.remove('show');
   }
 
+  // Таблица записей работника для окна. copyable = true: клик по надписи Serial копирует серийные номера
+  function workerTable(records, copyable) {
+    const copyAttr = copyable ? ` class="bulk-copy" title="${escHtml(t('bulkCopyHint'))}"` : '';
+    let html = `<table><thead><tr>
+        <th${copyAttr}>${escHtml(t('hSerial'))}</th><th>${escHtml(t('hType'))}</th><th>${escHtml(t('hStatus'))}</th>
+        <th>${escHtml(t('hOc'))}</th><th>${escHtml(t('hComment'))}</th>
+      </tr></thead><tbody>`;
+    records.forEach(r => {
+      html += `<tr><td class="lv-sn" data-sn="${escHtml(r.serial || '')}" title="${escHtml(t('phHint'))}">${escHtml(r.serial || '--')}</td><td>${escHtml(r.type || '--')}</td><td>${escHtml(r.status || '--')}</td><td>${escHtml(r.ocAfterRepair || '--')}</td><td>${escHtml(r.comment || '--')}</td></tr>`;
+    });
+    return html + '</tbody></table>';
+  }
+
   function openModal(name) {
+    bulkModalList = null;
     const records = combinedDataCache.filter(r => r.name === name && (r.date || '').split(' ')[0] === lastDateStr);
     const body = $('modal-body');
 
     if (!records.length) {
       body.innerHTML = `<p class="lv-msg">${escHtml(t('modalNoData'))}</p>`;
     } else {
-      let html = `<table><thead><tr>
-        <th>${escHtml(t('hSerial'))}</th><th>${escHtml(t('hType'))}</th><th>${escHtml(t('hStatus'))}</th>
-        <th>${escHtml(t('hOc'))}</th><th>${escHtml(t('hComment'))}</th>
-      </tr></thead><tbody>`;
-      records.forEach(r => {
-        html += `<tr><td class="lv-sn" data-sn="${escHtml(r.serial || '')}" title="${escHtml(t('phHint'))}">${escHtml(r.serial || '--')}</td><td>${escHtml(r.type || '--')}</td><td>${escHtml(r.status || '--')}</td><td>${escHtml(r.ocAfterRepair || '--')}</td><td>${escHtml(r.comment || '--')}</td></tr>`;
-      });
-      body.innerHTML = html + '</tbody></table>';
+      body.innerHTML = workerTable(records, false);
+    }
+    $('modal').classList.add('show');
+  }
+
+  // Окно для результата пакетного поиска: то же окно, но только найденные серийники этого работника
+  function openBulkModal(key) {
+    const body = $('modal-body');
+    if (key === 'missing') {
+      bulkModalList = null;
+      body.innerHTML = `<div class="bulk-missing-list">${escHtml(bulkNotFound.join(', '))}</div>`;
+    } else {
+      const list = bulkGroups[String(key).replace(/^w:/, '')] || [];
+      bulkModalList = list;
+      body.innerHTML = list.length ? workerTable(list, true) : `<p class="lv-msg">${escHtml(t('modalNoData'))}</p>`;
     }
     $('modal').classList.add('show');
   }
@@ -755,11 +772,9 @@
 
   function runBulkSearch() {
     const output = $('search-result');
-    const raw = $('bulk-input').value;
-    const snList = raw.split('\n').map(s => s.trim().toUpperCase()).filter(s => s !== '');
+    const snList = $('bulk-input').value.split('\n').map(s => s.trim().toUpperCase()).filter(s => s !== '');
     if (!snList.length) { output.innerHTML = ''; resultMode = null; return; }
     resultMode = 'bulk';
-    if (raw !== lastBulkText) { bulkOpen.clear(); lastBulkText = raw; } // новый список: все строки свёрнуты
 
     const groups = {};
     const notFound = [];
@@ -777,52 +792,24 @@
       }
     });
     bulkGroups = groups;
+    bulkNotFound = notFound;
 
     const sortedNames = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
     const foundTotal = sortedNames.reduce((n, name) => n + groups[name].length, 0);
-    let rows = '';
 
-    // Первый уровень: работник и количество. Второй уровень: список его серийных номеров
-    sortedNames.forEach(name => {
-      const key = 'w:' + name;
-      const open = bulkOpen.has(key);
-      rows += `
-        <tr class="bulk-row${open ? ' open' : ''}" data-key="${escHtml(key)}">
-          <td class="bulk-name"><span class="bulk-arrow">▶</span><span class="${getUserCustomClass(name)}">${escHtml(name)}</span></td>
+    // Таблица: работник и количество. Клик по работнику открывает окно со списком его серийников
+    let rows = sortedNames.map(name => `
+        <tr class="bulk-row" data-key="${escHtml('w:' + name)}">
+          <td class="bulk-name ${getUserCustomClass(name)}">${escHtml(name)}</td>
           <td class="sum-col">${groups[name].length}</td>
-        </tr>
-        <tr class="bulk-detail" style="display:${open ? 'table-row' : 'none'}"><td colspan="2">
-          <table>
-            <thead><tr>
-              <th class="bulk-copy" data-key="${escHtml(key)}" title="${escHtml(t('bulkCopyHint'))}">${escHtml(t('hSerial'))}</th>
-              <th>${escHtml(t('hDate'))}</th><th>${escHtml(t('hStatus'))}</th>
-              <th>${escHtml(t('hFinal'))}</th><th>${escHtml(t('hOc'))}</th><th>${escHtml(t('hInfo'))}</th>
-            </tr></thead>
-            <tbody>
-              ${groups[name].map(r => `
-                <tr>
-                  <td class="lv-sn" data-sn="${escHtml(r.serial)}" title="${escHtml(t('phHint'))}">${escHtml(r.serial)}</td>
-                  <td>${escHtml(r.date)}</td>
-                  <td>${escHtml(r.status)}</td>
-                  <td>${escHtml(r.nameG || ' ')}</td>
-                  <td>${escHtml(r.ocAfterRepair || ' ')}</td>
-                  <td>${escHtml(r.comment)}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </td></tr>`;
-    });
+        </tr>`).join('');
 
     if (notFound.length) {
-      const open = bulkOpen.has('missing');
       rows += `
-        <tr class="bulk-row bulk-missing-row${open ? ' open' : ''}" data-key="missing">
-          <td class="bulk-name"><span class="bulk-arrow">▶</span>${escHtml(t('notFoundCount', { n: notFound.length }))}</td>
+        <tr class="bulk-row bulk-missing-row" data-key="missing">
+          <td class="bulk-name">${escHtml(t('notFoundCount', { n: notFound.length }))}</td>
           <td></td>
-        </tr>
-        <tr class="bulk-detail" style="display:${open ? 'table-row' : 'none'}"><td colspan="2">
-          <div class="bulk-missing-list">${escHtml(notFound.join(', '))}</div>
-        </td></tr>`;
+        </tr>`;
     }
 
     output.innerHTML = rows
@@ -834,23 +821,17 @@
       : `<p class="lv-msg">${escHtml(t('notFound'))}</p>`;
   }
 
-  // Клик по строке работника: развернуть или свернуть его список. Клик по надписи Serial: скопировать его серийные номера
+  // Клик по строке результата: открыть окно работника
   function onBulkClick(e) {
-    const th = e.target.closest && e.target.closest('th.bulk-copy');
-    if (th) { copyBulkGroup(th); return; }
     const row = e.target.closest && e.target.closest('tr.bulk-row');
-    if (!row) return;
-    const open = !row.classList.contains('open');
-    row.classList.toggle('open', open);
-    const detail = row.nextElementSibling;
-    if (detail) detail.style.display = open ? 'table-row' : 'none';
-    if (open) bulkOpen.add(row.dataset.key); else bulkOpen.delete(row.dataset.key);
+    if (row && row.dataset.key) openBulkModal(row.dataset.key);
   }
 
-  function copyBulkGroup(th) {
-    const name = String(th.dataset.key || '').replace(/^w:/, '');
-    const list = bulkGroups[name] || [];
-    if (!list.length) return;
+  // Клик по надписи Serial в окне: скопировать серийные номера этого работника
+  function onModalBodyClick(e) {
+    const th = e.target.closest && e.target.closest('th.bulk-copy');
+    if (!th || !bulkModalList || !bulkModalList.length) return;
+    const list = bulkModalList;
     const done = (msg) => {
       th.textContent = msg;
       clearTimeout(th._t);
@@ -1024,6 +1005,7 @@
     $('bulk-input').addEventListener('keydown', onBulkKey);
     $('bulk-run').onclick = runBulkSearch;
     $('search-result').addEventListener('click', onBulkClick);
+    $('modal-body').addEventListener('click', onModalBodyClick);
 
     document.addEventListener('keydown', onGlobalKey, true);
 
