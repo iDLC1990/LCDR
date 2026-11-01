@@ -55,9 +55,9 @@
 
   // ===== База PN на устройстве (для печати без интернета) =====
   // Вся таблица televisions (серийник -> PN, бренд) хранится в IndexedDB этого устройства.
-  // Обновляется в фоне раз в 6 часов; кроме того, запоминается каждый PN, найденный при обычной работе.
+  // Обновляется в фоне раз в час; кроме того, запоминается каждый PN, найденный при обычной работе.
   const PNB_DB = 'lcdr-pnbase', PNB_STORE = 'kv', PNB_KEY = 'pnmap';
-  const PNB_FULL_MS = 6 * 3600 * 1000, PNB_PAGE = 1000;
+  const PNB_FULL_MS = 3600 * 1000, PNB_PAGE = 1000;
   const PNB = { map: new Map(), lastSync: 0, syncing: false, saveTimer: null, dbp: null };
 
   function pnbIdb() {
@@ -825,10 +825,10 @@ html,body{margin:0;padding:0;background:#fff}
     }
   });
 
-  // База PN на устройстве: загрузка при старте, обновление раз в 6 часов и при возвращении связи
+  // База PN на устройстве: загрузка при старте, обновление раз в час и при возвращении связи
   pnbLoad().then(() => {
     setTimeout(() => { if (pnbDue(PNB_FULL_MS)) pnbSync(); }, 5000);
   });
-  setInterval(() => { if (pnbDue(PNB_FULL_MS)) pnbSync(); }, 30 * 60 * 1000);
-  window.addEventListener('online', () => { if (pnbDue(3600 * 1000)) pnbSync(); });
+  setInterval(() => { if (pnbDue(PNB_FULL_MS)) pnbSync(); }, 5 * 60 * 1000);
+  window.addEventListener('online', () => { if (pnbDue(10 * 60 * 1000)) pnbSync(); });
 })();
