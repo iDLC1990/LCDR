@@ -3,8 +3,9 @@
    Запросы к Supabase и Google не затрагиваются. */
 const CACHE = 'lcdr-hub-v1';
 const CORE = [
-  './', 'index.html', 'css/style.css', 'icon.jpg',
-  'js/config.js', 'js/diagonals.js', 'js/app.js', 'js/final.js', 'js/manual.js',
+  './', 'index.html', 'css/style.css', 'icon.jpg', 'manifest.webmanifest',
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
+  'js/health.js', 'js/config.js', 'js/diagonals.js', 'js/app.js', 'js/final.js', 'js/manual.js',
   'js/label.js', 'js/pnbase.js', 'js/special.js', 'js/sheets.js', 'js/livedata.js', 'js/statistic.js',
   'js/collapse.js', 'js/repairlog.js', 'js/photo.js', 'js/panelsn.js',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
