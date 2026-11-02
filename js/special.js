@@ -209,7 +209,7 @@
   // ===== RDL400FY: пісочниця етикетки 76x40 мм на аркуші 130x76 мм (Code128 + підпис з номера) =====
   function initRdl(host) {
     const KEY = 'spRdl_v1';
-    const SET = ['aw','ah','preset','pw','ph','ox','oy','dw','dpi','mode','thr','guide','pm','gap','thick'];
+    const SET = ['aw','ah','preset','pw','ph','ox','oy','dw','dpi','mode','thr','guide','pm','gap','thick','bt'];
     const DEF = [
       { id: 'model', name: 'Model', text: 'RDL400FY', x: 48, y: 3, size: 3.2, bold: true, serif: false },
       { id: 'rev', name: 'Rev', text: '(QW0-003) Rev. 00', x: 45, y: 7.2, size: 2.8, bold: false, serif: false },
@@ -254,6 +254,7 @@
     <label>Mode<select class="form-input" id="rd_mode"><option value="bw">1-bit raster (recommended)</option><option value="gray">Grayscale</option></select></label>
     <label>Threshold<input class="form-input" type="number" id="rd_thr" value="165"></label>
     <label>Guides<select class="form-input" id="rd_guide"><option value="marks">Corner marks</option><option value="frame">Frame</option><option value="dash">Dashed only</option><option value="none">None</option></select></label>
+    <label>Barcode<select class="form-input" id="rd_bt"><option value="CODE128">Code128 auto</option><option value="CODE128B">Code128 B</option><option value="CODE39">Code39</option></select></label>
     <label>Print marks<select class="form-input" id="rd_pm"><option value="1">Yes</option><option value="0">No</option></select></label>
     <label>Mark gap<input class="form-input" type="number" id="rd_gap" value="1.5" step="0.1"></label>
     <label>Mark thick<input class="form-input" type="number" id="rd_thick" value="0.5" step="0.1"></label>
@@ -328,7 +329,7 @@
           if (!f.text) return;
           const b = document.createElement('canvas');
           try {
-            JsBarcode(b, f.text, { format: 'CODE128', displayValue: false, margin: 0, width: f.mw, height: mm(f.size) });
+            JsBarcode(b, f.text, { format: g('bt').value || 'CODE128', displayValue: false, margin: 0, width: f.mw, height: mm(f.size) });
             x.drawImage(b, px, py);
           } catch (e) {}
           x.font = font(mm(f.capSize), f.capBold, f.capSerif);
