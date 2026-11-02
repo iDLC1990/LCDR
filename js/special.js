@@ -254,7 +254,7 @@
     <label>Mode<select class="form-input" id="rd_mode"><option value="bw">1-bit raster (recommended)</option><option value="gray">Grayscale</option></select></label>
     <label>Threshold<input class="form-input" type="number" id="rd_thr" value="165"></label>
     <label>Guides<select class="form-input" id="rd_guide"><option value="marks">Corner marks</option><option value="frame">Frame</option><option value="dash">Dashed only</option><option value="none">None</option></select></label>
-    <label>Barcode<select class="form-input" id="rd_bt"><option value="CODE128">Code128 auto</option><option value="CODE128B">Code128 B</option><option value="CODE39">Code39</option></select></label>
+    <label>Barcode<select class="form-input" id="rd_bt"><option value="CODE128B">Code128 B</option><option value="CODE39">Code39</option></select></label>
     <label>Print marks<select class="form-input" id="rd_pm"><option value="1">Yes</option><option value="0">No</option></select></label>
     <label>Mark gap<input class="form-input" type="number" id="rd_gap" value="1.5" step="0.1"></label>
     <label>Mark thick<input class="form-input" type="number" id="rd_thick" value="0.5" step="0.1"></label>
@@ -288,6 +288,8 @@
       };
     });
 
+    if (!g('bt').value) g('bt').value = 'CODE128B';
+
     function build() {
       const box = $('rdMods'); box.innerHTML = '';
       F.forEach(f => {
@@ -316,6 +318,22 @@
     }
     const font = (sz, b, s) => (b ? 'bold ' : '') + sz + 'px ' + (s ? '"Times New Roman",serif' : 'Arial,Helvetica,sans-serif');
 
+    // як у «Label»: базовий штрихкод 1 точка/модуль, далі кожен модуль масштабується в m точок (чіткі краї)
+    function barcodeCanvas(text, mw, hd) {
+      const base = document.createElement('canvas');
+      JsBarcode(base, text, { format: g('bt').value || 'CODE128B', displayValue: false, margin: 0, width: 1, height: 1, lineColor: '#000000', background: '#ffffff' });
+      const n = base.width, row = base.getContext('2d').getImageData(0, 0, n, 1).data;
+      const W = Math.max(1, Math.round(n * mw));
+      const cv = document.createElement('canvas'); cv.width = W; cv.height = Math.max(8, hd);
+      const c = cv.getContext('2d');
+      c.fillStyle = '#fff'; c.fillRect(0, 0, W, cv.height); c.fillStyle = '#000';
+      for (let i = 0; i < n; i++) if (row[i * 4] < 128) {
+        const x0 = Math.round(i * mw), x1 = Math.round((i + 1) * mw);
+        c.fillRect(x0, 0, Math.max(1, x1 - x0), cv.height);
+      }
+      return cv;
+    }
+
     function render(forPrint) {
       const dpi = +g('dpi').value || 203, mm = (v) => Math.round(v * dpi / 25.4);
       const cv = document.createElement('canvas'); cv.width = mm(+g('pw').value); cv.height = mm(+g('ph').value);
@@ -327,11 +345,7 @@
         const px = mm(ox + f.x), py = mm(oy + f.y);
         if (f.type === 'barcode') {
           if (!f.text) return;
-          const b = document.createElement('canvas');
-          try {
-            JsBarcode(b, f.text, { format: g('bt').value || 'CODE128', displayValue: false, margin: 0, width: f.mw, height: mm(f.size) });
-            x.drawImage(b, px, py);
-          } catch (e) {}
+          try { x.imageSmoothingEnabled = false; x.drawImage(barcodeCanvas(f.text, f.mw, mm(f.size)), px, py); } catch (e) {}
           x.font = font(mm(f.capSize), f.capBold, f.capSerif);
           x.fillText(f.text, px, py + mm(f.size + f.capGap));
         } else { x.font = font(mm(f.size), f.bold, f.serif); x.fillText(f.text, px, py); }
@@ -375,12 +389,15 @@
       c.style.width = g('pw').value + 'mm'; c.style.height = g('ph').value + 'mm'; // фізичний розмір
     }
     $('rdPrint').onclick = () => {
+      // як у «Label»: 1 піксель = 1 точка принтера, розмір картинки = кількість точок × розмір точки
       const r = render(true), url = r.toDataURL('image/png'), w = g('pw').value, h = g('ph').value;
-      printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+      const dot = 25.4 / (+g('dpi').value || 203), wm = (r.width * dot).toFixed(4), hm = (r.height * dot).toFixed(4);
+      printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LABEL</title><style>
         @page { size: ${w}mm ${h}mm; margin: 0; }
         html, body { margin: 0; padding: 0; background: #fff; }
-        img { display: block; width: ${w}mm; height: ${h}mm; image-rendering: pixelated; }
-      </style></head><body><img src="${url}" alt=""></body></html>`);
+        .page { position: relative; width: ${w}mm; height: ${(h - 0.4).toFixed(2)}mm; overflow: hidden; }
+        .page img { position: absolute; left: 0; top: 0; width: ${wm}mm; height: ${hm}mm; image-rendering: crisp-edges; image-rendering: pixelated; }
+      </style></head><body><div class="page"><img src="${url}" alt=""></div></body></html>`);
     };
     $('rdReset').onclick = () => { F = JSON.parse(JSON.stringify(DEF)); save(); build(); draw(); };
     build(); draw();
