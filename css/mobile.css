@@ -1,6 +1,8 @@
 /* Телефон (ширина до 700 пикселей, как порог в app.js): меню открывается поверх страницы
-   со сплошным фоном и затемнением, нажатие мимо меню закрывает его.
+   со сплошным фоном и затемнением; открыть можно кнопкой ☰ или свайпом вправо, закрыть: нажатием мимо меню или свайпом влево.
    Подключение: <link rel="stylesheet" href="css/mobile.css"> ПОСЛЕ css/style.css. */
+#mobileMenuBtn { display: none; }
+
 @media (max-width: 700px) {
   /* Меню: сплошной фон вместо полупрозрачного, чтобы текст страницы под ним не просвечивал */
   .sidebar {
@@ -27,6 +29,30 @@
 
   /* Пункты меню удобно нажимать пальцем */
   .nav-item { min-height: 44px; }
+
+  /* Кнопка меню: всегда на месте поверх страницы (прежняя кнопка в шапке на телефоне пропадала) */
+  #menuToggle { display: none !important; }
+  #mobileMenuBtn {
+    display: flex;
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    left: 10px;
+    z-index: 1100;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
 
   /* Поля ввода не меньше 16 пикселей, иначе iPhone приближает страницу при нажатии */
   input, select, textarea { font-size: 16px !important; }
