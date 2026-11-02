@@ -1,0 +1,33 @@
+/* Телефон (ширина до 700 пикселей, как порог в app.js): меню открывается поверх страницы
+   со сплошным фоном и затемнением, нажатие мимо меню закрывает его.
+   Подключение: <link rel="stylesheet" href="css/mobile.css"> ПОСЛЕ css/style.css. */
+@media (max-width: 700px) {
+  /* Меню: сплошной фон вместо полупрозрачного, чтобы текст страницы под ним не просвечивал */
+  .sidebar {
+    background: #0b0f1a !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    z-index: 1000 !important;
+    max-width: 86vw;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Затемнение страницы, пока меню открыто (создаётся в js/mobile.js) */
+  #menuBackdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 900;
+  }
+  .app:not(.collapsed) > #menuBackdrop { display: block; }
+
+  /* Пункты меню удобно нажимать пальцем */
+  .nav-item { min-height: 44px; }
+
+  /* Поля ввода не меньше 16 пикселей, иначе iPhone приближает страницу при нажатии */
+  input, select, textarea { font-size: 16px !important; }
+}
