@@ -1,59 +1,84 @@
-/* Телефон (ширина до 700 пикселей, как порог в app.js): меню открывается поверх страницы
-   со сплошным фоном и затемнением; открыть можно кнопкой ☰ или свайпом вправо, закрыть: нажатием мимо меню или свайпом влево.
+/* Телефон. Классы на <html> ставит js/mobile.js:
+     is-phone    — ширина меньше 700 пикселей или телефон в любой ориентации (в том числе повёрнутый);
+     touch-phone — именно телефон с сенсорным экраном (а не узкое окно на компьютере).
+   Меню открывается поверх страницы со сплошным фоном и затемнением. Открыть: свайп вправо, закрыть: свайп влево
+   или нажатие мимо меню. Кнопка ☰ и список языков на телефоне скрыты: вместо них свайп и флаги в правом углу.
    Подключение: <link rel="stylesheet" href="css/mobile.css"> ПОСЛЕ css/style.css. */
-#mobileMenuBtn { display: none; }
 
-@media (max-width: 700px) {
-  /* Меню: сплошной фон вместо полупрозрачного, чтобы текст страницы под ним не просвечивал */
-  .sidebar {
-    background: #0b0f1a !important;
-    background-image: none !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    z-index: 1000 !important;
-    max-width: 86vw;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.6);
-  }
+/* Тёмный фон под страницей: вместо белого при оттягивании края и в боковых полях повёрнутого телефона */
+html { background-color: #050a14; }
 
-  /* Затемнение страницы, пока меню открыто (создаётся в js/mobile.js) */
-  #menuBackdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 900;
-  }
-  .app:not(.collapsed) > #menuBackdrop { display: block; }
+/* ----- Меню ----- */
+html.is-phone .sidebar {
+  background: #0b0f1a !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  z-index: 1000 !important;
+  max-width: 86vw;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.6);
+}
+#menuBackdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 900;
+}
+html.is-phone .app:not(.collapsed) > #menuBackdrop { display: block; }
+html.is-phone .nav-item { min-height: 44px; }
 
-  /* Пункты меню удобно нажимать пальцем */
-  .nav-item { min-height: 44px; }
+/* Поля ввода не меньше 16 пикселей, иначе iPhone приближает страницу при нажатии */
+html.is-phone input, html.is-phone select, html.is-phone textarea { font-size: 16px !important; }
 
-  /* Кнопка меню: всегда на месте поверх страницы (прежняя кнопка в шапке на телефоне пропадала) */
-  #menuToggle { display: none !important; }
-  #mobileMenuBtn {
-    display: flex;
-    position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 10px);
-    left: 10px;
-    z-index: 1100;
-    width: 44px;
-    height: 44px;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    color: #fff;
-    font-size: 22px;
-    line-height: 1;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
+/* ----- Телефон с сенсорным экраном ----- */
+/* Страница не сдвигается вбок и не «белеет» при свайпе: горизонтально двигаются только таблицы */
+html.touch-phone, html.touch-phone body {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y pinch-zoom;
+}
+/* Кнопка меню не нужна: есть свайп. Список языков заменён флагами */
+html.touch-phone #menuToggle { display: none !important; }
+html.touch-phone .lang-select { display: none !important; }
 
-  /* Поля ввода не меньше 16 пикселей, иначе iPhone приближает страницу при нажатии */
-  input, select, textarea { font-size: 16px !important; }
+/* Каждая таблица прокручивается сама (обёртку добавляет js/mobile.js) */
+html.touch-phone .tbl-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+}
+
+/* ----- Флаги языков в правом верхнем углу ----- */
+#langFlags { display: none; }
+html.touch-phone #langFlags {
+  display: flex;
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  right: 8px;
+  z-index: 1100;
+  gap: 6px;
+}
+#langFlags button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(17, 24, 39, 0.85);
+  font-size: 22px;
+  line-height: 1;
+  opacity: 0.55;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#langFlags button.txt { font-size: 13px; font-weight: 700; color: #fff; }
+#langFlags button.active {
+  opacity: 1;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.55);
 }
