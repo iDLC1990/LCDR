@@ -56,6 +56,18 @@ html.touch-phone, html.touch-phone body {
 /* Кнопка меню не нужна: есть свайп. Список языков заменён флагами */
 html.touch-phone #menuToggle { display: none !important; }
 html.touch-phone .lang-select { display: none !important; }
+/* Индикатор состояния сайта на телефоне не нужен (остаётся на компьютере) */
+html.touch-phone .lcdr-dot { display: none !important; }
+
+/* Свёрнутые карточки (Special Label, Panel Label, PN Base): во всю ширину, а не узкими столбиками справа */
+html.touch-phone .manual-input-card.card-collapsed {
+  width: 100% !important; max-width: none !important; min-width: 0 !important; flex: 1 1 100% !important;
+  grid-column: 1 / -1; align-self: stretch !important; margin-left: 0 !important; margin-right: 0 !important; box-sizing: border-box;
+}
+html.touch-phone .card-head.untitled { height: 26px; border-radius: 10px; }
+html.touch-phone .card-head.untitled::after {
+  content: ''; display: block; width: 48px; height: 4px; margin: 11px auto 0; border-radius: 2px; background: #6b7280;
+}
 
 /* Каждая таблица прокручивается сама (обёртку добавляет js/mobile.js) */
 html.touch-phone .tbl-scroll {
