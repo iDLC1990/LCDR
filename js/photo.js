@@ -10,8 +10,15 @@
   const SB_URL = window.APP_CONFIG.SUPABASE_URL;
   const SB_KEY = window.APP_CONFIG.SUPABASE_KEY;
 
-  // key — ключ в имени файла (латиница), label — как на кнопке
-  const WORKERS = [
+  // Работники берутся из рабочей таблицы Final II (вкладка WORKERS_SHEET, столбец F), за последние WORKERS_DAYS дней.
+  // key — ключ в имени файла (фамилия латиницей без диакритики), label — как на кнопке.
+  const WORKERS_SHEET = 'FI Station 2 ULANOVYCH.R';
+  const WORKERS_COL = 5;
+  const WORKERS_DAYS = 7;
+  const WORKERS_CACHE_KEY = 'ph_workers_v1';
+
+  // Прежний список: нужен, чтобы подписать старые фото и как запасной вариант, если таблица недоступна
+  const LEGACY_WORKERS = [
     { key: 'BLASZKOWSKA',  label: 'BŁASZKOWSKA M.' },
     { key: 'PYNTIA',       label: 'PYNTIA A.' },
     { key: 'ZAHUBYPALETS', label: 'ZAHUBYPALETS K.' },
@@ -23,6 +30,7 @@
     { key: 'BUJKO',        label: 'BUJKO K.' },
     { key: 'ULANOVYCH',    label: 'ULANOVYCH R.' }
   ];
+  let WORKERS = LEGACY_WORKERS.slice();
 
   const STYLE = `
 #photoPage { padding: 1.25rem; overflow: auto; }
@@ -176,6 +184,82 @@
 
   /* ---------- Работники ---------- */
 
+  // «BŁASZKOWSKA M.» -> BLASZKOWSKA (первое слово, без диакритики)
+  function workerKey(label) {
+    const folded = String(label || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/Ł/g, 'L').replace(/ł/g, 'l').toUpperCase();
+    const m = /[A-Z]+/.exec(folded);
+    return m ? m[0] : '';
+  }
+
+  function labelForKey(key) {
+    const w = WORKERS.find(x => x.key === key) || LEGACY_WORKERS.find(x => x.key === key);
+    return w ? w.label : key;
+  }
+
+  // Дата строки таблицы: 02.11.2026 13:00:30 или 2026-11-02 ... -> число для сравнения
+  function rowDay(v) {
+    const first = String(v || '').trim().split(/\s+/)[0];
+    let m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(first);
+    if (m) return Date.UTC(+m[3], +m[2] - 1, +m[1]);
+    m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(first);
+    if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    return null;
+  }
+
+  // Из строк вкладки: уникальные имена за последние WORKERS_DAYS дней (от последней даты в таблице)
+  function workersFromRows(rows) {
+    const data = (rows || []).slice(1).map(r => ({ day: rowDay(r[0]), name: String(r[WORKERS_COL] || '').trim() }))
+      .filter(x => x.day !== null && x.name);
+    if (!data.length) return [];
+    const last = Math.max.apply(null, data.map(x => x.day));
+    const from = last - (WORKERS_DAYS - 1) * 86400000;
+    const byKey = {};
+    data.filter(x => x.day >= from).forEach(x => {
+      const key = workerKey(x.name);
+      if (!key) return;
+      // Если один человек записан по-разному («ANNA STAROZHYLOVA» и «STAROZHYLOVA A.»), оставляем форму «ФАМИЛИЯ И.»
+      const cur = byKey[key];
+      if (!cur || (!/\.$/.test(cur.label) && /\.$/.test(x.name))) byKey[key] = { key, label: x.name };
+    });
+    // Запись «ИМЯ ФАМИЛИЯ» убираем, если её фамилия уже есть отдельной кнопкой
+    const keys = Object.keys(byKey);
+    keys.forEach(k => {
+      const lab = byKey[k].label;
+      if (/\.$/.test(lab)) return;
+      const other = lab.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/Ł/g, 'L').replace(/ł/g, 'l').toUpperCase().match(/[A-Z]+/g) || [];
+      if (other.some(t => t !== k && byKey[t] && /\.$/.test(byKey[t].label))) delete byKey[k];
+    });
+    return Object.keys(byKey).map(k => byKey[k]).sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  function applyWorkers(list) {
+    if (!list.length) return false;
+    const key = selected && selected.key;
+    WORKERS = list;
+    selected = key ? (WORKERS.find(w => w.key === key) || null) : null;
+    renderWorkers();
+    return true;
+  }
+
+  // Загрузка списка работников: таблица -> (при сбое) последний сохранённый список -> прежний список
+  async function loadWorkers() {
+    try {
+      const rows = await window.LCDR_SHEETS.rows(WORKERS_SHEET);
+      const list = workersFromRows(rows);
+      if (list.length) {
+        try { localStorage.setItem(WORKERS_CACHE_KEY, JSON.stringify(list)); } catch (e) {}
+        applyWorkers(list);
+        return;
+      }
+    } catch (e) {}
+    try {
+      const cached = JSON.parse(localStorage.getItem(WORKERS_CACHE_KEY) || '[]');
+      if (cached.length) { applyWorkers(cached); return; }
+    } catch (e) {}
+    applyWorkers(LEGACY_WORKERS.slice());
+  }
+
   function renderWorkers() {
     $('ph-workers').innerHTML = WORKERS
       .map((w, i) => `<button type="button" class="ph-w${selected === w ? ' sel' : ''}" data-w="${i}">${esc(w.label)}</button>`)
@@ -185,7 +269,7 @@
   function selectWorker(i) {
     selected = WORKERS[i];
     renderWorkers();
-    msg(`Работник: ${selected.label}. Сканируй серийный номер.`);
+    msg(`Работник: ${selected.label}. Серийный номер берётся из Repair Log.`);
     focusSerial();
   }
 
@@ -310,8 +394,7 @@
   function parseName(name) {
     const m = /^([A-Z]+)__([A-Za-z0-9_-]+)\.jpg$/.exec(name);
     if (!m) return null;
-    const w = WORKERS.find(x => x.key === m[1]);
-    return { worker: w ? w.label : m[1], serial: m[2] };
+    return { worker: labelForKey(m[1]), serial: m[2] };
   }
 
   async function refreshList() {
@@ -427,6 +510,7 @@
     document.head.appendChild(style);
     root.innerHTML = MARKUP;
     renderWorkers();
+    loadWorkers();
 
     $('ph-workers').addEventListener('click', (e) => {
       const b = e.target.closest('button[data-w]');
@@ -468,6 +552,7 @@
     startCamera();
     refreshList();
     refreshAuto();
+    loadWorkers();
     focusSerial();
   };
 
