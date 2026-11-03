@@ -7,6 +7,19 @@
 
 /* Тёмный фон под страницей: вместо белого при оттягивании края и в боковых полях повёрнутого телефона */
 html { background-color: #050a14; }
+html.touch-phone, html.touch-phone body { background-color: #050a14 !important; margin: 0; }
+
+/* Страница занимает весь экран (viewport-fit=cover в index.html), поэтому отступы под «чёлку» и полосу жестов задаём сами */
+html.touch-phone body {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html.touch-phone .topbar {
+  padding-left: max(env(safe-area-inset-left, 0px), 12px);
+  padding-right: max(env(safe-area-inset-right, 0px), 12px);
+}
+html.touch-phone .sidebar { padding-left: env(safe-area-inset-left, 0px); }
 
 /* ----- Меню ----- */
 html.is-phone .sidebar {
@@ -38,7 +51,7 @@ html.is-phone input, html.is-phone select, html.is-phone textarea { font-size: 1
 html.touch-phone, html.touch-phone body {
   overflow-x: hidden;
   overscroll-behavior-x: none;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-y pinch-zoom; /* приближать щипком можно, уменьшать страницу меньше экрана нельзя (см. mobile.js) */
 }
 /* Кнопка меню не нужна: есть свайп. Список языков заменён флагами */
 html.touch-phone #menuToggle { display: none !important; }
@@ -59,7 +72,7 @@ html.touch-phone #langFlags {
   display: flex;
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 8px);
-  right: 8px;
+  right: calc(env(safe-area-inset-right, 0px) + 8px);
   z-index: 1100;
   gap: 6px;
 }
