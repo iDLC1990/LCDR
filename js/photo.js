@@ -10,14 +10,15 @@
   const SB_URL = window.APP_CONFIG.SUPABASE_URL;
   const SB_KEY = window.APP_CONFIG.SUPABASE_KEY;
 
-  // Работники берутся из рабочей таблицы Final II (вкладка WORKERS_SHEET, столбец F), за последние WORKERS_DAYS дней.
-  // key — ключ в имени файла (фамилия латиницей без диакритики), label — как на кнопке.
-  const WORKERS_SHEET = 'FI Station 2 ULANOVYCH.R';
-  const WORKERS_COL = 5;
-  const WORKERS_DAYS = 7;
-  const WORKERS_CACHE_KEY = 'ph_workers_v1';
+  // Работник берётся из рабочей таблицы Final II: вкладка SHEET_TAB, ищется строка с этим серийным номером
+  // (столбец C), фамилия из столбца F. Фамилия попадает в имя файла и в подпись в списке ниже.
+  const SHEET_TAB = 'FI Station 2 ULANOVYCH.R';
+  const SHEET_SN_COL = 2;
+  const SHEET_NAME_COL = 5;
+  const SHEET_TTL_MS = 60000;
+  const NO_NAME = 'NONAME';
 
-  // Прежний список: нужен, чтобы подписать старые фото и как запасной вариант, если таблица недоступна
+  // Прежний список: только чтобы подписать старые фото, снятые до этой версии
   const LEGACY_WORKERS = [
     { key: 'BLASZKOWSKA',  label: 'BŁASZKOWSKA M.' },
     { key: 'PYNTIA',       label: 'PYNTIA A.' },
@@ -30,7 +31,6 @@
     { key: 'BUJKO',        label: 'BUJKO K.' },
     { key: 'ULANOVYCH',    label: 'ULANOVYCH R.' }
   ];
-  let WORKERS = LEGACY_WORKERS.slice();
 
   const STYLE = `
 #photoPage { padding: 1.25rem; overflow: auto; }
@@ -72,17 +72,13 @@
   const MARKUP = `
 <div class="ph-wrap">
   <h2>Photo</h2>
-  <div class="ph-workers" id="ph-workers"></div>
   <div class="ph-bar">
-    <input type="text" id="ph-serial" placeholder="Серийный номер (из Repair Log или сканер)" autocomplete="off" spellcheck="false">
     <select id="ph-cam"></select>
     <button type="button" class="ph-btn" id="ph-snap" disabled>📷 Сделать фото и сохранить</button>
-    <button type="button" class="ph-btn ghost" id="ph-retake" style="display:none">Скрыть снимок</button>
   </div>
   <div class="ph-auto" id="ph-auto"></div>
-  <div class="ph-stage">
+  <div class="ph-stage" style="grid-template-columns:1fr">
     <div class="ph-box"><video id="ph-video" autoplay playsinline muted></video></div>
-    <div class="ph-box"><img id="ph-preview" alt="" style="display:none"></div>
   </div>
   <div class="ph-msg" id="ph-msg"></div>
   <div class="ph-bar" style="justify-content:space-between">
@@ -98,14 +94,14 @@
   const $ = (id) => document.getElementById(id);
   let inited = false;
   let stream = null;
-  let previewUrl = null;
   let client = null;
-  let selected = null; // выбранный работник (объект из WORKERS)
+  let userCam = false;     // камеру выбрали вручную: автовыбор её не меняет
+  let autoCamTried = false; // автовыбор камеры за это открытие вкладки уже выполнен
+  let sheetCache = { at: 0, idx: null }; // серийный номер -> фамилия из таблицы
   let listed = [];     // имена файлов, которые сейчас показаны в списке
   let autoSn = '';       // последний серийный номер из Repair Log
   let autoInfo = '';     // дата и время этой записи
   let autoState = 'wait'; // wait | ok | none | err
-  let manualSn = false;  // номер введён или отсканирован вручную: автоподстановка его не перезаписывает
   const RL_QUEUE_KEY = 'rl_queue_v1'; // записи Repair Log, ещё не отправленные в базу (нет связи)
 
   function esc(v) {
@@ -129,12 +125,6 @@
     return client;
   }
 
-  // На телефоне курсор в поле не ставим: иначе при каждом действии выезжает клавиатура
-  function focusSerial() {
-    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-    if (!coarse) $('ph-serial').focus();
-  }
-
   /* ---------- Серийный номер из Repair Log ---------- */
 
   // Самая свежая запись Repair Log. Неотправленные записи этого устройства новее базы
@@ -156,10 +146,9 @@
     const el = $('ph-auto');
     if (!el) return;
     let text = '', warn = false;
-    if (manualSn) text = 'Номер введён вручную. Очистите поле, чтобы брать номер из Repair Log.';
-    else if (autoState === 'ok') text = 'Из Repair Log: ' + autoSn + (autoInfo ? ' (' + autoInfo + ')' : '');
-    else if (autoState === 'none') { text = 'В Repair Log ещё нет записей.'; warn = true; }
-    else if (autoState === 'err') { text = 'Не удалось получить номер из Repair Log. Введите номер вручную.'; warn = true; }
+    if (autoState === 'ok') text = 'Серийный номер из Repair Log: ' + autoSn + (autoInfo ? ' (' + autoInfo + ')' : '');
+    else if (autoState === 'none') { text = 'В Repair Log ещё нет записей: фото сохранить нельзя.'; warn = true; }
+    else if (autoState === 'err') { text = 'Не удалось получить номер из Repair Log.'; warn = true; }
     el.textContent = text;
     el.className = 'ph-auto' + (warn ? ' warn' : '');
   }
@@ -170,7 +159,6 @@
       autoSn = r ? cleanSerial(r.sn) : '';
       autoInfo = r ? r.when : '';
       autoState = autoSn ? 'ok' : 'none';
-      if (!manualSn) $('ph-serial').value = autoSn;
     } catch (e) {
       autoState = 'err';
     }
@@ -193,84 +181,36 @@
   }
 
   function labelForKey(key) {
-    const w = WORKERS.find(x => x.key === key) || LEGACY_WORKERS.find(x => x.key === key);
+    if (key === NO_NAME) return '—';
+    const w = LEGACY_WORKERS.find(x => x.key === key);
     return w ? w.label : key;
   }
 
-  // Дата строки таблицы: 02.11.2026 13:00:30 или 2026-11-02 ... -> число для сравнения
-  function rowDay(v) {
-    const first = String(v || '').trim().split(/\s+/)[0];
-    let m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(first);
-    if (m) return Date.UTC(+m[3], +m[2] - 1, +m[1]);
-    m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(first);
-    if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
-    return null;
-  }
-
-  // Из строк вкладки: уникальные имена за последние WORKERS_DAYS дней (от последней даты в таблице)
-  function workersFromRows(rows) {
-    const data = (rows || []).slice(1).map(r => ({ day: rowDay(r[0]), name: String(r[WORKERS_COL] || '').trim() }))
-      .filter(x => x.day !== null && x.name);
-    if (!data.length) return [];
-    const last = Math.max.apply(null, data.map(x => x.day));
-    const from = last - (WORKERS_DAYS - 1) * 86400000;
-    const byKey = {};
-    data.filter(x => x.day >= from).forEach(x => {
-      const key = workerKey(x.name);
-      if (!key) return;
-      // Если один человек записан по-разному («ANNA STAROZHYLOVA» и «STAROZHYLOVA A.»), оставляем форму «ФАМИЛИЯ И.»
-      const cur = byKey[key];
-      if (!cur || (!/\.$/.test(cur.label) && /\.$/.test(x.name))) byKey[key] = { key, label: x.name };
-    });
-    // Запись «ИМЯ ФАМИЛИЯ» убираем, если её фамилия уже есть отдельной кнопкой
-    const keys = Object.keys(byKey);
-    keys.forEach(k => {
-      const lab = byKey[k].label;
-      if (/\.$/.test(lab)) return;
-      const other = lab.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/Ł/g, 'L').replace(/ł/g, 'l').toUpperCase().match(/[A-Z]+/g) || [];
-      if (other.some(t => t !== k && byKey[t] && /\.$/.test(byKey[t].label))) delete byKey[k];
-    });
-    return Object.keys(byKey).map(k => byKey[k]).sort((a, b) => a.label.localeCompare(b.label));
-  }
-
-  function applyWorkers(list) {
-    if (!list.length) return false;
-    const key = selected && selected.key;
-    WORKERS = list;
-    selected = key ? (WORKERS.find(w => w.key === key) || null) : null;
-    renderWorkers();
-    return true;
-  }
-
-  // Загрузка списка работников: таблица -> (при сбое) последний сохранённый список -> прежний список
-  async function loadWorkers() {
+  // Индекс «серийный номер -> фамилия» из вкладки таблицы (последняя запись по номеру главнее). Кэш на минуту
+  async function sheetIndex(force) {
+    if (!force && sheetCache.idx && Date.now() - sheetCache.at < SHEET_TTL_MS) return sheetCache.idx;
     try {
-      const rows = await window.LCDR_SHEETS.rows(WORKERS_SHEET);
-      const list = workersFromRows(rows);
-      if (list.length) {
-        try { localStorage.setItem(WORKERS_CACHE_KEY, JSON.stringify(list)); } catch (e) {}
-        applyWorkers(list);
-        return;
-      }
-    } catch (e) {}
-    try {
-      const cached = JSON.parse(localStorage.getItem(WORKERS_CACHE_KEY) || '[]');
-      if (cached.length) { applyWorkers(cached); return; }
-    } catch (e) {}
-    applyWorkers(LEGACY_WORKERS.slice());
+      const rows = await window.LCDR_SHEETS.rows(SHEET_TAB);
+      const idx = new Map();
+      (rows || []).slice(1).forEach(r => {
+        const sn = String(r[SHEET_SN_COL] || '').trim().toUpperCase();
+        const name = String(r[SHEET_NAME_COL] || '').trim();
+        if (sn && name) idx.set(sn, name);
+      });
+      sheetCache = { at: Date.now(), idx };
+    } catch (e) {
+      // Таблица недоступна: пользуемся прошлым индексом, если он есть
+      if (!sheetCache.idx) sheetCache = { at: 0, idx: new Map() };
+    }
+    return sheetCache.idx;
   }
 
-  function renderWorkers() {
-    $('ph-workers').innerHTML = WORKERS
-      .map((w, i) => `<button type="button" class="ph-w${selected === w ? ' sel' : ''}" data-w="${i}">${esc(w.label)}</button>`)
-      .join('');
-  }
-
-  function selectWorker(i) {
-    selected = WORKERS[i];
-    renderWorkers();
-    msg(`Работник: ${selected.label}. Серийный номер берётся из Repair Log.`);
-    focusSerial();
+  // Фамилия по серийному номеру: сначала из кэша, при отсутствии один раз перечитываем таблицу
+  async function workerFor(serial) {
+    const sn = String(serial || '').toUpperCase();
+    let name = (await sheetIndex(false)).get(sn);
+    if (!name) name = (await sheetIndex(true)).get(sn);
+    return name || '';
   }
 
   /* ---------- Камера ---------- */
@@ -282,6 +222,21 @@
     }
     $('ph-video').srcObject = null;
     $('ph-snap').disabled = true;
+  }
+
+  const isTouch = () => !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+  // Названия камер зависят от языка iPhone: «Задняя двойная широкоугольная камера», «Back Dual Wide Camera» и т.п.
+  function pickPreferredCamera(devices) {
+    const l = (d) => (d.label || '').toLowerCase();
+    const back = /(задн|back|rear|tyln|tylny)/;
+    const dual = /(двойн|подвійн|dual|podwójn|podwojn)/;
+    const wide = /(широкоугол|ширококут|wide|szerokok)/;
+    const ultra = /(сверх|надш|ultra|ultraszerok)/;
+    const exact = devices.find(d => back.test(l(d)) && dual.test(l(d)) && wide.test(l(d)) && !ultra.test(l(d)));
+    if (exact) return exact;
+    // Двойной нет (другая модель): обычная задняя камера, но не сверхширокая и не телеобъектив
+    return devices.find(d => back.test(l(d)) && !ultra.test(l(d)) && !/(телефото|telephoto|tele|тройн|потрійн|triple)/.test(l(d))) || null;
   }
 
   async function fillCameraList() {
@@ -306,12 +261,13 @@
     stopStream();
     msg('Подключение камеры...');
     const deviceId = $('ph-cam').value;
-    const constraints = {
-      audio: false,
-      video: deviceId
-        ? { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-        : { width: { ideal: 1920 }, height: { ideal: 1080 } }
-    };
+    // На телефоне без выбранной камеры сразу открываем заднюю (потом подбирается двойная широкоугольная)
+    const video = deviceId
+      ? { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+      : (isTouch()
+          ? { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+          : { width: { ideal: 1920 }, height: { ideal: 1080 } });
+    const constraints = { audio: false, video };
     try {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       $('ph-video').srcObject = stream;
@@ -319,6 +275,18 @@
       $('ph-snap').disabled = false;
       await fillCameraList();
       msg('');
+      // Только телефон: сам выбираем «Заднюю двойную широкоугольную камеру», если её не выбрали вручную
+      if (isTouch() && !userCam && !autoCamTried) {
+        autoCamTried = true;
+        const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+        const pref = pickPreferredCamera(devs);
+        const track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
+        const curId = track && track.getSettings ? track.getSettings().deviceId : '';
+        if (pref) {
+          $('ph-cam').value = pref.deviceId;
+          if (pref.deviceId !== curId) { await startCamera(); return; }
+        }
+      }
     } catch (err) {
       msg('Камера недоступна: ' + err.name + ' — ' + err.message);
     }
@@ -326,24 +294,7 @@
 
   /* ---------- Снимок и сохранение ---------- */
 
-  function showPreview(blob) {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    previewUrl = URL.createObjectURL(blob);
-    $('ph-preview').src = previewUrl;
-    $('ph-preview').style.display = 'block';
-    $('ph-retake').style.display = 'inline-block';
-  }
-
-  function resetPreview() {
-    if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
-    $('ph-preview').style.display = 'none';
-    $('ph-preview').removeAttribute('src');
-    $('ph-retake').style.display = 'none';
-  }
-
   async function takeShot() {
-    if (!selected) { msg('Сначала нажми фамилию работника'); return; }
-
     const video = $('ph-video');
     if (!stream || !video.videoWidth) { msg('Камера ещё не готова'); return; }
 
@@ -355,17 +306,18 @@
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
     if (!blob) { msg('Не удалось создать снимок'); return; }
 
-    // Серийный номер: введённый вручную, иначе самый свежий из Repair Log
-    if (!manualSn) await refreshAuto();
-    const serial = cleanSerial($('ph-serial').value);
+    // Серийный номер: самый свежий из Repair Log
+    await refreshAuto();
+    const serial = autoSn;
     if (serial.length < 3) {
-      msg('Нет серийного номера: добавьте запись в Repair Log или введите номер вручную');
-      focusSerial();
+      msg('Нет серийного номера: сначала добавьте запись в Repair Log');
       return;
     }
 
-    const objectName = `${selected.key}__${serial}.jpg`;
-    showPreview(blob);
+    // Фамилия по этому номеру из рабочей таблицы Final II
+    const name = await workerFor(serial);
+    const key = workerKey(name) || NO_NAME;
+    const objectName = `${key}__${serial}.jpg`;
     msg(`Сохраняю ${serial}.jpg...`);
     $('ph-snap').disabled = true;
 
@@ -376,10 +328,11 @@
         cacheControl: '0'
       });
       if (error) throw error;
-      msg(`Сохранено: ${serial}.jpg (${selected.label})`);
-      manualSn = false;
+      // Повторный снимок этого номера: убираем прежний файл, если он был записан под другой фамилией
+      const stale = listed.filter(n => n !== objectName && n.endsWith('__' + serial + '.jpg'));
+      if (stale.length) { try { await removeFiles(stale); } catch (e) {} }
+      msg(`Сохранено: ${serial}.jpg (${name || 'фамилия в таблице пока не найдена'})`);
       refreshAuto();
-      focusSerial();
       refreshList();
     } catch (err) {
       msg('Ошибка сохранения: ' + (err.message || err));
@@ -408,6 +361,7 @@
       .map(f => ({ f, p: parseName(f.name) }))
       .filter(x => x.p);
     listed = items.map(x => x.f.name);
+    const idx = await sheetIndex(false);
 
     // Отметки «скачано» (таблица photo_downloads). Если таблицы нет, отметок просто не будет
     const downloaded = {};
@@ -426,7 +380,7 @@
       const done = d && x.f.updated_at && new Date(d) > new Date(x.f.updated_at);
       const mark = done ? `<span title="Скачано: ${esc(new Date(d).toLocaleString())}">✔</span>` : '';
       return `<tr>
-        <td>${esc(x.p.worker)}</td>
+        <td>${esc(idx.get(x.p.serial.toUpperCase()) || x.p.worker)}</td>
         <td>${esc(x.p.serial)}.jpg</td>
         <td>${esc(x.f.updated_at ? new Date(x.f.updated_at).toLocaleString() : '')}</td>
         <td class="ph-done">${mark}</td>
@@ -509,26 +463,8 @@
     style.textContent = STYLE;
     document.head.appendChild(style);
     root.innerHTML = MARKUP;
-    renderWorkers();
-    loadWorkers();
-
-    $('ph-workers').addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-w]');
-      if (b) selectWorker(+b.dataset.w);
-    });
-    // Сканер печатает номер и нажимает Enter — по Enter сразу делаем фото
-    $('ph-serial').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); takeShot(); }
-    });
-    // Любой ввод вручную (в том числе сканером) отключает автоподстановку; пустое поле возвращает её
-    $('ph-serial').addEventListener('input', () => {
-      const v = cleanSerial($('ph-serial').value);
-      manualSn = v !== '' && v !== autoSn;
-      if (v === '') refreshAuto(); else showAuto();
-    });
     $('ph-snap').addEventListener('click', takeShot);
-    $('ph-retake').addEventListener('click', resetPreview);
-    $('ph-cam').addEventListener('change', startCamera);
+    $('ph-cam').addEventListener('change', () => { userCam = true; startCamera(); });
     $('ph-refresh').addEventListener('click', refreshList);
     $('ph-delall').addEventListener('click', deleteAll);
     $('ph-list').addEventListener('click', (e) => {
@@ -541,7 +477,7 @@
     // Обновляем список раз в 30 секунд, пока открыта вкладка (чтобы видеть фото коллеги)
     setInterval(() => { if (inited && $('ph-list').offsetParent && !document.hidden) refreshList(); }, 30000);
     // Свежий номер из Repair Log подтягиваем каждые 5 секунд, пока открыта вкладка
-    setInterval(() => { if (inited && $('ph-serial').offsetParent && !document.hidden && !manualSn) refreshAuto(); }, 5000);
+    setInterval(() => { if (inited && $('ph-auto').offsetParent && !document.hidden) refreshAuto(); }, 5000);
 
     inited = true;
   }
@@ -549,11 +485,10 @@
   // Вызывается сайтом при открытии вкладки
   window.photoShow = function () {
     if (!inited) return;
+    autoCamTried = false;
     startCamera();
     refreshList();
     refreshAuto();
-    loadWorkers();
-    focusSerial();
   };
 
   // Вызывается сайтом при уходе с вкладки
