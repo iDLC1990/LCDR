@@ -6,8 +6,8 @@
   if (!app) return;
   const root = document.documentElement;
 
-  // Флаги языков в правом верхнем углу. Убрать язык: удалить строку. 'RU' показывается текстом, не флагом
-  const FLAGS = [['uk', '\uD83C\uDDFA\uD83C\uDDE6'], ['pl', '\uD83C\uDDF5\uD83C\uDDF1'], ['en', '\uD83C\uDDEC\uD83C\uDDE7'], ['ru', 'RU']];
+  // Флаги языков в правом верхнем углу (украинский, польский, английский)
+  const FLAGS = [['uk', '\uD83C\uDDFA\uD83C\uDDE6'], ['pl', '\uD83C\uDDF5\uD83C\uDDF1'], ['en', '\uD83C\uDDEC\uD83C\uDDE7']];
 
   /* ---------- Тип устройства ---------- */
   const coarse = () => !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -127,6 +127,15 @@
       });
     }
     mark();
+    // На телефоне доступны только эти три языка: если сохранён другой (например, русский), включаем украинский
+    try {
+      const saved = localStorage.getItem('siteLang') || root.lang || 'en';
+      if (touchPhone() && !FLAGS.some(f => f[0] === saved)) {
+        langSelect.value = 'uk';
+        langSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        mark();
+      }
+    } catch (e) {}
     // Язык мог смениться без нажатия на флаг (например, при загрузке страницы)
     new MutationObserver(mark).observe(root, { attributes: true, attributeFilter: ['lang'] });
   }
