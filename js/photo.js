@@ -34,6 +34,8 @@
 #photoPage select, #photoPage input { padding: 9px 10px; background: #111827; color: #fff; border: 1px solid #374151; border-radius: 8px; }
 #photoPage #ph-cam { min-width: 14rem; }
 #photoPage #ph-serial { min-width: 18rem; font-size: 16px; letter-spacing: .03em; }
+#photoPage .ph-auto { margin: -2px 0 10px 0; font-size: 13px; color: #9CA3AF; }
+#photoPage .ph-auto.warn { color: #fbbf24; }
 #photoPage .ph-workers { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 #photoPage .ph-w { padding: 9px 14px; border: 1px solid #374151; border-radius: 8px; background: #111827;
   color: #e5e7eb; cursor: pointer; font-weight: 600; }
@@ -64,11 +66,12 @@
   <h2>Photo</h2>
   <div class="ph-workers" id="ph-workers"></div>
   <div class="ph-bar">
-    <input type="text" id="ph-serial" placeholder="Серийный номер (сканер)" autocomplete="off" spellcheck="false">
+    <input type="text" id="ph-serial" placeholder="Серийный номер (из Repair Log или сканер)" autocomplete="off" spellcheck="false">
     <select id="ph-cam"></select>
     <button type="button" class="ph-btn" id="ph-snap" disabled>📷 Сделать фото и сохранить</button>
     <button type="button" class="ph-btn ghost" id="ph-retake" style="display:none">Скрыть снимок</button>
   </div>
+  <div class="ph-auto" id="ph-auto"></div>
   <div class="ph-stage">
     <div class="ph-box"><video id="ph-video" autoplay playsinline muted></video></div>
     <div class="ph-box"><img id="ph-preview" alt="" style="display:none"></div>
@@ -91,6 +94,11 @@
   let client = null;
   let selected = null; // выбранный работник (объект из WORKERS)
   let listed = [];     // имена файлов, которые сейчас показаны в списке
+  let autoSn = '';       // последний серийный номер из Repair Log
+  let autoInfo = '';     // дата и время этой записи
+  let autoState = 'wait'; // wait | ok | none | err
+  let manualSn = false;  // номер введён или отсканирован вручную: автоподстановка его не перезаписывает
+  const RL_QUEUE_KEY = 'rl_queue_v1'; // записи Repair Log, ещё не отправленные в базу (нет связи)
 
   function esc(v) {
     return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -113,6 +121,54 @@
     return client;
   }
 
+  // На телефоне курсор в поле не ставим: иначе при каждом действии выезжает клавиатура
+  function focusSerial() {
+    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (!coarse) $('ph-serial').focus();
+  }
+
+  /* ---------- Серийный номер из Repair Log ---------- */
+
+  // Самая свежая запись Repair Log. Неотправленные записи этого устройства новее базы
+  async function latestRepairSn() {
+    try {
+      const q = JSON.parse(localStorage.getItem(RL_QUEUE_KEY) || '[]');
+      if (q.length) { const r = q[q.length - 1]; return { sn: r.sn, when: ((r.date || '') + ' ' + (r.time || '')).trim() }; }
+    } catch (e) {}
+    const res = await Promise.race([
+      sb().from('repair_log').select('panel_sn,repair_date,repair_time').order('id', { ascending: false }).limit(1),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
+    ]);
+    if (res.error) throw res.error;
+    const r = res.data && res.data[0];
+    return r ? { sn: r.panel_sn, when: ((r.repair_date || '') + ' ' + (r.repair_time || '')).trim() } : null;
+  }
+
+  function showAuto() {
+    const el = $('ph-auto');
+    if (!el) return;
+    let text = '', warn = false;
+    if (manualSn) text = 'Номер введён вручную. Очистите поле, чтобы брать номер из Repair Log.';
+    else if (autoState === 'ok') text = 'Из Repair Log: ' + autoSn + (autoInfo ? ' (' + autoInfo + ')' : '');
+    else if (autoState === 'none') { text = 'В Repair Log ещё нет записей.'; warn = true; }
+    else if (autoState === 'err') { text = 'Не удалось получить номер из Repair Log. Введите номер вручную.'; warn = true; }
+    el.textContent = text;
+    el.className = 'ph-auto' + (warn ? ' warn' : '');
+  }
+
+  async function refreshAuto() {
+    try {
+      const r = await latestRepairSn();
+      autoSn = r ? cleanSerial(r.sn) : '';
+      autoInfo = r ? r.when : '';
+      autoState = autoSn ? 'ok' : 'none';
+      if (!manualSn) $('ph-serial').value = autoSn;
+    } catch (e) {
+      autoState = 'err';
+    }
+    showAuto();
+  }
+
   // Серийный номер: только буквы, цифры, _ и -
   function cleanSerial(v) {
     return String(v || '').trim().replace(/[^A-Za-z0-9_-]/g, '');
@@ -130,7 +186,7 @@
     selected = WORKERS[i];
     renderWorkers();
     msg(`Работник: ${selected.label}. Сканируй серийный номер.`);
-    $('ph-serial').focus();
+    focusSerial();
   }
 
   /* ---------- Камера ---------- */
@@ -203,18 +259,26 @@
 
   async function takeShot() {
     if (!selected) { msg('Сначала нажми фамилию работника'); return; }
-    const serial = cleanSerial($('ph-serial').value);
-    if (serial.length < 3) { msg('Отсканируй серийный номер'); $('ph-serial').focus(); return; }
 
     const video = $('ph-video');
     if (!stream || !video.videoWidth) { msg('Камера ещё не готова'); return; }
 
+    // Кадр снимаем сразу при нажатии
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
     if (!blob) { msg('Не удалось создать снимок'); return; }
+
+    // Серийный номер: введённый вручную, иначе самый свежий из Repair Log
+    if (!manualSn) await refreshAuto();
+    const serial = cleanSerial($('ph-serial').value);
+    if (serial.length < 3) {
+      msg('Нет серийного номера: добавьте запись в Repair Log или введите номер вручную');
+      focusSerial();
+      return;
+    }
 
     const objectName = `${selected.key}__${serial}.jpg`;
     showPreview(blob);
@@ -229,8 +293,9 @@
       });
       if (error) throw error;
       msg(`Сохранено: ${serial}.jpg (${selected.label})`);
-      $('ph-serial').value = '';
-      $('ph-serial').focus();
+      manualSn = false;
+      refreshAuto();
+      focusSerial();
       refreshList();
     } catch (err) {
       msg('Ошибка сохранения: ' + (err.message || err));
@@ -371,6 +436,12 @@
     $('ph-serial').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); takeShot(); }
     });
+    // Любой ввод вручную (в том числе сканером) отключает автоподстановку; пустое поле возвращает её
+    $('ph-serial').addEventListener('input', () => {
+      const v = cleanSerial($('ph-serial').value);
+      manualSn = v !== '' && v !== autoSn;
+      if (v === '') refreshAuto(); else showAuto();
+    });
     $('ph-snap').addEventListener('click', takeShot);
     $('ph-retake').addEventListener('click', resetPreview);
     $('ph-cam').addEventListener('change', startCamera);
@@ -385,6 +456,8 @@
 
     // Обновляем список раз в 30 секунд, пока открыта вкладка (чтобы видеть фото коллеги)
     setInterval(() => { if (inited && $('ph-list').offsetParent && !document.hidden) refreshList(); }, 30000);
+    // Свежий номер из Repair Log подтягиваем каждые 5 секунд, пока открыта вкладка
+    setInterval(() => { if (inited && $('ph-serial').offsetParent && !document.hidden && !manualSn) refreshAuto(); }, 5000);
 
     inited = true;
   }
@@ -394,7 +467,8 @@
     if (!inited) return;
     startCamera();
     refreshList();
-    $('ph-serial').focus();
+    refreshAuto();
+    focusSerial();
   };
 
   // Вызывается сайтом при уходе с вкладки
