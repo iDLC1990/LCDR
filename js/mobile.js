@@ -52,7 +52,8 @@
   }
 
   document.addEventListener('touchstart', (e) => {
-    if (!isPhone() || e.touches.length !== 1) { track = false; return; }
+    // При приближении щипком палец двигает страницу, а не открывает меню
+    if (!isPhone() || e.touches.length !== 1 || (window.visualViewport && window.visualViewport.scale > 1.05)) { track = false; return; }
     const t = e.touches[0];
     sx = t.clientX; sy = t.clientY; st = Date.now();
     track = isOpen() ? true : (sx < window.innerWidth * ZONE && !inScrolledTable(e.target));
@@ -67,6 +68,34 @@
     if (dx > 0 && !isOpen()) app.classList.remove('collapsed');
     else if (dx < 0 && isOpen()) app.classList.add('collapsed');
   }, { passive: true });
+
+
+  /* ---------- Щипок двумя пальцами ---------- */
+  // Приближать можно. Уменьшать страницу меньше экрана нельзя: вокруг неё появляется белое поле браузера
+  const vv = window.visualViewport;
+  if (vv) {
+    let startScale = 1;
+    document.addEventListener('gesturestart', () => { startScale = vv.scale; }, { passive: false });
+    document.addEventListener('gesturechange', (e) => {
+      if (touchPhone() && e.scale && startScale * e.scale < 1) e.preventDefault();
+    }, { passive: false });
+
+    // Если страница всё же стала меньше экрана, на мгновение фиксируем масштаб 1 и возвращаем прежние настройки
+    let zoomTimer = null;
+    const resetZoom = () => {
+      const meta = document.querySelector('meta[name="viewport"]');
+      if (!meta) return;
+      const orig = meta.getAttribute('content') || '';
+      const base = orig.replace(/,?\s*(maximum|minimum)-scale=[^,]*/g, '');
+      meta.setAttribute('content', base + ', maximum-scale=1, minimum-scale=1');
+      setTimeout(() => meta.setAttribute('content', orig), 350);
+    };
+    vv.addEventListener('resize', () => {
+      if (!touchPhone()) return;
+      clearTimeout(zoomTimer);
+      zoomTimer = setTimeout(() => { if (vv.scale < 0.99) resetZoom(); }, 300);
+    });
+  }
 
   /* ---------- Флаги языков ---------- */
   // Переключают скрытый список языков из app.js, поэтому весь перевод работает как раньше
