@@ -69,7 +69,7 @@
 @media (max-width: 800px) { #photoPage .ph-stage { grid-template-columns: 1fr; } }
 
 /* ----- Телефон: вкладка открывается как фотоаппарат ----- */
-#photoPage .ph-thumb, #photoPage .ph-flip, #photoPage .ph-close, #photoPage .ph-flash { display: none; }
+#photoPage .ph-thumb, #photoPage .ph-close, #photoPage .ph-flash { display: none; }
 html.touch-phone #photoPage { position: fixed; inset: 0; z-index: 800; margin: 0; padding: 0; background: #000; }
 html.touch-phone #photoPage .ph-wrap { position: absolute; inset: 0; max-width: none; margin: 0; padding: 0; border: 0;
   border-radius: 0; background: #000; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; overflow: hidden; }
@@ -93,11 +93,16 @@ html.touch-phone #photoPage #ph-snap { position: absolute; z-index: 4; left: 50%
   border: 5px solid #000; box-shadow: 0 0 0 4px #fff; }
 html.touch-phone #photoPage #ph-snap:active:not(:disabled) { transform: translateX(-50%) scale(.9); }
 html.touch-phone #photoPage #ph-snap:disabled { opacity: .35; }
-html.touch-phone #photoPage .ph-thumb, html.touch-phone #photoPage .ph-flip { display: flex; position: absolute; z-index: 4; width: 58px; height: 58px;
+/* Телефон повёрнут горизонтально: кнопка съёмки в правом нижнем углу, под большой палец */
+@media (orientation: landscape) {
+  html.touch-phone #photoPage #ph-snap { left: auto; right: calc(env(safe-area-inset-right, 0px) + 28px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); transform: none; }
+  html.touch-phone #photoPage #ph-snap:active:not(:disabled) { transform: scale(.9); }
+}
+html.touch-phone #photoPage .ph-thumb { display: flex; position: absolute; z-index: 4; width: 58px; height: 58px;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 38px); padding: 0; border-radius: 14px; align-items: center; justify-content: center;
   background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); color: #fff; font-size: 26px; cursor: pointer; }
 html.touch-phone #photoPage .ph-thumb { left: 24px; }
-html.touch-phone #photoPage .ph-flip { right: 24px; border-radius: 50%; }
 html.touch-phone #photoPage .ph-count { position: absolute; top: -7px; right: -7px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
   background: #7c3aed; color: #fff; font-size: 12px; line-height: 20px; text-align: center; }
 html.touch-phone #photoPage .ph-count:empty { display: none; }
@@ -125,7 +130,6 @@ html.touch-phone.ph-camera #langFlags { display: none !important; }
   </div>
   <div class="ph-msg" id="ph-msg"></div>
   <button type="button" class="ph-thumb" id="ph-thumb" aria-label="Фото">🖼<span class="ph-count" id="ph-count"></span></button>
-  <button type="button" class="ph-flip" id="ph-flip" aria-label="Камера">🔄</button>
   <div class="ph-flash" id="ph-flash"></div>
   <button type="button" class="ph-close" id="ph-close" aria-label="Закрыть">✕</button>
   <div class="ph-listbox" id="ph-listbox">
@@ -531,14 +535,6 @@ html.touch-phone.ph-camera #langFlags { display: none !important; }
     $('ph-refresh').addEventListener('click', refreshList);
     $('ph-thumb').addEventListener('click', () => { $('ph-wrap').classList.add('ph-open'); refreshList(); });
     $('ph-close').addEventListener('click', () => $('ph-wrap').classList.remove('ph-open'));
-    // Смена камеры по кругу (как кнопка поворота в камере iPhone)
-    $('ph-flip').addEventListener('click', () => {
-      const sel = $('ph-cam');
-      if (!sel.options || sel.options.length < 2) return;
-      sel.selectedIndex = (sel.selectedIndex + 1) % sel.options.length;
-      userCam = true;
-      startCamera();
-    });
     $('ph-delall').addEventListener('click', deleteAll);
     $('ph-list').addEventListener('click', (e) => {
       const dl = e.target.closest('button[data-dl]');
