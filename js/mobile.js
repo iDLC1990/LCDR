@@ -158,24 +158,9 @@
     });
   }
 
-  // Свёрнутая карточка на телефоне должна занимать всю ширину. Если какой-то из её родителей сжат по содержимому
-  // (страница тянется к правому краю), растягиваем и его: помечаем родителей классом fill-w (правило в css/mobile.css)
-  function fillCollapsed() {
-    if (!touchPhone()) return;
-    Array.prototype.forEach.call(document.querySelectorAll('.card-collapsed'), (card) => {
-      for (let el = card.parentElement; el && el !== document.body; el = el.parentElement) {
-        if (el.matches && el.matches('main, .main, .app, #app')) break;   // каркас сайта не трогаем
-        el.classList.add('fill-w');
-      }
-    });
-  }
-
   let scanTimer = null;
-  const scheduleScan = () => { clearTimeout(scanTimer); scanTimer = setTimeout(() => { scanTables(); fillCollapsed(); }, 150); };
-  const watched = document.querySelector('main') || document.body;
-  new MutationObserver(scheduleScan).observe(watched, { childList: true, subtree: true });
-  // Карточка сворачивается сменой класса card-collapsed
-  new MutationObserver(scheduleScan).observe(watched, { attributes: true, attributeFilter: ['class'], subtree: true });
+  const scheduleScan = () => { clearTimeout(scanTimer); scanTimer = setTimeout(scanTables, 150); };
+  new MutationObserver(scheduleScan).observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
   window.addEventListener('resize', scheduleScan);
   scheduleScan();
 })();
