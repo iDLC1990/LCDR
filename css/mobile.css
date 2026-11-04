@@ -107,3 +107,29 @@ html.touch-phone #langFlags {
   border-color: #7c3aed;
   box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.55);
 }
+
+/* Родители свёрнутой карточки растягиваются на всю ширину (классом управляет js/mobile.js) */
+html.touch-phone .fill-w {
+  width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+  margin-left: 0 !important; margin-right: 0 !important; align-self: stretch !important; box-sizing: border-box;
+}
+
+/* ----- Верхняя полоса с названием страницы ----- */
+/* Горизонтально: полупрозрачная полоса чуть выше кнопок языков (кнопки 8 + 40 пикселей, полоса 56) */
+@media (orientation: landscape) {
+  html.touch-phone .topbar {
+    min-height: calc(env(safe-area-inset-top, 0px) + 56px);
+    box-sizing: border-box;
+  }
+}
+/* Вертикально: подписи страниц и их полупрозрачный фон убраны. Высота полосы сохраняется, чтобы содержимое не уехало под флаги */
+@media (orientation: portrait) {
+  html.touch-phone .topbar {
+    background: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  html.touch-phone .topbar > * { visibility: hidden; }
+}
