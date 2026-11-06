@@ -5,9 +5,11 @@
 
    Горячие клавиши (работают на любой странице сайта):
      Открыта страница Final I: печатает Final I. Иначе (Final II, Repair Log, любая другая страница): печатает Final II.
-     Shift+P — печать без бренда (первая строка или выделенные). В полях ввода не срабатывает.
-     Ctrl+P  — то же; стандартное окно печати браузера не открывается.
-     Alt+P   — печать с брендом в выбранном формате.
+     Левый Shift+P  — без бренда, 2 копии (первая строка или выделенные). В полях ввода не срабатывает.
+     Левый Alt+P    — с брендом, 2 копии.
+     Правый Shift+P — без бренда, 1 копия.
+     Правый Alt+P   — с брендом, 1 копия.
+     Ctrl+P  — без бренда, 2 копии; стандартное окно печати браузера не открывается.
      Ctrl+C  — копирование выделенной колонки (только на открытой странице Final I или Final II).
    Двойной клик по серийному номеру — копирование в буфер обмена (без уведомления).
    Данные обновляются в фоне каждые 5 секунд, независимо от того, открыта ли страница.
@@ -594,7 +596,7 @@ html,body{margin:0;padding:0;background:#fff}
     printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Label</title><style>@page{size:${w}mm ${h}mm;margin:0}${PRINT_CSS}</style></head><body>${pages}</body></html>`);
   }
 
-  // copies: сколько копий этикетки на каждый SN (по умолчанию 2; правый Alt+P печатает одну)
+  // copies: сколько копий этикетки на каждый SN (по умолчанию 2; правые Shift+P и Alt+P печатают одну)
   function printStd(list, inc, copies) { printDoc(stdPages(list, inc, copies), 100, 78); }
   function printNew(list, inc, copies) { printDoc(newPages(list, inc, copies), 130, 76); }
 
@@ -784,11 +786,17 @@ html,body{margin:0;padding:0;background:#fff}
   window.printFinal2BySn = station2.printBySn;
 
   // ===== Горячие клавиши (один обработчик на обе станции) =====
-  // Правый Shift запоминаем отдельно: у события клавиши P нет сведений, какой именно Shift нажат
-  let rightShiftDown = false;
-  document.addEventListener('keydown', (e) => { if (e.code === 'ShiftRight') rightShiftDown = true; }, true);
-  document.addEventListener('keyup', (e) => { if (e.code === 'ShiftRight') rightShiftDown = false; }, true);
-  window.addEventListener('blur', () => { rightShiftDown = false; });
+  // Правые Shift и Alt запоминаем отдельно: у события клавиши P нет сведений, какой именно Shift или Alt нажат
+  let rightShiftDown = false, rightAltDown = false;
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'ShiftRight') rightShiftDown = true;
+    if (e.code === 'AltRight') rightAltDown = true;
+  }, true);
+  document.addEventListener('keyup', (e) => {
+    if (e.code === 'ShiftRight') rightShiftDown = false;
+    if (e.code === 'AltRight') rightAltDown = false;
+  }, true);
+  window.addEventListener('blur', () => { rightShiftDown = false; rightAltDown = false; });
 
   document.addEventListener('keydown', (e) => {
     // Клавиши определяем по физической позиции (e.code), а не по букве:
@@ -801,6 +809,16 @@ html,body{margin:0;padding:0;background:#fff}
     // Открыта Final I: печатает она. На любой другой странице (в том числе Final II и Repair Log) печатает Final II
     const target = onFinal1 ? station1 : station2;
 
+    // Правый Alt+P: одна копия этикетки с брендом (левый Alt+P печатает две).
+    // На польской раскладке правый Alt работает как AltGr и сообщает ещё и Ctrl, поэтому Ctrl здесь не мешает
+    const altGr = !!(e.getModifierState && e.getModifierState('AltGraph'));
+    if (isP && (rightAltDown || altGr) && !e.shiftKey && !e.metaKey) {
+      e.preventDefault();
+      if (e.repeat) return;
+      target.hotPrint(true, 1);
+      return;
+    }
+
     // Правый Shift+P: одна копия этикетки без бренда (левый Shift+P печатает две)
     if (rightShiftDown && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && isP && !isTyping(e.target)) {
       e.preventDefault();
@@ -809,7 +827,7 @@ html,body{margin:0;padding:0;background:#fff}
       return;
     }
 
-    // Shift+P: печать без бренда. В полях ввода не срабатывает, чтобы можно было печатать заглавные буквы
+    // Левый Shift+P: печать без бренда, две копии. В полях ввода не срабатывает, чтобы можно было печатать заглавные буквы
     if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && isP && !isTyping(e.target)) {
       e.preventDefault();
       if (e.repeat) return;
@@ -817,7 +835,7 @@ html,body{margin:0;padding:0;background:#fff}
       return;
     }
 
-    // Alt+P: печать с брендом
+    // Левый Alt+P: печать с брендом, две копии
     if (e.altKey && !e.ctrlKey && !e.metaKey && isP) {
       e.preventDefault();
       if (e.repeat) return;
