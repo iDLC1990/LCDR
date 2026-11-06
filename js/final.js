@@ -534,7 +534,7 @@ html,body{margin:0;padding:0;background:#fff}
   }
 
   // Стандартная этикетка 100x78 мм, по 2 копии на каждый SN
-  function stdPages(list, inc) {
+  function stdPages(list, inc, copies) {
     let out = '';
     list.forEach(p => {
       const pn = p.pn || 'N/A', sn = p.sn || 'N/A', brand = p.brand || '-';
@@ -551,13 +551,13 @@ html,body{margin:0;padding:0;background:#fff}
           <div class="val-sn">${esc(sn)}</div>
         </div>
       </div></div>`;
-      out += one + one;
+      out += one.repeat(copies || 2);
     });
     return out;
   }
 
   // Новая этикетка 130x76 мм, по 2 копии на каждый SN
-  function newPages(list, inc) {
+  function newPages(list, inc, copies) {
     let out = '';
     list.forEach(p => {
       const pn = p.pn || 'N/A', sn = p.sn || 'N/A', brand = p.brand || '-';
@@ -570,7 +570,7 @@ html,body{margin:0;padding:0;background:#fff}
         <div class="bw-sn">${bc(sn, 48, 1.0, true)}</div>
         <div class="val">${esc(sn)}</div>
       </div></div>`;
-      out += one + one;
+      out += one.repeat(copies || 2);
     });
     return out;
   }
@@ -594,19 +594,20 @@ html,body{margin:0;padding:0;background:#fff}
     printInFrame(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Label</title><style>@page{size:${w}mm ${h}mm;margin:0}${PRINT_CSS}</style></head><body>${pages}</body></html>`);
   }
 
-  function printStd(list, inc) { printDoc(stdPages(list, inc), 100, 78); }
-  function printNew(list, inc) { printDoc(newPages(list, inc), 130, 76); }
+  // copies: сколько копий этикетки на каждый SN (по умолчанию 2; правый Alt+P печатает одну)
+  function printStd(list, inc, copies) { printDoc(stdPages(list, inc, copies), 100, 78); }
+  function printNew(list, inc, copies) { printDoc(newPages(list, inc, copies), 130, 76); }
 
   // Пакетная печать и Shift+P: формат зависит от выбранной кнопки 100×78 / 130×76
-  function printList(list, inc) {
-    if (mode === '2') printNew(list, inc);
-    else printStd(list, inc);
+  function printList(list, inc, copies) {
+    if (mode === '2') printNew(list, inc, copies);
+    else printStd(list, inc, copies);
   }
 
-  function printBatch(inc) {
+  function printBatch(inc, copies) {
     const list = products.filter(p => selected.has(p.sn));
     if (!list.length) return;
-    printList(list, inc);
+    printList(list, inc, copies);
     selected.clear();
     render();
   }
@@ -630,11 +631,11 @@ html,body{margin:0;padding:0;background:#fff}
   };
 
   // Горячие клавиши принимает общий обработчик внизу файла: он решает, какая станция сейчас активна.
-  function hotPrint(withBrand) {
+  function hotPrint(withBrand, copies) {
     if (!products.length) return;
     if (!selected.size && !products[0].pn) { toast(t('toastPn')); return; }
-    if (selected.size) printBatch(withBrand);
-    else printList([products[0]], withBrand);
+    if (selected.size) printBatch(withBrand, copies);
+    else printList([products[0]], withBrand, copies);
   }
 
   // Ctrl+C: копирование выделенной колонки
@@ -783,6 +784,12 @@ html,body{margin:0;padding:0;background:#fff}
   window.printFinal2BySn = station2.printBySn;
 
   // ===== Горячие клавиши (один обработчик на обе станции) =====
+  // Правый Shift запоминаем отдельно: у события клавиши P нет сведений, какой именно Shift нажат
+  let rightShiftDown = false;
+  document.addEventListener('keydown', (e) => { if (e.code === 'ShiftRight') rightShiftDown = true; }, true);
+  document.addEventListener('keyup', (e) => { if (e.code === 'ShiftRight') rightShiftDown = false; }, true);
+  window.addEventListener('blur', () => { rightShiftDown = false; });
+
   document.addEventListener('keydown', (e) => {
     // Клавиши определяем по физической позиции (e.code), а не по букве:
     // при украинской или русской раскладке e.key для P даёт другой символ
@@ -793,6 +800,14 @@ html,body{margin:0;padding:0;background:#fff}
     const onFinal2 = station2.isVisible();
     // Открыта Final I: печатает она. На любой другой странице (в том числе Final II и Repair Log) печатает Final II
     const target = onFinal1 ? station1 : station2;
+
+    // Правый Shift+P: одна копия этикетки без бренда (левый Shift+P печатает две)
+    if (rightShiftDown && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && isP && !isTyping(e.target)) {
+      e.preventDefault();
+      if (e.repeat) return;
+      target.hotPrint(false, 1);
+      return;
+    }
 
     // Shift+P: печать без бренда. В полях ввода не срабатывает, чтобы можно было печатать заглавные буквы
     if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && isP && !isTyping(e.target)) {
